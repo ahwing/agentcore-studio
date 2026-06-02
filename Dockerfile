@@ -1,0 +1,9 @@
+FROM public.ecr.aws/docker/library/python:3.12-slim
+# agentcore CLI + uv（运行时调用 agentcore deploy/invoke 需要）
+RUN pip install --no-cache-dir uv bedrock-agentcore-starter-toolkit
+RUN apt-get update && apt-get install -y --no-install-recommends zip && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY index.html server.py ./
+ENV HOST=0.0.0.0 PORT=8080 AGENTCORE_SUPPRESS_RECOMMENDATION=1
+EXPOSE 8080
+CMD ["python3", "server.py"]
