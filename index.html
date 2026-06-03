@@ -213,7 +213,7 @@ const COMPONENTS={
   runtime:{label:'Runtime',ic:'⚙️',ac:'var(--rt)',required:true,fields:[
     {k:'name',l:'Agent 名称',t:'text',d:'my_agent',hint:'仅下划线，不能用连字符'},
     {k:'framework',l:'Agent 框架',t:'select',o:['minimal','claude_sdk','langchain','custom'],d:'minimal'},
-    {k:'model_id',l:'模型 ID',t:'text',d:'anthropic.claude-3-5-sonnet-20240620-v1:0'},
+    {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-20250514-v1:0','anthropic.claude-haiku-4-20250514-v1:0','anthropic.claude-3-5-sonnet-20241022-v2:0','anthropic.claude-3-5-haiku-20241022-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-20250514-v1:0'},
     {k:'system_prompt',l:'系统提示 (System Prompt)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
     {k:'temperature',l:'温度',t:'select',o:['0','0.3','0.7','1.0'],d:'0.7'},
     {k:'max_tokens',l:'最大输出 Token',t:'text',d:'1024'},
