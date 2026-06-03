@@ -2,7 +2,7 @@
 """AgentCore Studio 后端 — 本地发布 + Playground 调用 + 可选云部署（零依赖，仅标准库）。
 启动: python3 server.py  →  http://127.0.0.1:8799  (可用 PORT 环境变量覆盖)
 仅绑定 127.0.0.1，会在本机执行生成的 agent 代码与 agentcore CLI，请勿暴露到公网。"""
-import json, os, sys, types, importlib.util, subprocess, re, base64
+import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
@@ -132,10 +132,30 @@ class H(BaseHTTPRequestHandler):
             out, mode = run_agent(data["name"], data.get("prompt", ""))
             self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/deploy":
-            log, ok = deploy_cloud(data["name"]); self._send(200, json.dumps({"log": log, "ok": ok}))
+            self._stream_deploy(data["name"])
         elif self.path == "/api/invoke-cloud":
             out, mode = invoke_cloud(data["name"], data.get("prompt", "")); self._send(200, json.dumps({"result": out, "mode": mode}))
         else: self._send(404, "{}")
+    def _stream_deploy(self, name):
+        # SSE: 5s 心跳保活，避免 AppRunner / 反向代理在 120s 无字节超时；最后写一行 data: <result>
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        result = {}
+        def worker():
+            try: result["log"], result["ok"] = deploy_cloud(name)
+            except Exception as e: result["log"], result["ok"] = f"deploy error: {e}", False
+        t = threading.Thread(target=worker, daemon=True); t.start()
+        try:
+            while t.is_alive():
+                self.wfile.write(b": keepalive\n\n"); self.wfile.flush()
+                t.join(5)
+            self.wfile.write(("data: " + json.dumps(result) + "\n\n").encode()); self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            return  # 客户端断了；后台 deploy 仍会跑完
     def log_message(self, *a): pass
 
 if __name__ == "__main__":
