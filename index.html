@@ -394,13 +394,38 @@ function gen(){
     '# 1) 配置并部署 Runtime（核心，一键执行）',cfg,'PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',`PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,''];
   let opt=[];
   if(mem)opt.push(`# Memory: 已在 configure 阶段启用 (mode=${mem.cfg.mode}, 保留 ${mem.cfg.expiry} 天)`);
-  if(ident&&ident.cfg.auth!=='IAM'){const a=ident.cfg.auth;opt.push(a==='cognito'?'# agentcore identity setup-cognito --auth-flow user':a==='aws-jwt'?`# agentcore identity setup-aws-jwt --audience ${ident.cfg.audience} --signing-algorithm ${ident.cfg.sign_alg} --duration ${ident.cfg.duration}`:`# agentcore identity create-credential-provider --name ${a}_provider --type ${a} --client-id <CLIENT_ID> --client-secret <CLIENT_SECRET>`)}
-  if(gw){opt.push(`# agentcore gateway create-mcp-gateway --name ${gw.cfg.gw_name} --region ${region}${gw.cfg.semantic==='true'?' --enable_semantic_search':''}`);
-    mcps.forEach(m=>opt.push(`#   agentcore gateway create-mcp-gateway-target --gateway-arn <GATEWAY_ARN> --gateway-url <GATEWAY_URL> --role-arn <ROLE_ARN> --name ${m.cfg.name} --target-type ${m.cfg.type}`))}
-  if(pol)opt.push(`# agentcore policy create-policy-engine --name ${pol.cfg.engine}`,`#   agentcore policy create-policy --policy-engine-id <ENGINE_ID> --name ${pol.cfg.pname} --definition '<CEDAR_JSON>' --validation-mode ${pol.cfg.validation}`);
+  if(ident&&ident.cfg.auth!=='IAM'){const a=ident.cfg.auth;
+    if(a==='cognito')opt.push('','# 2) Identity — Cognito 认证','PYTHONIOENCODING=utf-8 agentcore identity setup-cognito --auth-flow user');
+    else if(a==='aws-jwt')opt.push('','# 2) Identity — AWS JWT 联邦认证',`PYTHONIOENCODING=utf-8 agentcore identity setup-aws-jwt --audience ${ident.cfg.audience} --signing-algorithm ${ident.cfg.sign_alg} --duration ${ident.cfg.duration}`);
+    else opt.push('','# 2) Identity — Workload Identity',`PYTHONIOENCODING=utf-8 agentcore identity create-workload-identity -n ${c.name}_identity -r ${region}`)}
+  if(gw){opt.push('',`# ${ident&&ident.cfg.auth!=='IAM'?'3':'2'}) Gateway — 创建 MCP Gateway 并注册工具目标`,
+    `echo ">>> 创建 MCP Gateway: ${gw.cfg.gw_name}"`,
+    `GW_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore gateway create-mcp-gateway --name ${gw.cfg.gw_name} --region ${region}${gw.cfg.semantic==='true'?' --enable_semantic_search':''} 2>&1)`,
+    'echo "$GW_OUTPUT"',
+    'GW_ARN=$(echo "$GW_OUTPUT" | grep -o \'arn:aws:bedrock-agentcore:[^"]*gateway/[^"]*\' | head -1)',
+    'GW_URL=$(echo "$GW_OUTPUT" | grep -oE \'https://[^ "]+\' | head -1)',
+    'ROLE_ARN=$(echo "$GW_OUTPUT" | grep -o \'arn:aws:iam::[^"]*role/[^"]*\' | head -1)',
+    'if [ -z "$GW_ARN" ]; then',
+    '  echo "⚠ 未能解析 Gateway ARN，尝试从 list 获取..."',
+    `  GW_ARN=$(PYTHONIOENCODING=utf-8 agentcore gateway list-mcp-gateways --region ${region} 2>&1 | grep -o 'arn:aws:bedrock-agentcore:[^"]*gateway/[^"]*' | tail -1)`,
+    'fi',
+    'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"');
+    mcps.forEach(m=>opt.push('',`echo ">>> 创建 Gateway Target: ${m.cfg.name}"`,
+      `PYTHONIOENCODING=utf-8 agentcore gateway create-mcp-gateway-target --gateway-arn "$GW_ARN" --gateway-url "$GW_URL" --role-arn "$ROLE_ARN" --region ${region} --name ${m.cfg.name} --target-type ${m.cfg.type} || echo "⚠ Target ${m.cfg.name} 创建失败（可能已存在）"`))}
+  if(pol){const step=(!ident||ident.cfg.auth==='IAM')?(gw?'3':'2'):(gw?'4':'3');
+    opt.push('',`# ${step}) Policy — 创建策略引擎并附加策略`,
+    `echo ">>> 创建 Policy Engine: ${pol.cfg.engine}"`,
+    `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region} 2>&1)`,
+    'echo "$PE_OUTPUT"',
+    'PE_ID=$(echo "$PE_OUTPUT" | grep -oE \'[a-zA-Z0-9_-]+-[a-zA-Z0-9]{10}\' | head -1)',
+    'if [ -n "$PE_ID" ]; then',
+    `  echo ">>> 创建 Policy: ${pol.cfg.pname}"`,
+    `  PYTHONIOENCODING=utf-8 agentcore policy create-policy --policy-engine-id "$PE_ID" --name ${pol.cfg.pname} --definition '{"Version":"2024-01-01","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}' --validation-mode ${pol.cfg.validation} -r ${region} || echo "⚠ Policy 创建失败"`,
+    'else','  echo "⚠ 未能解析 Policy Engine ID（可能已存在）"','fi')}
   const bts=[];if(ci)bts.push(`Code Interpreter(network=${ci.cfg.network},timeout=${ci.cfg.timeout})`);if(br)bts.push(`Browser(network=${br.cfg.network},recording=${br.cfg.recording})`);
-  if(bts.length)opt.push('# 内置工具 (随 Runtime 通过 bedrock-agentcore SDK 启用): '+bts.join(', '));
-  if(opt.length)s.push('# 2) 可选附加资源 — 用上一步输出的真实 ARN/ID 手动执行：',...opt);
+  if(bts.length)opt.push('','# 内置工具 (随 Runtime 通过 bedrock-agentcore SDK 启用): '+bts.join(', '));
+  if(opt.length)s.push(...opt);
+  s.push('','echo "✅ 所有组件部署完成"');
   const deploy=s.join('\n').replace(/uv run agentcore/g,'agentcore');
   const registry={agent:c.name,framework:c.framework,model:c.model_id,region,
     components:nodes.filter(n=>!COMPONENTS[n.type].multi&&!['codeinterp','browser'].includes(n.type)).map(n=>({type:n.type,name:n.cfg.name||n.cfg.gw_name||n.cfg.engine||COMPONENTS[n.type].label})),
