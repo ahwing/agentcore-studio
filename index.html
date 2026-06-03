@@ -413,7 +413,7 @@ function gen(){
   let cfg=`PYTHONIOENCODING=utf-8 agentcore configure -e ${c.entry||'agentcore_entry.py'} -n ${c.name} \\\n  --deployment-type ${c.deploy_type} --runtime ${c.runtime} -r ${region} --protocol ${c.protocol} --idle-timeout ${c.idle_timeout} --max-lifetime ${c.max_lifetime}`;
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
   let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
-    '# 1) 配置并部署 Runtime（核心，一键执行）',cfg,'PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',`PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,''];
+    '# 1) 配置并部署 Runtime（核心，一键执行）',cfg,'PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',`PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,'','# 后续组件允许部分失败','set +e',''];
   let opt=[];
   if(mem)opt.push(`# Memory: 已在 configure 阶段启用 (mode=${mem.cfg.mode}, 保留 ${mem.cfg.expiry} 天)`);
   if(ident&&ident.cfg.auth!=='IAM'){const a=ident.cfg.auth;
@@ -525,11 +525,12 @@ function addMsg(t,txt){const d=document.createElement('div');d.className='msg '+
   const m=document.getElementById('msgs');m.appendChild(d);m.scrollTop=m.scrollHeight}
 async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(!published)await doPublish();if(!confirm('真实部署到云端？需 uv + agentcore toolkit + 凭证，耗时数分钟并产生费用。'))return;
-  toast('☁️ 正在部署到云端…（数分钟）');switchView('play');addMsg('sys','☁️ 开始真实部署到云端…');
-  try{const r=await fetch('/api/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:rt.cfg.name})});
-    const j=await r.json();addMsg('sys','部署日志(末尾)：\n'+(j.log||'').slice(-800));
+  toast('☁️ 正在部署到云端…（数分钟）');switchView('play');addMsg('sys','☁️ 开始真实部署到云端…请耐心等待 2-5 分钟');
+  try{const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),600000);
+    const r=await fetch('/api/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:rt.cfg.name}),signal:ctrl.signal});
+    clearTimeout(tid);const j=await r.json();addMsg('sys','部署日志(末尾)：\n'+(j.log||'').slice(-800));
     if(j.ok){deployed=true;setSrc('cloud');addMsg('sys','✅ 已发布到云端，已切换「AWS 云端」，发消息即可验证云端 runtime')}
-    else addMsg('sys','⚠ 部署未成功，请检查日志（需 uv + agentcore toolkit + AWS 凭证）')}catch(e){addMsg('sys','⚠ 后端未启动，无法执行真实部署')}}
+    else addMsg('sys','⚠ 部署未完全成功，请检查日志')}catch(e){if(e.name==='AbortError')addMsg('sys','⚠ 请求超时（10分钟），请刷新后检查云端状态');else addMsg('sys','⚠ 网络错误：'+e.message+'。部署可能仍在后台执行，请稍后刷新重试')}}
 
 // ---- 导出 ----
 function curFile(){const o=gen();return{name:TABS[tab],text:o[tab]}}

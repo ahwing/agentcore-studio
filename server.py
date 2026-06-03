@@ -53,9 +53,10 @@ def deploy_cloud(name):
     if not info: return "尚未发布", False
     try:
         r = subprocess.run(["bash", "deploy.sh"], cwd=info["dir"], capture_output=True, text=True, timeout=900)
-        ok = r.returncode == 0
+        out = (r.stdout + r.stderr)[-6000:] or "（无输出）"
+        ok = r.returncode == 0 or "Deployment completed successfully" in out or "Agent created/updated" in out
         if ok: info["deployed"] = True
-        return ((r.stdout + r.stderr)[-6000:] or "（无输出）"), ok
+        return out, ok
     except Exception as e:
         return f"部署失败: {e}", False
 
