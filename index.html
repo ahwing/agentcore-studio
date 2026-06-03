@@ -88,6 +88,9 @@
   .field textarea{font-family:var(--mono);font-size:12px;min-height:54px}
   .field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,153,0,.15)}
   .field select{cursor:pointer}
+  .field .checks{display:flex;flex-wrap:wrap;gap:6px 12px}
+  .field .chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);cursor:pointer}
+  .field .chk input{accent-color:var(--orange);width:15px;height:15px;cursor:pointer}
   .field .hint{font-size:10.5px;color:var(--muted2);margin-top:4px}.field .hint.warn{color:var(--orange)}
   .empty{color:var(--muted2);font-size:13px;text-align:center;padding:24px 10px;font-family:var(--ui);line-height:1.7}
   .pop{position:absolute;z-index:8;width:282px;max-height:80%;overflow-y:auto;background:var(--ink2);border:1px solid var(--ac,var(--line2));border-radius:13px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px;animation:nodeIn .16s both}
@@ -223,8 +226,8 @@ const COMPONENTS={
     {k:'env',l:'环境变量',t:'text',d:'',hint:'KEY=val,KEY2=val2'}]},
   memory:{label:'Memory',ic:'🧠',ac:'var(--mem)',fields:[
     {k:'mem_name',l:'记忆名称',t:'text',d:'my_memory'},
-    {k:'mode',l:'记忆模式',t:'select',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM',hint:'顺序固定为 STM_AND_LTM'},
-    {k:'strategy',l:'记忆策略',t:'select',o:['SEMANTIC','SUMMARIZATION','USER_PREFERENCE'],d:'SEMANTIC'},
+    {k:'mode',l:'记忆模式 (可多选)',t:'checks',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM'},
+    {k:'strategy',l:'记忆策略 (可多选)',t:'checks',o:['SEMANTIC','SUMMARIZATION','USER_PREFERENCE'],d:'SEMANTIC'},
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'expiry',l:'事件保留天数',t:'text',d:'90'}]},
   gateway:{label:'Gateway',ic:'🔌',ac:'var(--gw)',fields:[
@@ -332,7 +335,7 @@ function render(){
   fresh.clear();drawEdges(rt);renderPreview();updateStat(rt);renderRegistry()}
 function summary(n){const c=n.cfg;switch(n.type){
   case'runtime':return `<span class="req">${c.name}</span> · ${c.framework}<br>${(c.model_id||'').split('.').pop().slice(0,18)}`;
-  case'memory':return `mode: ${c.mode}`;
+  case'memory':return `mode: ${c.mode}<br>strategy: ${c.strategy}`;
   case'gateway':return c.gw_name;
   case'mcp':return `${c.name}<br>${c.type}`;
   case'skill':return c.name;
@@ -364,6 +367,7 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
   const c=COMPONENTS[n.type];pop.style.setProperty('--ac',c.ac);
   pop.innerHTML=`<h3><span class="chip">${c.ic}</span>${c.label}<span class="x" onclick="closePop()">×</span></h3>`+c.fields.map(f=>{const v=n.cfg[f.k];let inp;
     if(f.t==='select')inp=`<select onchange="setCfg(${n.id},'${f.k}',this.value)">${f.o.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+    else if(f.t==='checks'){const vals=(v||'').split(',');inp=`<div class="checks">${f.o.map(o=>`<label class="chk"><input type="checkbox" ${vals.includes(o)?'checked':''} onchange="toggleCheck(${n.id},'${f.k}','${o}',this.checked)">${o}</label>`).join('')}</div>`}
     else if(f.t==='textarea')inp=`<textarea oninput="setCfg(${n.id},'${f.k}',this.value)">${v}</textarea>`;
     else inp=`<input value="${v}" oninput="setCfg(${n.id},'${f.k}',this.value)">`;
     let hint=f.hint?`<div class="hint">${f.hint}</div>`:'';
@@ -377,6 +381,7 @@ function positionPop(n){const pop=document.getElementById('pop'),wrap=document.q
 function closePop(){sel=null;render();renderProps()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sel){closePop()}});
 function setCfg(id,k,v){nodes.find(x=>x.id===id).cfg[k]=v;published=false;render()}
+function toggleCheck(id,k,val,checked){const n=nodes.find(x=>x.id===id);let vals=(n.cfg[k]||'').split(',').filter(Boolean);if(checked){if(!vals.includes(val))vals.push(val)}else{vals=vals.filter(v=>v!==val)}n.cfg[k]=vals.join(',');published=false;render()}
 
 function updateStat(rt){const p=document.getElementById('statPill'),tx=document.getElementById('statTxt');
   if(!rt){p.classList.remove('ready');tx.textContent='空画布 — 需要 Runtime'}
