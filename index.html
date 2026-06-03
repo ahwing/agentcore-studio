@@ -531,11 +531,18 @@ function addMsg(t,txt){const d=document.createElement('div');d.className='msg '+
 async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(!published)await doPublish();if(!confirm('真实部署到云端？需 uv + agentcore toolkit + 凭证，耗时数分钟并产生费用。'))return;
   toast('☁️ 正在部署到云端…（数分钟）');switchView('play');addMsg('sys','☁️ 开始真实部署到云端…请耐心等待 2-5 分钟');
-  try{const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),600000);
+  try{const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),900000);
     const r=await fetch('/api/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:rt.cfg.name}),signal:ctrl.signal});
-    clearTimeout(tid);const j=await r.json();addMsg('sys','部署日志(末尾)：\n'+(j.log||'').slice(-800));
+    clearTimeout(tid);
+    // SSE 流：忽略心跳（": keepalive"），从最后一行 "data: {...}" 取结果
+    const reader=r.body.getReader(),dec=new TextDecoder();let buf='',j=null;
+    while(true){const{value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const ln of lines){if(ln.startsWith('data:'))try{j=JSON.parse(ln.slice(5).trim())}catch{}}}
+    if(!j)throw new Error('部署流意外结束');
+    addMsg('sys','部署日志(末尾)：\n'+(j.log||'').slice(-800));
     if(j.ok){deployed=true;setSrc('cloud');addMsg('sys','✅ 已发布到云端，已切换「AWS 云端」，发消息即可验证云端 runtime')}
-    else addMsg('sys','⚠ 部署未完全成功，请检查日志')}catch(e){if(e.name==='AbortError')addMsg('sys','⚠ 请求超时（10分钟），请刷新后检查云端状态');else addMsg('sys','⚠ 网络错误：'+e.message+'。部署可能仍在后台执行，请稍后刷新重试')}}
+    else addMsg('sys','⚠ 部署未完全成功，请检查日志')}catch(e){if(e.name==='AbortError')addMsg('sys','⚠ 请求超时（15分钟），请刷新后检查云端状态');else addMsg('sys','⚠ 网络错误：'+e.message+'。部署可能仍在后台执行，请稍后刷新重试')}}
 
 // ---- 导出 ----
 function curFile(){const o=gen();return{name:TABS[tab],text:o[tab]}}

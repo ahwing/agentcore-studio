@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AgentCore Studio on App Runner — IAM roles + service via CloudFormation.
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: agentcore-studio
+    Description: Name used as prefix for IAM roles and as the App Runner service name.
+  ImageUri:
+    Type: String
+    Description: ECR image URI with tag, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/agentcore-studio:latest
+  StudioPassword:
+    Type: String
+    NoEcho: true
+    Description: HTTP Basic Auth password injected into the container as STUDIO_PASSWORD.
+
+Resources:
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-instance"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: tasks.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:apprunner:${AWS::Region}:${AWS::AccountId}:service/*"
+      Policies:
+        - PolicyName: studio
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AgentCore
+                Effect: Allow
+                Action:
+                  - bedrock-agentcore:*
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: "*"
+              - Sid: DeployInfra
+                Effect: Allow
+                Action:
+                  - ecr:*
+                  - s3:*
+                  - codebuild:*
+                  - logs:*
+                  - cloudformation:*
+                  - cloudwatch:*
+                  - xray:*
+                Resource: "*"
+              - Sid: IamForDeploy
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:PassRole
+                  - iam:CreatePolicy
+                  - iam:TagRole
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                Resource: "*"
+
+  EcrAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-ecr-access"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+
+  Service:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt EcrAccessRole.Arn
+        AutoDeploymentsEnabled: false
+        ImageRepository:
+          ImageRepositoryType: ECR
+          ImageIdentifier: !Ref ImageUri
+          ImageConfiguration:
+            Port: "8080"
+            RuntimeEnvironmentVariables:
+              - Name: STUDIO_PASSWORD
+                Value: !Ref StudioPassword
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+        InstanceRoleArn: !GetAtt InstanceRole.Arn
+      HealthCheckConfiguration:
+        Protocol: TCP
+        Interval: 10
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 5
+
+Outputs:
+  ServiceUrl:
+    Description: Public HTTPS URL of the App Runner service.
+    Value: !Sub "https://${Service.ServiceUrl}"
+  ServiceArn:
+    Value: !GetAtt Service.ServiceArn
+  InstanceRoleArn:
+    Value: !GetAtt InstanceRole.Arn
+  EcrAccessRoleArn:
+    Value: !GetAtt EcrAccessRole.Arn
