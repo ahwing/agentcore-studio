@@ -66,6 +66,9 @@
   .node .hd .del:hover{color:var(--pol)}
   .node .bd{padding:0 12px 11px;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
   .node .bd .req{color:var(--ac);font-weight:500}
+  .node.incomplete{border-color:rgba(255,180,0,.6);box-shadow:0 0 0 1px rgba(255,180,0,.3),0 10px 30px rgba(0,0,0,.35)}
+  .node.incomplete::after{content:'⚠';position:absolute;top:6px;right:8px;font-size:14px;opacity:.9;filter:drop-shadow(0 0 4px rgba(255,180,0,.5))}
+  .node .bd .incomplete-hint{color:#FFB400;font-size:9.5px;margin-top:3px}
   @keyframes nodeIn{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
   .node.enter{animation:nodeIn .42s cubic-bezier(.2,.9,.3,1.3) both}
   .canvas-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted2);font-family:var(--ui);font-size:15px;line-height:2;pointer-events:none}
@@ -152,6 +155,7 @@
   <div class="brand"><div class="logo">🧩</div><div><h1>AgentCore Studio</h1><div class="sub">拖拽编排 · 一键上线你的 AI Agent</div></div></div>
   <span class="spacer"></span>
   <span class="pill" id="statPill"><span class="dot"></span><span id="statTxt">空画布</span></span>
+  <button class="btn-ghost" onclick="newAgent()">＋ 新建 Agent</button>
   <button class="btn-ghost" onclick="loadSample()">载入示例</button>
   <button class="btn-cloud" onclick="deployCloud()">☁️ 发布到云端</button>
   <button class="btn-pri" onclick="publish()">🚀 本地发布</button>
@@ -297,14 +301,32 @@ function addNode(type,x,y){
   nodes.push(n);fresh.add(n.id);sel=n.id;published=false;render();renderProps()}
 function delNode(id){nodes=nodes.filter(n=>n.id!==id);if(sel===id)sel=null;published=false;render();renderProps()}
 
+function isIncomplete(n){
+  const c=n.cfg;
+  switch(n.type){
+    case'mcp':if(!c.endpoint||c.endpoint.includes('<'))return '需填写目标资源';break;
+    case'identity':if(c.auth!=='IAM'&&c.auth!=='cognito'&&c.auth!=='aws-jwt'&&(!c.provider_name||c.provider_name==='my_provider'))return '需配置认证详情';break;
+    case'gateway':if(!c.gw_name||c.gw_name==='my_gateway')return null;break;
+    case'policy':if(!c.engine||c.engine==='my_engine')return null;break;
+  }return null}
+
+function newAgent(){
+  if(nodes.length&&!confirm('当前画布将被清空，开始新的 Agent 配置？'))return;
+  nodes=[];sel=null;nid=0;fresh.clear();published=false;deployed=false;
+  const c=COMPONENTS['runtime'],cfg={};c.fields.forEach(f=>cfg[f.k]=f.d);
+  const name='agent_'+(Date.now()%10000);cfg.name=name;
+  nodes.push({id:++nid,type:'runtime',x:40,y:250,cfg});fresh.add(nid);
+  sel=nid;render();renderProps();toast('已创建新 Agent: '+name+' — 请配置组件')}
+
 function render(){
   document.getElementById('hint').style.display=nodes.length?'none':'block';
   [...canvas.querySelectorAll('.node')].forEach(e=>e.remove());
   const rt=nodes.find(n=>n.type==='runtime');
-  nodes.forEach(n=>{const c=COMPONENTS[n.type];const el=document.createElement('div');
-    el.className='node'+(n.id===sel?' sel':'')+(fresh.has(n.id)?' enter':'')+(c.multi?' mini':'');
+  nodes.forEach(n=>{const c=COMPONENTS[n.type];const inc=isIncomplete(n);const el=document.createElement('div');
+    el.className='node'+(n.id===sel?' sel':'')+(fresh.has(n.id)?' enter':'')+(c.multi?' mini':'')+(inc?' incomplete':'');
     el.style.cssText=`left:${n.x}px;top:${n.y}px;--ac:${c.ac}`;
-    el.innerHTML=`<div class="hd"><span class="chip">${c.ic}</span>${c.label}<span class="del" title="删除">×</span></div><div class="bd">${summary(n)}</div>`;
+    const incHint=inc?`<div class="incomplete-hint">⚠ ${inc}</div>`:'';
+    el.innerHTML=`<div class="hd"><span class="chip">${c.ic}</span>${c.label}<span class="del" title="删除">×</span></div><div class="bd">${summary(n)}${incHint}</div>`;
     el.addEventListener('mousedown',e=>startDrag(e,n,el));
     el.querySelector('.del').addEventListener('mousedown',e=>{e.stopPropagation();delNode(n.id)});canvas.appendChild(el)});
   fresh.clear();drawEdges(rt);renderPreview();updateStat(rt);renderRegistry()}
@@ -410,9 +432,9 @@ function gen(){
     `  GW_ARN=$(PYTHONIOENCODING=utf-8 agentcore gateway list-mcp-gateways --region ${region} 2>&1 | grep -o 'arn:aws:bedrock-agentcore:[^"]*gateway/[^"]*' | tail -1)`,
     'fi',
     'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"');
-    mcps.forEach(m=>opt.push('',`echo ">>> 创建 Gateway Target: ${m.cfg.name}"`,
-      `PYTHONIOENCODING=utf-8 agentcore gateway create-mcp-gateway-target --gateway-arn "$GW_ARN" --gateway-url "$GW_URL" --role-arn "$ROLE_ARN" --region ${region} --name ${m.cfg.name} --target-type ${m.cfg.type} || echo "⚠ Target ${m.cfg.name} 创建失败（可能已存在）"`))}
-  if(pol){const step=(!ident||ident.cfg.auth==='IAM')?(gw?'3':'2'):(gw?'4':'3');
+    mcps.forEach(m=>{if(isIncomplete({type:'mcp',cfg:m.cfg})){opt.push('',`echo "⚠ 跳过未完整配置的 MCP Tool: ${m.cfg.name}"`);return}
+      opt.push('',`echo ">>> 创建 Gateway Target: ${m.cfg.name}"`,
+      `PYTHONIOENCODING=utf-8 agentcore gateway create-mcp-gateway-target --gateway-arn "$GW_ARN" --gateway-url "$GW_URL" --role-arn "$ROLE_ARN" --region ${region} --name ${m.cfg.name} --target-type ${m.cfg.type} || echo "⚠ Target ${m.cfg.name} 创建失败（可能已存在）"`)})}  if(pol){const step=(!ident||ident.cfg.auth==='IAM')?(gw?'3':'2'):(gw?'4':'3');
     opt.push('',`# ${step}) Policy — 创建策略引擎并附加策略`,
     `echo ">>> 创建 Policy Engine: ${pol.cfg.engine}"`,
     `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region} 2>&1)`,
