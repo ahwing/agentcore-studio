@@ -148,6 +148,16 @@ def _extract(out):
     d = cand or any_d
     if isinstance(d, dict):
         return d.get("result") or d.get("response") or d.get("output") or json.dumps(d, ensure_ascii=False)
+    # 防御：CLI 可能按终端宽度把 JSON 折行（插入真实换行），尝试在 Response 段去掉折行后重组解析
+    m = re.search(r"Response:\s*(\{.*\})", out, re.DOTALL)
+    if m:
+        try:
+            collapsed = re.sub(r"\n", "", m.group(1))
+            obj = json.loads(collapsed)
+            if isinstance(obj, dict):
+                return obj.get("result") or obj.get("response") or obj.get("output") or json.dumps(obj, ensure_ascii=False)
+        except Exception:
+            pass
     noise = ("suppress_recommendation", "silence this warning", "recommendation", "set agentcore_", "💡", "⚠")
     lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
     return lines[-1] if lines else "（无输出）"
@@ -165,7 +175,7 @@ def invoke_cloud(name, prompt):
             r = subprocess.run(
                 ["npx", "@aws/agentcore", "invoke", "--harness", pn, "--prompt", prompt],
                 cwd=proj_dir, capture_output=True, text=True, timeout=120,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1"})
+                env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
             out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
             if r.returncode == 0:
                 return _extract(out), "cloud"
@@ -179,7 +189,7 @@ def invoke_cloud(name, prompt):
     try:
         r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
                            capture_output=True, text=True, timeout=120,
-                           env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1"})
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
         out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
         if r.returncode == 0:
             return _extract(out), "cloud"
