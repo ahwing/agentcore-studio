@@ -358,6 +358,7 @@ const COMPONENTS={
     {k:'description',l:'描述',t:'text',d:'治理策略'}]},
 };
 let nodes=[],sel=null,nid=0,tab='entry',fresh=new Set(),published=false,view='cfg',pgSrc='local',deployed=false;
+let sessions={},curName=null;  // 每个场景/agent 独立 session：published/deployed/源模式/对话历史
 
 const pal=document.getElementById('palette');
 [['核心组件',['runtime','memory','gateway','identity','observability','policy']],['内置工具',['codeinterp','browser']],['Gateway 工具目标',['mcp','skill']]].forEach(([title,types])=>{
@@ -896,6 +897,7 @@ function collectWarnings(){
   return [...new Set(w)]}
 function publish(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
+  curName=rt.cfg.name;  // session 按实际发布的 agent 名对齐（处理改名）
   const order=['runtime','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
   const rtInc=isIncomplete(rt);
   // 未配置完整的组件（Runtime 除外）→ 将被跳过、不发布
@@ -1036,13 +1038,33 @@ const SCENARIOS={
   analyst:{label:'数据分析 Agent',desc:'Runtime + Code Interpreter + Memory + Observability',nodes:[['runtime',40,210,{name:'analyst_agent',system_prompt:'你是一个数据分析助手，可运行 Python 代码处理数据。'}],['memory',340,110],['codeinterp',340,250,{network:'SANDBOX'}],['observability',340,390]]},
   full:{label:'全家桶（全部组件）',desc:'10 个组件全部展示',nodes:[['runtime',40,285],['memory',300,20],['identity',300,96],['observability',300,172],['gateway',300,248],['policy',300,324],['codeinterp',300,400],['browser',300,476],['mcp',560,210],['skill',560,294]]}
 };
+// 每个场景/agent 独立 session：保存/恢复 published/deployed/源模式/对话历史
+function snapshotSession(){if(curName==null)return;
+  sessions[curName]={published,deployed,pgSrc,chat:document.getElementById('msgs').innerHTML,
+    cloudAvail:document.getElementById('srcCloud').classList.contains('avail')}}
+function syncSrcPills(){document.getElementById('srcLocal').classList.toggle('on',pgSrc==='local');
+  document.getElementById('srcCloud').classList.toggle('on',pgSrc==='cloud')}
+function applySession(name,label){
+  curName=name;const m=document.getElementById('msgs');
+  // 切换时重置进行中的部署/trace 实时引用（旧元素已随对话快照分离）
+  curDeployLog=null;curDeployHd=null;traceEl=null;clearInterval(deployTimer);deployTimer=null;
+  const st=sessions[name];
+  if(st){published=st.published;deployed=st.deployed;pgSrc=st.pgSrc;m.innerHTML=st.chat;
+    document.getElementById('srcCloud').classList.toggle('avail',!!st.cloudAvail)}
+  else{published=false;deployed=false;pgSrc='local';m.innerHTML='';
+    document.getElementById('srcCloud').classList.remove('avail');
+    addMsg('sys','🆕 场景「'+(label||name)+'」：先在「本地」对话测试，OK 后再「发布到云端」。每个场景需各自发布；云端对话用的是该场景自己部署的 Agent。')}
+  syncSrcPills()}
 function loadScenario(key){const sc=SCENARIOS[key]||SCENARIOS.full;
-  nodes=[];nid=0;fresh.clear();published=false;deployed=false;
+  snapshotSession();
+  nodes=[];nid=0;fresh.clear();
   sc.nodes.forEach(([t,x,y,ov])=>{const c=COMPONENTS[t],cfg={};c.fields.forEach(f=>cfg[f.k]=f.d);
     if(c.multi){const k=c.fields[0].k;cfg[k]=cfg[k]+'_'+(nodes.filter(n=>n.type===t).length+1)}
     if(ov)Object.assign(cfg,ov);
     nodes.push({id:++nid,type:t,x,y,cfg});fresh.add(nid)});
   sel=null;render();[...canvas.querySelectorAll('.node')].forEach((el,i)=>{el.style.animation='none';void el.offsetWidth;el.classList.add('enter');el.style.animationDelay=(i*70)+'ms'});renderProps();
+  const rt=nodes.find(n=>n.type==='runtime');
+  applySession(rt?(rt.cfg.name||('scenario:'+key)):('scenario:'+key),sc.label);
   toast('已载入场景：'+sc.label)}
 function loadSample(){loadScenario('full')}
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1900)}
