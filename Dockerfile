@@ -1,7 +1,10 @@
 FROM public.ecr.aws/docker/library/python:3.12-slim
 # agentcore CLI + uv（运行时调用 agentcore deploy/invoke 需要）
 RUN pip install --no-cache-dir uv bedrock-agentcore-starter-toolkit
-RUN apt-get update && apt-get install -y --no-install-recommends zip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends zip curl unzip && \
+    curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
+    unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscliv2.zip && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY index.html server.py ./
 ENV HOST=0.0.0.0 PORT=8080 AGENTCORE_SUPPRESS_RECOMMENDATION=1
