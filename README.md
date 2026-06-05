@@ -31,8 +31,3 @@ PORT=9000 STUDIO_PASSWORD=yourpass python3 server.py
 | `index.html` | 单文件前端（字体内联，可离线） |
 | `server.py` | 零依赖后端（发布 / Playground / 部署 / 云端调用） |
 | `Dockerfile` | 容器镜像（内置 agentcore CLI + AWS CLI + zip）— 可选，用于打包到任意容器平台 |
-
-## 安全
-- 源码不含任何密钥；AWS 账号、密码均为运行时动态获取 / 生成。
-- 运行时生成的 `workspace/`（含 `.bedrock_agentcore.yaml`、账号信息）已在 `.gitignore` 中排除。
-- 后端会执行生成代码且持有 AWS 权限，公网部署务必启用 `STUDIO_PASSWORD` 鉴权。
