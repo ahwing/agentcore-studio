@@ -2,7 +2,7 @@
 """AgentCore Studio 后端 — 本地发布 + Playground 调用 + 可选云部署（零依赖，仅标准库）。
 启动: python3 server.py  →  http://127.0.0.1:8799  (可用 PORT 环境变量覆盖)
 仅绑定 127.0.0.1，会在本机执行生成的 agent 代码与 agentcore CLI，请勿暴露到公网。"""
-import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue
+import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue, shutil
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
@@ -266,6 +266,11 @@ class H(BaseHTTPRequestHandler):
         self.send_header("X-Accel-Buffering", "no")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
+        # 立刻写首个字节：App Runner 入口若头 1-2s 收不到 body 会掐断连接
+        try:
+            self.wfile.write(("data: " + json.dumps({"tick": 0}) + "\n\n").encode()); self.wfile.flush()
+        except Exception:
+            return
         info = PUBLISHED.get(name)
         if not info:
             try:
@@ -285,9 +290,12 @@ class H(BaseHTTPRequestHandler):
         def worker():
             lines = []
             try:
-                p = subprocess.Popen(["bash", "deploy.sh"], cwd=info["dir"],
+                env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+                # stdbuf 强制行缓冲：让 agentcore 输出实时流出，而非被块缓冲憋住（憋住会让 App Runner 误判空闲掐断）
+                cmd = ["stdbuf", "-oL", "-eL", "bash", "deploy.sh"] if shutil.which("stdbuf") else ["bash", "deploy.sh"]
+                p = subprocess.Popen(cmd, cwd=info["dir"],
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                     text=True, bufsize=1)
+                                     text=True, bufsize=1, env=env)
                 for line in iter(p.stdout.readline, ""):
                     line = line.rstrip("\n"); lines.append(line)
                     if keep(line): q.put(("line", line))   # 仅推送关键行，压缩日志量
@@ -301,11 +309,14 @@ class H(BaseHTTPRequestHandler):
             q.put(("done", None))
         threading.Thread(target=worker, daemon=True).start()
         try:
+            tick = 0
             while True:
                 try:
-                    kind, val = q.get(timeout=5)
+                    kind, val = q.get(timeout=2)
                 except queue.Empty:
-                    self.wfile.write(b": keepalive\n\n"); self.wfile.flush(); continue
+                    # 用真实 data 事件做心跳（App Runner 入口会掐断静默的流式响应，注释行不算数据）
+                    tick += 1
+                    self.wfile.write(("data: " + json.dumps({"tick": tick}) + "\n\n").encode()); self.wfile.flush(); continue
                 if kind == "line":
                     self.wfile.write(("data: " + json.dumps({"line": val}) + "\n\n").encode()); self.wfile.flush()
                 else:
