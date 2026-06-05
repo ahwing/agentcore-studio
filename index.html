@@ -153,6 +153,10 @@
   .dt-stage.active{opacity:1;border-color:var(--orange);background:rgba(255,153,0,.12);box-shadow:0 0 0 0 rgba(255,153,0,.5);animation:dtpulse 1.2s infinite}
   .dt-stage.active .dt-lb{color:var(--orange)}
   .dt-stage.done{opacity:1;border-color:var(--id);background:rgba(92,214,160,.1)}.dt-stage.done .dt-lb{color:var(--id)}.dt-stage.done .dt-ck{display:inline}.dt-stage.done .dt-ic{filter:grayscale(.2)}
+  .dt-stage.skip{opacity:.8;border-style:dashed;border-color:var(--line2);background:rgba(255,255,255,.02)}
+  .dt-stage.skip .dt-lb{color:var(--muted)}
+  .dt-stage.skip .dt-ck{display:inline;color:var(--muted);font-weight:800}
+  .dt-stage.skip .dt-ic{filter:grayscale(1);opacity:.7}
   .dt-conn{width:14px;height:2px;background:var(--line2);flex:none}
   @keyframes dtpulse{0%{box-shadow:0 0 0 0 rgba(255,153,0,.45)}70%{box-shadow:0 0 0 6px rgba(255,153,0,0)}100%{box-shadow:0 0 0 0 rgba(255,153,0,0)}}
   .pg-in{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--line)}
@@ -601,6 +605,10 @@ const TABS={entry:'agentcore_entry.py',deploy:'deploy.sh',registry:'registry.jso
 const tabsEl=document.getElementById('tabs');
 Object.entries(TABS).forEach(([k,label])=>{const btn=document.createElement('button');btn.textContent=label;btn.dataset.k=k;btn.onclick=()=>{tab=k;renderPreview()};tabsEl.appendChild(btn)});
 
+// 增量发布：稳定指纹（FNV-1a 32bit hex），用于比对组件是否变化
+function _hash(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)}return (h>>>0).toString(16).padStart(8,'0')}
+function _fp(o){return _hash(JSON.stringify(o))}
+
 function gen(){
   const rt=nodes.find(n=>n.type==='runtime');
   if(!rt)return{entry:'# 请先拖入一个 Runtime 组件',deploy:'# 请先拖入一个 Runtime',registry:'{}',policy:'{}',req:''};
@@ -711,24 +719,55 @@ if __name__ == "__main__":
   if(c.deploy_type==='container'&&(c.container_uri||'').trim())cfg+=` --ecr ${c.container_uri.trim()}`;
   if(c.deploy_type==='direct_code_deploy'&&(c.code_s3||'').trim())cfg+=` --s3 ${c.code_s3.trim()}`;
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
-  let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
-    '# 1) 配置并部署 Runtime（核心，一键执行）','echo "###STEP### runtime"',cfg,'PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',`PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,
-    ...(mem?['echo "###STEP### memory"']:[]),...(obs&&obs.cfg.enabled!=='false'?['echo "###STEP### observability"']:[]),
+  // 增量发布：各单元指纹（runtime 折入 memory/obs/tools/skills/model/framework，因其随 runtime 制品打包/配置）
+  const fpRuntime=_fp({entry,cfg,region,model:c.model_id,fw:c.framework,mem:mem?mem.cfg:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname}))});
+  const fpIdentity=ident?_fp(ident.cfg):'';
+  const fpGateway=gw?_fp({gw:gw.cfg,targets:mcps.map(m=>m.cfg)}):'';
+  const fpPolicy=pol?_fp(pol.cfg):'';
+  const helpers=['STATE=".studio_state.json"',
+    `_fpget(){ python3 -c "import json,os,sys;f='.studio_state.json';d=json.load(open(f)) if os.path.isfile(f) else {};print(d.get(sys.argv[1],''))" "$1" 2>/dev/null; }`,
+    `_fpset(){ python3 -c "import json,os,sys;f='.studio_state.json';d=json.load(open(f)) if os.path.isfile(f) else {};d[sys.argv[1]]=sys.argv[2];json.dump(d,open(f,'w'))" "$1" "$2"; }`,
+    `FP_runtime="${fpRuntime}"`];
+  if(ident)helpers.push(`FP_identity="${fpIdentity}"`);
+  if(gw)helpers.push(`FP_gateway="${fpGateway}"`);
+  if(pol)helpers.push(`FP_policy="${fpPolicy}"`);
+  let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成（增量发布：指纹未变化的组件自动跳过）','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
+    ...helpers,'',
+    '# 1) Runtime（核心）— 指纹一致则跳过 configure/deploy（增量）','echo "###STEP### runtime"',
+    'if [ "$(_fpget runtime)" = "$FP_runtime" ]; then',
+    '  echo "###SKIP### runtime"; echo ">>> Runtime 未变化，跳过 configure/deploy（增量发布）"; RTC=0',
+    'else',
+    '  '+cfg.replace(/\n/g,'\n  '),
+    '  PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',
+    `  PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,
+    '  _fpset runtime "$FP_runtime"; RTC=1',
+    'fi',
+    ...(mem?['[ "$RTC" = "1" ] && echo "###STEP### memory" || echo "###SKIP### memory"']:[]),
+    ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
     '','# 后续组件允许部分失败','set +e',''];
   let opt=[];
   if(mem)opt.push(`# Memory: 已在 configure 阶段启用 (mode=${mem.cfg.mode}, 保留 ${mem.cfg.expiry} 天)`);
   const identActive=ident&&(ident.cfg.inbound_auth==='JWT'||ident.cfg.outbound_auth!=='none');
   if(identActive){
-    opt.push('echo "###STEP### identity"');
+    opt.push('echo "###STEP### identity"',
+      'if [ "$(_fpget identity)" = "$FP_identity" ]; then',
+      '  echo "###SKIP### identity"; echo ">>> Identity 未变化，跳过"',
+      'else');
     if(ident.cfg.inbound_auth==='JWT')opt.push('','# 2a) Identity 入站 — JWT 授权器（保护 Runtime 端点）',
       `# 入站 JWT: discovery=${ident.cfg.in_discovery_url}`,
       `# 在 runtime configure 时通过 --authorizer-config 应用 customJWTAuthorizer，或用 Identity 控制台配置`);
     if(ident.cfg.outbound_auth==='oauth')opt.push('','# 2b) Identity 出站 — OAuth2 凭证提供方 ('+ident.cfg.oauth_provider+')',
       `PYTHONIOENCODING=utf-8 agentcore identity create-credential-provider --name ${ident.cfg.provider_name} --type ${ident.cfg.oauth_provider} --client-id "${ident.cfg.client_id||'<CLIENT_ID>'}" --client-secret "${ident.cfg.client_secret||'<CLIENT_SECRET>'}"${ident.cfg.scopes?` --scopes ${ident.cfg.scopes}`:''} || echo "⚠ OAuth 凭证提供方创建失败"`);
     else if(ident.cfg.outbound_auth==='apikey')opt.push('','# 2b) Identity 出站 — API Key 凭证提供方',
-      `PYTHONIOENCODING=utf-8 agentcore identity create-api-key-credential-provider --name ${ident.cfg.provider_name} --api-key "${ident.cfg.api_key||'<API_KEY>'}" -r ${region} || echo "⚠ API Key 凭证提供方创建失败"`)}
-  if(gw){opt.push('',`# ${identActive?'3':'2'}) Gateway — 创建 MCP Gateway 并注册工具目标`,
+      `PYTHONIOENCODING=utf-8 agentcore identity create-api-key-credential-provider --name ${ident.cfg.provider_name} --api-key "${ident.cfg.api_key||'<API_KEY>'}" -r ${region} || echo "⚠ API Key 凭证提供方创建失败"`);
+    opt.push('  _fpset identity "$FP_identity"','fi')}
+  if(gw){const gwTools=mcps.filter(m=>!isIncomplete({type:'mcp',cfg:m.cfg}));
+    opt.push('',`# ${identActive?'3':'2'}) Gateway — 创建 MCP Gateway 并注册工具目标（指纹未变则整体跳过）`,
     'echo "###STEP### gateway"',
+    'if [ "$(_fpget gateway)" = "$FP_gateway" ]; then',
+    '  echo "###SKIP### gateway"; echo ">>> Gateway 及其 Target 未变化，跳过"',
+    ...gwTools.map(m=>`  echo "###SKIP### tool:${m.cfg.name}"`),
+    'else',
     `echo ">>> 创建 MCP Gateway: ${gw.cfg.gw_name}"`,
     ...(gw.cfg.inbound_auth!=='IAM'&&gw.cfg.discovery_url?[
       `# JWT 授权配置`,
@@ -752,10 +791,14 @@ if __name__ == "__main__":
         tcmd+=` --target-payload file:///tmp/${m.cfg.name}_schema.json`;
         if(m.cfg.egress_auth!=='IAM'&&m.cfg.credentials)tcmd+=` --credentials '${m.cfg.credentials}'`;
       }
-      opt.push(tcmd+` || echo "⚠ Target ${m.cfg.name} 创建失败（可能已存在）"`)})}  if(pol){const step=(!identActive)?(gw?'3':'2'):(gw?'4':'3');
+      opt.push(tcmd+` || echo "⚠ Target ${m.cfg.name} 创建失败（可能已存在）"`)});
+    opt.push('  _fpset gateway "$FP_gateway"','fi')}  if(pol){const step=(!identActive)?(gw?'3':'2'):(gw?'4':'3');
     const attachGw=gw&&pol.cfg.attach_gateway!=='(不关联)';
     opt.push('',`# ${step}) Policy — 策略引擎${attachGw?'（关联 Gateway '+gw.cfg.gw_name+'）':''} + Cedar 策略`,
     'echo "###STEP### policy"',
+    'if [ "$(_fpget policy)" = "$FP_policy" ]; then',
+    '  echo "###SKIP### policy"; echo ">>> Policy 未变化，跳过"',
+    'else',
     `echo ">>> 创建 Policy Engine: ${pol.cfg.engine}"`,
     `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region}${attachGw?' --gateway-arn "$GW_ARN"':''}${pol.cfg.mode?` --mode ${pol.cfg.mode}`:''} 2>&1)`,
     'echo "$PE_OUTPUT"',
@@ -769,7 +812,7 @@ if __name__ == "__main__":
       opt.push(`  cat > /tmp/${pol.cfg.pname}.cedar <<'CEDAR_EOF'`,(pol.cfg.cedar||'permit(principal, action, resource);'),'CEDAR_EOF',
         `  PYTHONIOENCODING=utf-8 agentcore policy create-policy --policy-engine-id "$PE_ID" --name ${pol.cfg.pname} --definition file:///tmp/${pol.cfg.pname}.cedar --validation-mode ${pol.cfg.validation} -r ${region} || echo "⚠ Policy 创建失败"`);
     }
-    opt.push('else','  echo "⚠ 未能解析 Policy Engine ID（可能已存在）"','fi')}
+    opt.push('else','  echo "⚠ 未能解析 Policy Engine ID（可能已存在）"','fi');opt.push('  _fpset policy "$FP_policy"','fi')}
   const bts=[];if(ci)bts.push(`Code Interpreter(network=${ci.cfg.network},timeout=${ci.cfg.timeout})`);if(br)bts.push(`Browser(network=${br.cfg.network},recording=${br.cfg.recording})`);
   if(bts.length)opt.push('','# 内置工具 (随 Runtime 通过 bedrock-agentcore SDK 启用): '+bts.join(', '));
   // Skills: 内联/上传代码写入 skills/<name>.py，路径型直接引用
@@ -942,9 +985,12 @@ function newDeployTrace(){traceStages=buildDeployPlan();const m=document.getElem
 function advanceTrace(id){if(!traceEl)return;let hit=false;
   traceStages.forEach(s=>{const el=traceEl.querySelector(`.dt-stage[data-id="${CSS.escape(s.id)}"]`);if(!el)return;
     if(s.id===id){el.className='dt-stage active';hit=true}
-    else if(!hit&&!el.classList.contains('done'))el.className='dt-stage done'})}
-function completeTrace(){if(!traceEl)return;traceStages.forEach(s=>{const el=traceEl.querySelector(`.dt-stage[data-id="${CSS.escape(s.id)}"]`);if(el)el.className='dt-stage done'});
-  const hd=traceEl.querySelector('.dt-hd');if(hd)hd.textContent='🎉 全部发布完成（'+traceStages.length+' 个组件）'}
+    else if(!hit&&!el.classList.contains('done')&&!el.classList.contains('skip'))el.className='dt-stage done'})}
+function skipTrace(id){if(!traceEl)return;const el=traceEl.querySelector(`.dt-stage[data-id="${CSS.escape(id)}"]`);
+  if(el){el.className='dt-stage skip';const ck=el.querySelector('.dt-ck');if(ck)ck.textContent='↷'}}
+function completeTrace(){if(!traceEl)return;traceStages.forEach(s=>{const el=traceEl.querySelector(`.dt-stage[data-id="${CSS.escape(s.id)}"]`);if(el&&!el.classList.contains('skip'))el.className='dt-stage done'});
+  const skn=traceEl.querySelectorAll('.dt-stage.skip').length;
+  const hd=traceEl.querySelector('.dt-hd');if(hd)hd.textContent='🎉 发布完成（'+traceStages.length+' 个组件'+(skn?'，'+skn+' 个未变化已跳过':'')+'）'}
 function isHosted(){const h=location.hostname;return !(h==='127.0.0.1'||h==='localhost'||h==='0.0.0.0')}
 async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(!published){toast('请先「本地发布」并在 Playground 验证后再部署到云端');switchView('cfg');return}
@@ -968,7 +1014,7 @@ async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){
       const lines=buf.split('\n');buf=lines.pop();
       for(const ln of lines){if(!ln.startsWith('data:'))continue;let j;try{j=JSON.parse(ln.slice(5).trim())}catch{continue}
         if(j.tick!==undefined)continue;
-        if(j.line!==undefined){const sm=j.line.match(/###STEP###\s*(\S+)/);if(sm)advanceTrace(sm[1]);else appendDeployLine(j.line)}
+        if(j.line!==undefined){const sk=j.line.match(/###SKIP###\s*(\S+)/);const sm=j.line.match(/###STEP###\s*(\S+)/);if(sk)skipTrace(sk[1]);else if(sm)advanceTrace(sm[1]);else appendDeployLine(j.line)}
         else if(j.done){gotDone=true;ok=j.ok;finalLog=j.log||''}}}
     if(!gotDone)throw new Error('部署流意外结束');
     if(ok){stopDeployHeartbeat('✅ 云端部署完成');completeTrace();deployed=true;setSrc('cloud');addMsg('sys','🎉 全部发布完成！已切换「AWS 云端」，发消息即可验证云端 runtime')}
