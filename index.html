@@ -945,12 +945,14 @@ function advanceTrace(id){if(!traceEl)return;let hit=false;
     else if(!hit&&!el.classList.contains('done'))el.className='dt-stage done'})}
 function completeTrace(){if(!traceEl)return;traceStages.forEach(s=>{const el=traceEl.querySelector(`.dt-stage[data-id="${CSS.escape(s.id)}"]`);if(el)el.className='dt-stage done'});
   const hd=traceEl.querySelector('.dt-hd');if(hd)hd.textContent='🎉 全部发布完成（'+traceStages.length+' 个组件）'}
+function isHosted(){const h=location.hostname;return !(h==='127.0.0.1'||h==='localhost'||h==='0.0.0.0')}
 async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(!published){toast('请先「本地发布」并在 Playground 验证后再部署到云端');switchView('cfg');return}
   if(isIncomplete(rt)){toast('⛔ Runtime 未配置完整，无法部署');switchView('cfg');return}
   const skipped=nodes.filter(n=>isIncomplete(n)&&n.type!=='runtime');
   const adv=collectWarnings().filter(w=>!nodes.some(n=>isIncomplete(n)&&w.includes(isIncomplete(n))));
   let pre='真实部署到云端？需 uv + agentcore toolkit + 凭证，耗时数分钟并产生费用。';
+  if(isHosted())pre='⚠ 当前为托管环境（如 App Runner）：真实部署资源开销大、可能受限或中断。建议真实部署在本地 Studio 执行；托底演示可直接用「AWS 云端」已就绪 Agent。\n\n仍要在此尝试部署吗？\n\n'+pre;
   if(skipped.length)pre='⏭ 将跳过 '+skipped.length+' 个未配置组件（不部署）：\n'+skipped.map(n=>{const c=COMPONENTS[n.type];return c.ic+(n.cfg.name||n.cfg.gw_name||n.cfg.engine||c.label)}).join('、')+'\n\n'+pre;
   if(adv.length)pre='⚠ 建议（不阻止）：\n'+adv.join('\n')+'\n\n'+pre;
   if(!confirm(pre))return;
@@ -969,7 +971,11 @@ async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){
         else if(j.done){gotDone=true;ok=j.ok;finalLog=j.log||''}}}
     if(!gotDone)throw new Error('部署流意外结束');
     if(ok){stopDeployHeartbeat('✅ 云端部署完成');completeTrace();deployed=true;setSrc('cloud');addMsg('sys','🎉 全部发布完成！已切换「AWS 云端」，发消息即可验证云端 runtime')}
-    else{stopDeployHeartbeat('⚠ 部署未完全成功');const tail=(finalLog||'').split('\n').slice(-12).join('\n');addMsg('sys','⚠ 部署未完全成功，日志末尾：\n'+tail)}}catch(e){stopDeployHeartbeat('⚠ 部署中断');if(e.name==='AbortError')addMsg('sys','⚠ 请求超时（15分钟），请刷新后检查云端状态');else addMsg('sys','⚠ 连接中断：'+e.message+'。部署很可能仍在后台跑完，可稍后在 AWS 控制台或 Playground「AWS 云端」验证 runtime 是否 READY')}}
+    else{stopDeployHeartbeat('⚠ 部署未完全成功');const tail=(finalLog||'').split('\n').slice(-12).join('\n');addMsg('sys','⚠ 部署未完全成功，日志末尾：\n'+tail)}}catch(e){stopDeployHeartbeat('⚠ 部署中断');
+    if(e.name==='AbortError')addMsg('sys','⚠ 请求超时（15分钟），请刷新后检查云端状态');
+    else{addMsg('sys','⚠ 云端部署连接中断：'+e.message);
+      if(isHosted())addMsg('sys','💡 当前是托管环境（App Runner）。真实「发布到云端」资源开销大、易受限，建议在本地 Studio（python3 server.py）执行真实部署；本演示环境可直接用已就绪的「AWS 云端」托底 Agent 对话。');
+      else addMsg('sys','部署可能仍在后台跑完，可稍后在 AWS 控制台或「AWS 云端」验证 runtime 是否 READY。');}}}
 
 // ---- 导出 ----
 function curFile(){const o=gen();return{name:TABS[tab],text:o[tab]}}
