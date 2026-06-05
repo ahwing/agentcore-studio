@@ -2,7 +2,7 @@
 """AgentCore Studio 后端 — 本地发布 + Playground 调用 + 可选云部署（零依赖，仅标准库）。
 启动: python3 server.py  →  http://127.0.0.1:8799  (可用 PORT 环境变量覆盖)
 仅绑定 127.0.0.1，会在本机执行生成的 agent 代码与 agentcore CLI，请勿暴露到公网。"""
-import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue, shutil
+import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue, shutil, uuid, tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
@@ -38,26 +38,47 @@ def clean_stale_region(d, target_region):
         pass
     return None
 
-def cloud_status(d, region):
-    """检测该工作区是否已有就绪(READY)的云端 agent，用作演示托底环境。
-    依赖本地 .bedrock_agentcore.yaml 记录的 agent_id（即由本工作区部署过）。"""
-    if not region: return None
-    yaml_fp = os.path.join(d, ".bedrock_agentcore.yaml")
-    if not os.path.isfile(yaml_fp): return None
+def _find_ready_runtime(region, name):
+    """直接查 AWS：region 内是否有同名且 READY 的 agent runtime（不依赖本地工作区）。"""
+    if not (region and name): return None
     try:
-        with open(yaml_fp) as f: content = f.read()
-        m = re.search(r"agent_id:\s*([A-Za-z0-9_\-]+)", content)
-        if not m: return None
-        aid = m.group(1)
-        r = subprocess.run(["aws", "bedrock-agentcore-control", "get-agent-runtime",
-                            "--agent-runtime-id", aid, "--region", region,
-                            "--query", "status", "--output", "text"],
-                           capture_output=True, text=True, timeout=15)
-        if r.returncode == 0 and r.stdout.strip() == "READY":
-            return {"agent_id": aid, "region": region}
+        r = subprocess.run(["aws", "bedrock-agentcore-control", "list-agent-runtimes",
+                            "--region", region, "--output", "json"],
+                           capture_output=True, text=True, timeout=20)
+        if r.returncode != 0: return None
+        rts = (json.loads(r.stdout or "{}")).get("agentRuntimes", [])
+        # 先精确匹配名字，再前缀匹配（agentcore 偶尔给 ARN 加后缀，但 name 字段通常是裸名）
+        for matcher in (lambda nm: nm == name, lambda nm: nm.startswith(name)):
+            for rt in rts:
+                if matcher(str(rt.get("agentRuntimeName", ""))) and rt.get("status") == "READY":
+                    return {"agent_id": rt.get("agentRuntimeId"), "arn": rt.get("agentRuntimeArn"), "region": region}
     except Exception:
         pass
     return None
+
+def cloud_status(d, region, name=None):
+    """检测是否已有就绪(READY)的云端 agent，用作演示托底环境。
+    优先用本地 .bedrock_agentcore.yaml（本工作区部署过）；否则直接按名字查 AWS（托管/全新容器也能命中）。"""
+    if not region: return None
+    yaml_fp = os.path.join(d, ".bedrock_agentcore.yaml")
+    if os.path.isfile(yaml_fp):
+        try:
+            content = open(yaml_fp).read()
+            m = re.search(r"agent_id:\s*([A-Za-z0-9_\-]+)", content)
+            if m:
+                aid = m.group(1)
+                r = subprocess.run(["aws", "bedrock-agentcore-control", "get-agent-runtime",
+                                    "--agent-runtime-id", aid, "--region", region,
+                                    "--query", "[status,agentRuntimeArn]", "--output", "text"],
+                                   capture_output=True, text=True, timeout=15)
+                if r.returncode == 0 and r.stdout.split():
+                    parts = r.stdout.split()
+                    if parts[0] == "READY":
+                        return {"agent_id": aid, "region": region, "arn": parts[1] if len(parts) > 1 else None}
+        except Exception:
+            pass
+    # 托底：直接按名字查 AWS
+    return _find_ready_runtime(region, name)
 
 def _stub_sdk():
     if "bedrock_agentcore" in sys.modules: return
@@ -162,9 +183,41 @@ def _extract(out):
     lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
     return lines[-1] if lines else "（无输出）"
 
+def _invoke_runtime_arn(arn, region, prompt):
+    """托底：不依赖本地工作区，直接用 AWS 数据面 API 按 ARN 调用云端 runtime。"""
+    sid = uuid.uuid4().hex + uuid.uuid4().hex  # 64 chars，满足 runtimeSessionId 长度要求
+    payload_b64 = base64.b64encode(json.dumps({"prompt": prompt}).encode()).decode()  # 默认 cli_binary_format=base64
+    outpath = None
+    try:
+        fd, outpath = tempfile.mkstemp(suffix=".out"); os.close(fd)
+        r = subprocess.run(["aws", "bedrock-agentcore", "invoke-agent-runtime",
+                            "--agent-runtime-arn", arn, "--region", region,
+                            "--runtime-session-id", sid,
+                            "--content-type", "application/json", "--accept", "application/json",
+                            "--payload", payload_b64, outpath],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            return (r.stderr or r.stdout).strip()[-1500:] or "云端调用失败", "cloud-error"
+        body = open(outpath, encoding="utf-8", errors="replace").read()
+        return _extract(body), "cloud"
+    except Exception as e:
+        return f"云端调用失败: {e}", "error"
+    finally:
+        if outpath and os.path.isfile(outpath):
+            try: os.remove(outpath)
+            except Exception: pass
+
 def invoke_cloud(name, prompt):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布", "error"
+    # 托底：本地工作区无部署状态（如托管/全新容器），但云端已有就绪 runtime → 直接按 ARN 调 AWS API
+    if not os.path.isfile(os.path.join(info["dir"], ".bedrock_agentcore.yaml")) and info["cfg"].get("deploy_mode") != "harness":
+        arn = info.get("cloud_arn"); region = info.get("cloud_region") or info["cfg"].get("region")
+        if not arn and region:
+            cs = _find_ready_runtime(region, name)
+            if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = region
+        if arn: return _invoke_runtime_arn(arn, region, prompt)
+        return "尚未发布", "error"
     # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
         pn = info["cfg"].get("harness_name") or "".join(ch for ch in name if ch.isalnum()) or "agent"
@@ -247,8 +300,11 @@ class H(BaseHTTPRequestHandler):
             region_notice = clean_stale_region(d, (data.get("cfg") or {}).get("region"))
             resp = {"ok": True, "dir": d, "zip_warn": zip_warn}
             if region_notice: resp["region_notice"] = region_notice
-            cs = cloud_status(d, (data.get("cfg") or {}).get("region"))
-            if cs: resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
+            cs = cloud_status(d, (data.get("cfg") or {}).get("region"), data.get("name"))
+            if cs:
+                PUBLISHED[data["name"]]["cloud_arn"] = cs.get("arn")
+                PUBLISHED[data["name"]]["cloud_region"] = cs.get("region")
+                resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
             self._send(200, json.dumps(resp))
         elif self.path == "/api/invoke":
             out, mode = run_agent(data["name"], data.get("prompt", ""))
