@@ -2,7 +2,7 @@
 """AgentCore Studio 后端 — 本地发布 + Playground 调用 + 可选云部署（零依赖，仅标准库）。
 启动: python3 server.py  →  http://127.0.0.1:8799  (可用 PORT 环境变量覆盖)
 仅绑定 127.0.0.1，会在本机执行生成的 agent 代码与 agentcore CLI，请勿暴露到公网。"""
-import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time
+import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
@@ -14,8 +14,50 @@ PUBLISHED = {}  # name -> {dir, cfg}
 def write_project(name, files):
     d = os.path.join(WS, name); os.makedirs(d, exist_ok=True)
     for fn, txt in files.items():
-        with open(os.path.join(d, fn), "w") as f: f.write(txt)
+        fp = os.path.join(d, fn)
+        os.makedirs(os.path.dirname(fp), exist_ok=True)  # 支持 skills/foo.py 等子目录
+        with open(fp, "w") as f: f.write(txt)
     return d
+
+def clean_stale_region(d, target_region):
+    """若本地 .bedrock_agentcore.yaml 记录的 agent_arn 区域与目标区域不一致，
+    清除过期的 toolkit 状态，使下次部署在新区域全新创建（而非跨区 Update 失败）。"""
+    if not target_region: return None
+    yaml_fp = os.path.join(d, ".bedrock_agentcore.yaml")
+    if not os.path.isfile(yaml_fp): return None
+    try:
+        with open(yaml_fp) as f: content = f.read()
+        m = re.search(r"agent_arn:\s*arn:aws:bedrock-agentcore:([a-z0-9-]+):", content)
+        if m and m.group(1) != target_region:
+            old = m.group(1)
+            os.remove(yaml_fp)
+            import shutil
+            shutil.rmtree(os.path.join(d, ".bedrock_agentcore"), ignore_errors=True)
+            return f"检测到旧部署区域 {old} 与目标 {target_region} 不一致，已清除本地状态，将在 {target_region} 全新创建"
+    except Exception:
+        pass
+    return None
+
+def cloud_status(d, region):
+    """检测该工作区是否已有就绪(READY)的云端 agent，用作演示托底环境。
+    依赖本地 .bedrock_agentcore.yaml 记录的 agent_id（即由本工作区部署过）。"""
+    if not region: return None
+    yaml_fp = os.path.join(d, ".bedrock_agentcore.yaml")
+    if not os.path.isfile(yaml_fp): return None
+    try:
+        with open(yaml_fp) as f: content = f.read()
+        m = re.search(r"agent_id:\s*([A-Za-z0-9_\-]+)", content)
+        if not m: return None
+        aid = m.group(1)
+        r = subprocess.run(["aws", "bedrock-agentcore-control", "get-agent-runtime",
+                            "--agent-runtime-id", aid, "--region", region,
+                            "--query", "status", "--output", "text"],
+                           capture_output=True, text=True, timeout=15)
+        if r.returncode == 0 and r.stdout.strip() == "READY":
+            return {"agent_id": aid, "region": region}
+    except Exception:
+        pass
+    return None
 
 def _stub_sdk():
     if "bedrock_agentcore" in sys.modules: return
@@ -28,18 +70,48 @@ def _stub_sdk():
         m.BedrockAgentCoreApp = _App
         sys.modules["bedrock_agentcore"] = m
 
+def bedrock_reply(prompt, cfg):
+    """直接调用 Bedrock converse 返回真实模型回复。无 boto3/凭证/模型权限则抛异常。"""
+    import boto3
+    model = cfg.get("model") or "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    region = cfg.get("region") or "us-west-2"
+    # 跨区域推理配置：新模型按需调用需带地域前缀
+    import re as _re
+    if not _re.match(r"^(us|eu|apac|us-gov)\.", model):
+        geo = "eu." if region.startswith("eu-") else "apac." if region.startswith("ap-") else "us-gov." if region.startswith("us-gov") else "us." if region.startswith("us-") else ""
+        model = geo + model
+    sp = (cfg.get("system_prompt") or "").strip()
+    tools, skills = cfg.get("tools") or [], cfg.get("skills") or []
+    if tools or skills:
+        sp += f"\n（可用工具: {', '.join(tools) or '无'}; 技能: {', '.join(skills) or '无'}）"
+    br = boto3.client("bedrock-runtime", region_name=region)
+    kw = {"modelId": model, "messages": [{"role": "user", "content": [{"text": prompt}]}],
+          "inferenceConfig": {"maxTokens": 1024, "temperature": 0.7}}
+    if sp.strip(): kw["system"] = [{"text": sp.strip()}]
+    r = br.converse(**kw)
+    return r["output"]["message"]["content"][0]["text"]
+
 def run_agent(name, prompt):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布，请先点击「发布」", "error"
     _stub_sdk()
     entry = os.path.join(info["dir"], info["cfg"].get("entry", "agentcore_entry.py"))
+    # 1) 优先真实运行已发布的 entry.py（需框架依赖，如 strands）
     try:
         spec = importlib.util.spec_from_file_location("ac_" + name, entry)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
         res = mod.invoke({"prompt": prompt})
-        return (res.get("result") or res.get("error") or json.dumps(res)), "real"
+        out = res.get("result") or res.get("error") or json.dumps(res)
+        if out and not res.get("error"): return out, "real"
     except Exception:
-        return fallback(prompt, info["cfg"]), "mock"
+        pass
+    # 2) 直连 Bedrock converse（有 boto3+凭证+模型权限即返回真实回复）
+    try:
+        return bedrock_reply(prompt, info["cfg"]), "real"
+    except Exception:
+        pass
+    # 3) 文本兜底（无依赖/无凭证）
+    return fallback(prompt, info["cfg"]), "mock"
 
 def fallback(prompt, cfg):
     sp = (cfg.get("system_prompt") or "").strip()
@@ -76,44 +148,38 @@ def _extract(out):
     d = cand or any_d
     if isinstance(d, dict):
         return d.get("result") or d.get("response") or d.get("output") or json.dumps(d, ensure_ascii=False)
-    lines = [l for l in out.splitlines() if l.strip()]
+    noise = ("suppress_recommendation", "silence this warning", "recommendation", "set agentcore_", "💡", "⚠")
+    lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
     return lines[-1] if lines else "（无输出）"
 
 def invoke_cloud(name, prompt):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布", "error"
-    # Harness 模式: 用 boto3 invoke_harness
+    # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
+        pn = info["cfg"].get("harness_name") or "".join(ch for ch in name if ch.isalnum()) or "agent"
+        proj_dir = os.path.join(info["dir"], pn)
+        if not os.path.isdir(proj_dir):
+            proj_dir = info["dir"]  # 回退：项目可能直接在 dir
         try:
-            import boto3, uuid
-            region = info["cfg"].get("region", "us-east-1")
-            client = boto3.client("bedrock-agentcore", region_name=region)
-            # 查找 harness ARN
-            harnesses = client.list_harnesses()
-            harness_arn = None
-            for h in harnesses.get("harnesses", []):
-                if name in h.get("harnessId", ""):
-                    harness_arn = h["arn"]; break
-            if not harness_arn: return f"未找到 Harness: {name}", "error"
-            resp = client.invoke_harness(
-                harnessArn=harness_arn,
-                runtimeSessionId=str(uuid.uuid4()),
-                messages=[{"role": "user", "content": [{"text": prompt}]}],
-            )
-            result = ""
-            for event in resp.get("stream", []):
-                if "contentBlockDelta" in event:
-                    delta = event["contentBlockDelta"].get("delta", {})
-                    if "text" in delta: result += delta["text"]
-            return result or "(空响应)", "cloud"
+            r = subprocess.run(
+                ["npx", "@aws/agentcore", "invoke", "--harness", pn, "--prompt", prompt],
+                cwd=proj_dir, capture_output=True, text=True, timeout=120,
+                env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1"})
+            out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
+            if r.returncode == 0:
+                return _extract(out), "cloud"
+            return out.strip()[-1500:] or "（无输出）", "cloud-error"
+        except FileNotFoundError:
+            return "未找到 @aws/agentcore CLI，请运行: npm install -g @aws/agentcore@preview", "error"
         except Exception as e:
-            return f"Harness 调用失败: {e}", "cloud-error"
+            return f"Harness 调用失败: {e}", "error"
     # Runtime 模式: 用 agentcore invoke CLI
     payload = json.dumps({"prompt": prompt})
     try:
         r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
                            capture_output=True, text=True, timeout=120,
-                           env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1"})
         out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
         if r.returncode == 0:
             return _extract(out), "cloud"
@@ -153,8 +219,27 @@ class H(BaseHTTPRequestHandler):
         data = json.loads(self.rfile.read(n) or "{}")
         if self.path == "/api/publish":
             d = write_project(data["name"], data["files"])
+            # 写入上传的 zip 技能包（base64），并校验含 SKILL.md
+            zip_warn = []
+            for fn, b64 in (data.get("zips") or {}).items():
+                try:
+                    import zipfile, io
+                    raw = base64.b64decode(b64)
+                    zf = zipfile.ZipFile(io.BytesIO(raw))
+                    if not any(n.lower().endswith("skill.md") for n in zf.namelist()):
+                        zip_warn.append(f"{fn}: 未含 SKILL.md，已跳过"); continue
+                    fp = os.path.join(d, fn)
+                    os.makedirs(os.path.dirname(fp), exist_ok=True)
+                    with open(fp, "wb") as f: f.write(raw)
+                except Exception as e:
+                    zip_warn.append(f"{fn}: {e}")
             PUBLISHED[data["name"]] = {"dir": d, "cfg": data.get("cfg", {})}
-            self._send(200, json.dumps({"ok": True, "dir": d}))
+            region_notice = clean_stale_region(d, (data.get("cfg") or {}).get("region"))
+            resp = {"ok": True, "dir": d, "zip_warn": zip_warn}
+            if region_notice: resp["region_notice"] = region_notice
+            cs = cloud_status(d, (data.get("cfg") or {}).get("region"))
+            if cs: resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
+            self._send(200, json.dumps(resp))
         elif self.path == "/api/invoke":
             out, mode = run_agent(data["name"], data.get("prompt", ""))
             self._send(200, json.dumps({"result": out, "mode": mode}))
@@ -164,23 +249,58 @@ class H(BaseHTTPRequestHandler):
             out, mode = invoke_cloud(data["name"], data.get("prompt", "")); self._send(200, json.dumps({"result": out, "mode": mode}))
         else: self._send(404, "{}")
     def _stream_deploy(self, name):
-        # SSE: 5s 心跳保活，避免 AppRunner / 反向代理在 120s 无字节超时；最后写一行 data: <result>
+        # SSE: 逐行流式输出部署日志；无输出时 5s 心跳保活；结束写 data:{done,ok,log}
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("X-Accel-Buffering", "no")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        result = {}
+        info = PUBLISHED.get(name)
+        if not info:
+            try:
+                self.wfile.write(("data: " + json.dumps({"done": True, "ok": False, "log": "尚未发布"}) + "\n\n").encode()); self.wfile.flush()
+            except Exception: pass
+            return
+        q = queue.Queue(); result = {}
+        def keep(s):
+            s = s.strip()
+            if not s: return False
+            if s.startswith((">>>", "#", "✅", "⚠", "❌", "☁️", "===")): return True
+            low = s.lower()
+            kw = ("error", "exception", "traceback", "failed", "fail:", "denied",
+                  "completed", "created", "created/updated", "deploying", "building",
+                  "pushing", "uploading", "success", "arn:aws", "endpoint", "ready")
+            return any(k in low for k in kw)
         def worker():
-            try: result["log"], result["ok"] = deploy_cloud(name)
-            except Exception as e: result["log"], result["ok"] = f"deploy error: {e}", False
-        t = threading.Thread(target=worker, daemon=True); t.start()
+            lines = []
+            try:
+                p = subprocess.Popen(["bash", "deploy.sh"], cwd=info["dir"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     text=True, bufsize=1)
+                for line in iter(p.stdout.readline, ""):
+                    line = line.rstrip("\n"); lines.append(line)
+                    if keep(line): q.put(("line", line))   # 仅推送关键行，压缩日志量
+                p.stdout.close(); rc = p.wait(timeout=900)
+                out = "\n".join(lines)
+                ok = rc == 0 or "Deployment completed successfully" in out or "Agent created/updated" in out
+                if ok: info["deployed"] = True
+                result["ok"] = ok; result["log"] = out[-4000:]
+            except Exception as e:
+                result["ok"] = False; result["log"] = ("\n".join(lines) + f"\ndeploy error: {e}")[-4000:]
+            q.put(("done", None))
+        threading.Thread(target=worker, daemon=True).start()
         try:
-            while t.is_alive():
-                self.wfile.write(b": keepalive\n\n"); self.wfile.flush()
-                t.join(5)
-            self.wfile.write(("data: " + json.dumps(result) + "\n\n").encode()); self.wfile.flush()
+            while True:
+                try:
+                    kind, val = q.get(timeout=5)
+                except queue.Empty:
+                    self.wfile.write(b": keepalive\n\n"); self.wfile.flush(); continue
+                if kind == "line":
+                    self.wfile.write(("data: " + json.dumps({"line": val}) + "\n\n").encode()); self.wfile.flush()
+                else:
+                    self.wfile.write(("data: " + json.dumps({"done": True, "ok": result.get("ok", False), "log": result.get("log", "")}) + "\n\n").encode()); self.wfile.flush()
+                    break
         except (BrokenPipeError, ConnectionResetError):
             return  # 客户端断了；后台 deploy 仍会跑完
     def log_message(self, *a): pass
