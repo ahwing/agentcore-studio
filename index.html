@@ -937,7 +937,7 @@ async function sendMsg(){const inp=document.getElementById('pgIn'),txt=inp.value
   if(!published){toast('请先点击「本地发布」');return}
   const cloud=pgSrc==='cloud';if(cloud&&!deployed){toast('请先「发布到云端」');return}
   inp.value='';addMsg('u',txt);
-  let res,mode;try{const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt})});
+  let res,mode;try{const rtNode=nodes.find(n=>n.type==='runtime');const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined})});
     const j=await r.json();res=j.result;mode=j.mode}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
   setMode(mode);addMsg('a',res)}
 function localReply(p){const rt=nodes.find(n=>n.type==='runtime');const sp=rt?rt.cfg.system_prompt:'';

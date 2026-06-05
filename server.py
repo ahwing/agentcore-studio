@@ -207,17 +207,22 @@ def _invoke_runtime_arn(arn, region, prompt):
             try: os.remove(outpath)
             except Exception: pass
 
-def invoke_cloud(name, prompt):
+def invoke_cloud(name, prompt, region=None):
     info = PUBLISHED.get(name)
-    if not info: return "尚未发布", "error"
+    if not info:
+        # PUBLISHED 无记录（如容器重启清空内存）→ 仍按名字查 AWS 托底，避免误报"尚未发布"
+        reg = region or "us-west-2"
+        cs = _find_ready_runtime(reg, name)
+        if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt)
+        return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # 托底：本地工作区无部署状态（如托管/全新容器），但云端已有就绪 runtime → 直接按 ARN 调 AWS API
     if not os.path.isfile(os.path.join(info["dir"], ".bedrock_agentcore.yaml")) and info["cfg"].get("deploy_mode") != "harness":
-        arn = info.get("cloud_arn"); region = info.get("cloud_region") or info["cfg"].get("region")
-        if not arn and region:
-            cs = _find_ready_runtime(region, name)
-            if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = region
-        if arn: return _invoke_runtime_arn(arn, region, prompt)
-        return "尚未发布", "error"
+        arn = info.get("cloud_arn"); reg = info.get("cloud_region") or info["cfg"].get("region") or region
+        if not arn and reg:
+            cs = _find_ready_runtime(reg, name)
+            if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = reg
+        if arn and reg: return _invoke_runtime_arn(arn, reg, prompt)
+        return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
         pn = info["cfg"].get("harness_name") or "".join(ch for ch in name if ch.isalnum()) or "agent"
@@ -312,7 +317,7 @@ class H(BaseHTTPRequestHandler):
         elif self.path == "/api/deploy":
             self._stream_deploy(data["name"])
         elif self.path == "/api/invoke-cloud":
-            out, mode = invoke_cloud(data["name"], data.get("prompt", "")); self._send(200, json.dumps({"result": out, "mode": mode}))
+            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region")); self._send(200, json.dumps({"result": out, "mode": mode}))
         else: self._send(404, "{}")
     def _stream_deploy(self, name):
         # SSE: 逐行流式输出部署日志；无输出时 5s 心跳保活；结束写 data:{done,ok,log}
