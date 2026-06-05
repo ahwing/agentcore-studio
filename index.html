@@ -212,6 +212,7 @@
 const COMPONENTS={
   runtime:{label:'Runtime',ic:'⚙️',ac:'var(--rt)',required:true,fields:[
     {k:'name',l:'Agent 名称',t:'text',d:'my_agent',hint:'仅下划线，不能用连字符'},
+    {k:'deploy_mode',l:'部署模式',t:'select',o:['runtime','harness'],d:'runtime',hint:'harness: 零代码托管; runtime: 自定义代码'},
     {k:'framework',l:'Agent 框架',t:'select',o:['minimal','claude_sdk','langchain','custom'],d:'minimal'},
     {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-20250514-v1:0','anthropic.claude-haiku-4-20250514-v1:0','anthropic.claude-3-5-sonnet-20241022-v2:0','anthropic.claude-3-5-haiku-20241022-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-20250514-v1:0'},
     {k:'system_prompt',l:'系统提示 (System Prompt)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
@@ -414,6 +415,88 @@ function gen(){
     ident=nodes.find(n=>n.type==='identity'),gw=nodes.find(n=>n.type==='gateway'),pol=nodes.find(n=>n.type==='policy');
   const mcps=nodes.filter(n=>n.type==='mcp'),skills=nodes.filter(n=>n.type==='skill');
   const ci=nodes.find(n=>n.type==='codeinterp'),br=nodes.find(n=>n.type==='browser');
+
+  // === Harness 模式 ===
+  if(c.deploy_mode==='harness'){
+    const tools=[];
+    if(ci)tools.push(`{"type":"agentcore_code_interpreter","name":"code_interpreter"}`);
+    if(br)tools.push(`{"type":"agentcore_browser","name":"browser"}`);
+    if(gw)mcps.forEach(m=>{if(!isIncomplete({type:'mcp',cfg:m.cfg}))tools.push(`{"type":"gateway","name":"${m.cfg.name}","gatewayArn":"<GATEWAY_ARN>"}`)});
+    const toolsJson=`'[${tools.join(",")}]'`;
+    const sp=JSON.stringify([{text:c.system_prompt||''}]);
+    let s=['#!/usr/bin/env bash','# AgentCore Harness 部署脚本 — 由 AgentCore Studio 生成','# Harness 模式: 零代码，纯配置声明，AgentCore 托管 Agent 循环','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
+      '# 1) 创建 Harness',
+      `echo ">>> 创建 Harness: ${c.name}"`,
+      `ROLE_ARN=$(aws iam get-role --role-name AmazonBedrockAgentCoreSDKRuntime-${region}-* --query Role.Arn --output text 2>/dev/null || echo "")`,
+      'if [ -z "$ROLE_ARN" ]; then','  echo "未找到执行角色，将由 CLI 自动创建"','  ROLE_ARN=""','fi',
+      `aws bedrock-agentcore-control create-harness \\`,
+      `  --harness-name "${c.name}" \\`,
+      `  --region ${region} \\`,
+      `  --execution-role-arn "$ROLE_ARN" \\`,
+      `  --system-prompt '${sp}' \\`,
+      `  --tools ${toolsJson} || echo "⚠ Harness 可能已存在，尝试更新"`,
+      '',
+      '# 等待 Harness 就绪',
+      `echo ">>> 等待 Harness 状态变为 READY..."`,
+      `for i in $(seq 1 30); do`,
+      `  STATUS=$(aws bedrock-agentcore-control get-harness --harness-id ${c.name} --region ${region} --query status --output text 2>/dev/null)`,
+      `  if [ "$STATUS" = "READY" ]; then echo "✅ Harness 就绪"; break; fi`,
+      `  sleep 2`,
+      'done',
+      '',
+      '# 2) 验证调用',
+      `echo ">>> 验证 Harness 调用"`,
+      `HARNESS_ARN=$(aws bedrock-agentcore-control get-harness --harness-id ${c.name} --region ${region} --query arn --output text)`,
+      'echo "Harness ARN: $HARNESS_ARN"'];
+    if(gw){s.push('','set +e','',`# 3) Gateway（用于 MCP 工具）`,
+      `echo ">>> 创建 MCP Gateway: ${gw.cfg.gw_name}"`,
+      `agentcore gateway create-mcp-gateway --name ${gw.cfg.gw_name} --region ${region}${gw.cfg.semantic==='true'?' --enable_semantic_search':''} || echo "⚠ Gateway 可能已存在"`);
+      mcps.forEach(m=>{if(!isIncomplete({type:'mcp',cfg:m.cfg}))s.push(`echo ">>> 注册 Target: ${m.cfg.name}"`)});}
+    s.push('','echo "✅ Harness 部署完成"');
+    const deploy=s.join('\n');
+
+    // Harness invoke script as entry
+    const entry=`# ABOUTME: AgentCore Harness 调用脚本 (${c.name}) — 由 AgentCore Studio 生成
+# Harness 模式无需编排代码，Agent 循环由 AgentCore 托管
+import boto3, uuid, sys
+
+HARNESS_ARN = "<HARNESS_ARN>"  # 部署后填入实际 ARN
+REGION = "${region}"
+MODEL_ID = "${c.model_id}"
+
+client = boto3.client("bedrock-agentcore", region_name=REGION)
+
+def invoke(prompt: str, session_id: str = None):
+    """调用 Harness Agent"""
+    if not session_id:
+        session_id = str(uuid.uuid4())
+    response = client.invoke_harness(
+        harnessArn=HARNESS_ARN,
+        runtimeSessionId=session_id,
+        model={"bedrockModelConfig": {"modelId": MODEL_ID}},
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+    )
+    result = ""
+    for event in response.get("stream", []):
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"].get("delta", {})
+            if "text" in delta:
+                result += delta["text"]
+    return result
+
+if __name__ == "__main__":
+    prompt = sys.argv[1] if len(sys.argv) > 1 else "Hello"
+    print(invoke(prompt))
+`;
+    const registry={agent:c.name,deploy_mode:'harness',model:c.model_id,region,
+      tools:tools.map(t=>JSON.parse(t)),
+      components:nodes.filter(n=>!COMPONENTS[n.type].multi&&!['codeinterp','browser'].includes(n.type)).map(n=>({type:n.type,name:n.cfg.name||n.cfg.gw_name||n.cfg.engine||COMPONENTS[n.type].label}))};
+    const policy=JSON.stringify({Version:'2012-10-17',Statement:[
+      {Sid:'Harness',Effect:'Allow',Action:['bedrock-agentcore:*','bedrock:InvokeModel','bedrock:InvokeModelWithResponseStream'],Resource:'*'},
+      {Sid:'IAM',Effect:'Allow',Action:['iam:GetRole','iam:PassRole'],Resource:'*'}]},null,4);
+    return{entry,deploy,registry:JSON.stringify(registry,null,2),policy,req:'boto3>=1.34.0'}}
+
+  // === Runtime 模式（原有逻辑）===
   const entry=genEntry(c,skills,mcps,ci,br);
   let cfg=`PYTHONIOENCODING=utf-8 agentcore configure -e ${c.entry||'agentcore_entry.py'} -n ${c.name} \\\n  --deployment-type ${c.deploy_type} --runtime ${c.runtime} -r ${region} --protocol ${c.protocol} --idle-timeout ${c.idle_timeout} --max-lifetime ${c.max_lifetime}`;
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
@@ -495,7 +578,7 @@ function switchView(v){view=v;['cfg','play','reg'].forEach(x=>{document.getEleme
 function agentName(){const rt=nodes.find(n=>n.type==='runtime');return rt?rt.cfg.name:null}
 function payload(){const rt=nodes.find(n=>n.type==='runtime');const o=gen();
   return{name:rt.cfg.name,files:{'agentcore_entry.py':o.entry,'deploy.sh':o.deploy,'registry.json':o.registry,'iam-policy.json':o.policy,'requirements.txt':o.req},
-    cfg:{entry:'agentcore_entry.py',framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,
+    cfg:{entry:'agentcore_entry.py',deploy_mode:rt.cfg.deploy_mode,region:rt.cfg.region,framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,
       tools:nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),skills:nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name)}}}
 function publish(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}

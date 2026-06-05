@@ -82,6 +82,33 @@ def _extract(out):
 def invoke_cloud(name, prompt):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布", "error"
+    # Harness 模式: 用 boto3 invoke_harness
+    if info["cfg"].get("deploy_mode") == "harness":
+        try:
+            import boto3, uuid
+            region = info["cfg"].get("region", "us-east-1")
+            client = boto3.client("bedrock-agentcore", region_name=region)
+            # 查找 harness ARN
+            harnesses = client.list_harnesses()
+            harness_arn = None
+            for h in harnesses.get("harnesses", []):
+                if name in h.get("harnessId", ""):
+                    harness_arn = h["arn"]; break
+            if not harness_arn: return f"未找到 Harness: {name}", "error"
+            resp = client.invoke_harness(
+                harnessArn=harness_arn,
+                runtimeSessionId=str(uuid.uuid4()),
+                messages=[{"role": "user", "content": [{"text": prompt}]}],
+            )
+            result = ""
+            for event in resp.get("stream", []):
+                if "contentBlockDelta" in event:
+                    delta = event["contentBlockDelta"].get("delta", {})
+                    if "text" in delta: result += delta["text"]
+            return result or "(空响应)", "cloud"
+        except Exception as e:
+            return f"Harness 调用失败: {e}", "cloud-error"
+    # Runtime 模式: 用 agentcore invoke CLI
     payload = json.dumps({"prompt": prompt})
     try:
         r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
