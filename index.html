@@ -292,7 +292,7 @@ const COMPONENTS={
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'expiry',l:'事件保留天数',t:'text',d:'90'}]},
   gateway:{label:'Gateway',ic:'🔌',ac:'var(--gw)',fields:[
-    {k:'gw_name',l:'Gateway 名称',t:'text',d:'my_gateway',hint:'⚠ 网关创建后改名/认证/语义搜索需删除网关重建（会换 ARN）'},
+    {k:'gw_name',l:'Gateway 名称',t:'text',d:'my_gateway',hint:'名称创建后不可改；认证/语义搜索可原地更新（秒级，保留 ARN）'},
     {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'JWT: 用 OAuth/JWT 授权服务器控制访问'},
     {k:'discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 使用，如 https://.../.well-known/openid-configuration'},
     {k:'allowed_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 使用，逗号分隔'},
@@ -722,7 +722,7 @@ if __name__ == "__main__":
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
   // 增量发布：各单元指纹（runtime 折入 memory/obs/tools/skills/model/framework，因其随 runtime 制品打包/配置）
   // 制品指纹（变了才重建）：代码/依赖/框架/模型/记忆/可观测/工具/skills/部署方式/运行时/镜像/S3
-  const fpArt=_fp({entry,region,dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?mem.cfg:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname}))});
+  const fpArt=_fp({entry,region,dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname}))});
   // 配置指纹（只它变 → update-agent-runtime 秒级，不重建）：协议/超时/环境变量/描述/系统提示(外置为 env)
   const fpCfg=_fp({protocol:c.protocol,idle:c.idle_timeout,max:c.max_lifetime,env:c.env||'',desc:c.description||'',sp:c.system_prompt||''});
   const envObj={};(c.env||'').split(',').forEach(p=>{const i=p.indexOf('=');if(i>0)envObj[p.slice(0,i).trim()]=p.slice(i+1)});if((c.system_prompt||'').length)envObj['SYSTEM_PROMPT']=c.system_prompt;const envJson=JSON.stringify(envObj);
@@ -754,11 +754,13 @@ if __name__ == "__main__":
     'else',
     '  echo "###SKIP### runtime"; echo ">>> Runtime 未变化，跳过（增量发布）"; RTC=0',
     'fi',
-    ...(mem?['[ "$RTC" = "1" ] && echo "###STEP### memory" || echo "###SKIP### memory"']:[]),
     ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
     '','# 后续组件允许部分失败','set +e',''];
   let opt=[];
-  if(mem)opt.push(`# Memory: 已在 configure 阶段启用 (mode=${mem.cfg.mode}, 保留 ${mem.cfg.expiry} 天)`);
+  if(mem)opt.push('echo "###STEP### memory"',
+    `# Memory: configure 阶段创建；保留期(expiry) 可原地更新（update-memory），mode/策略改动需随 runtime 重建`,
+    `MEM_ID=$(aws bedrock-agentcore-control list-memories --region ${region} --query "memories[?starts_with(id, '${c.name}_mem-')].id | [0]" --output text 2>/dev/null)`,
+    `if [ -n "$MEM_ID" ] && [ "$MEM_ID" != "None" ]; then aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --event-expiry-duration ${parseInt(mem.cfg.expiry)||30} --region ${region} >/dev/null 2>&1 && echo "✅ Memory 保留期=${parseInt(mem.cfg.expiry)||30} 天（原地更新，未重建）" || echo ">>> Memory 保留期更新跳过（可能正在创建中）"; else echo ">>> Memory 将随 runtime 创建"; fi`);
   const identActive=ident&&(ident.cfg.inbound_auth==='JWT'||ident.cfg.outbound_auth!=='none');
   if(identActive){
     opt.push('echo "###STEP### identity"',
@@ -778,11 +780,39 @@ if __name__ == "__main__":
       `fi`);
     opt.push('  _fpset identity "$FP_identity"','fi')}
   if(gw){const gwTools=mcps.filter(m=>!isIncomplete({type:'mcp',cfg:m.cfg}));
+    const gwSemPy = gw.cfg.semantic==='true' ? `pc["mcp"]["searchType"]="SEMANTIC"` : `pc["mcp"].pop("searchType",None)`;
+    let gwJwtPy='pass';
+    if(gw.cfg.inbound_auth==='JWT'&&gw.cfg.discovery_url){
+      const aud=gw.cfg.allowed_audience?`,"allowedAudience":[${gw.cfg.allowed_audience.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
+      const cli=gw.cfg.allowed_clients?`,"allowedClients":[${gw.cfg.allowed_clients.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
+      gwJwtPy=`out["authorizerType"]="CUSTOM_JWT";out["authorizerConfiguration"]={"customJWTAuthorizer":{"discoveryUrl":"${gw.cfg.discovery_url}"${aud}${cli}}}`;
+    }
     opt.push('',`# ${identActive?'3':'2'}) Gateway — 创建 MCP Gateway 并注册工具目标（指纹未变则整体跳过）`,
     'echo "###STEP### gateway"',
     'if [ "$(_fpget gateway)" = "$FP_gateway" ]; then',
     '  echo "###SKIP### gateway"; echo ">>> Gateway 及其 Target 未变化，跳过"',
     ...gwTools.map(m=>`  echo "###SKIP### tool:${m.cfg.name}"`),
+    'else',
+    `GW_EXIST=$(aws bedrock-agentcore-control list-gateways --region ${region} --query "items[?name=='${gw.cfg.gw_name}'].gatewayId | [0]" --output text 2>/dev/null)`,
+    'if [ -n "$GW_EXIST" ] && [ "$GW_EXIST" != "None" ]; then',
+    `  echo ">>> Gateway ${gw.cfg.gw_name} 已存在 → 原地更新（保留 ARN）"`,
+    `  aws bedrock-agentcore-control get-gateway --gateway-identifier "$GW_EXIST" --region ${region} --output json > /tmp/gw_cur.json`,
+    `  GW_ARN=$(python3 -c "import json;print(json.load(open('/tmp/gw_cur.json'))['gatewayArn'])")`,
+    `  GW_URL=$(python3 -c "import json;print(json.load(open('/tmp/gw_cur.json'))['gatewayUrl'])")`,
+    `  ROLE_ARN=$(python3 -c "import json;print(json.load(open('/tmp/gw_cur.json'))['roleArn'])")`,
+    `  python3 - > /tmp/gw_upd.json <<'PYEOF'`,
+    `import json`,
+    `g=json.load(open('/tmp/gw_cur.json'))`,
+    `out={"gatewayIdentifier":g["gatewayId"],"name":g["name"],"roleArn":g["roleArn"],"protocolType":g["protocolType"],"authorizerType":g["authorizerType"]}`,
+    `if g.get("authorizerConfiguration"): out["authorizerConfiguration"]=g["authorizerConfiguration"]`,
+    `pc=g.get("protocolConfiguration") or {"mcp":{}}`,
+    `pc.setdefault("mcp",{})`,
+    gwSemPy,
+    gwJwtPy,
+    `out["protocolConfiguration"]=pc`,
+    `json.dump(out,open('/tmp/gw_upd.json','w'))`,
+    `PYEOF`,
+    `  aws bedrock-agentcore-control update-gateway --cli-input-json file:///tmp/gw_upd.json --region ${region} >/dev/null 2>&1 && echo "✅ Gateway 已原地更新（auth/语义搜索，保留 ARN）" || echo "⚠ Gateway 更新失败"`,
     'else',
     `echo ">>> 创建 MCP Gateway: ${gw.cfg.gw_name}"`,
     ...(gw.cfg.inbound_auth!=='IAM'&&gw.cfg.discovery_url?[
@@ -797,6 +827,7 @@ if __name__ == "__main__":
     'if [ -z "$GW_ARN" ]; then',
     '  echo "⚠ 未能解析 Gateway ARN，尝试从 list 获取..."',
     `  GW_ARN=$(PYTHONIOENCODING=utf-8 agentcore gateway list-mcp-gateways --region ${region} 2>&1 | grep -o 'arn:aws:bedrock-agentcore:[^"]*gateway/[^"]*' | tail -1)`,
+    'fi',
     'fi',
     'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"',
     'GW_ID=$(echo "$GW_ARN" | sed "s#.*gateway/##")');
