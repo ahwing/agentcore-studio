@@ -10,8 +10,9 @@
 - 🔗 关系准确的连线（Runtime 为中枢，MCP/Skill 挂在 Gateway 下）
 - 📄 实时生成 `agentcore_entry.py` / `deploy.sh` / `iam-policy.json` / `requirements.txt` / `registry.json`
 - 📚 Registry 实时登记所有组件、内置工具、MCP/Skill
-- 🎮 Playground 对话：**本地直连 Bedrock `converse` 真实模型回复**（有凭证即真实，否则降级模拟）/ AWS 云端两种来源
-- 🚀 **发布管线 trace**：发布到云端时展示组件发布路径，逐个点亮（pending→进行中→✓），全部就绪后「全部发布完成」；实时流式日志 + 部署计时心跳
+- 🎮 Playground 对话：**本地直连 Bedrock `converse` 真实模型回复**（有凭证即真实，否则降级模拟）/ AWS 云端两种来源；**改 System Prompt 即时生效**——系统提示随每次对话传入 Agent，调一句 prompt 立刻看到新效果，无需重新部署
+- 🚀 **发布管线 trace**：发布到云端时展示组件发布路径，逐个点亮（pending→进行中→✓），全部就绪后「全部发布完成」；后台任务 + 轮询进度（不受流式超时影响），实时日志 + 部署计时心跳
+- ⚡ **增量发布（三态）**：每个组件按指纹判定——制品/代码变更→全量重建；仅控制面配置变更（协议/超时/环境变量/描述等）→ `update-agent-runtime` 秒级更新（复用现有制品、不重建、保留 ARN）；未变化→跳过。Identity / MCP Target / Policy / Memory / Gateway 均支持原地快速更新
 - ✅ 智能校验：未配置完整的组件自动**跳过不发布**（Runtime 未配置才阻止），状态栏显示「已配置/总数」
 - ☁️ 一键真实部署到 AWS Bedrock AgentCore（原地更新，重建期间旧版本继续服务）；自动探测云端已就绪 Agent 作为演示「托底」
 
