@@ -134,7 +134,7 @@ def bedrock_reply(prompt, cfg):
     r = br.converse(**kw)
     return r["output"]["message"]["content"][0]["text"]
 
-def run_agent(name, prompt):
+def run_agent(name, prompt, sp=None):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布，请先点击「发布」", "error"
     _stub_sdk()
@@ -143,7 +143,7 @@ def run_agent(name, prompt):
     try:
         spec = importlib.util.spec_from_file_location("ac_" + name, entry)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-        res = mod.invoke({"prompt": prompt})
+        res = mod.invoke({"prompt": prompt, **({"system_prompt": sp} if sp else {})})
         out = res.get("result") or res.get("error") or json.dumps(res)
         if out and not res.get("error"): return out, "real"
     except Exception:
@@ -205,10 +205,10 @@ def _extract(out):
     lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
     return lines[-1] if lines else "（无输出）"
 
-def _invoke_runtime_arn(arn, region, prompt):
+def _invoke_runtime_arn(arn, region, prompt, sp=None):
     """托底：不依赖本地工作区，直接用 AWS 数据面 API 按 ARN 调用云端 runtime。"""
     sid = uuid.uuid4().hex + uuid.uuid4().hex  # 64 chars，满足 runtimeSessionId 长度要求
-    payload_b64 = base64.b64encode(json.dumps({"prompt": prompt}).encode()).decode()  # 默认 cli_binary_format=base64
+    payload_b64 = base64.b64encode(json.dumps({"prompt": prompt, **({"system_prompt": sp} if sp else {})}).encode()).decode()  # 默认 cli_binary_format=base64
     outpath = None
     try:
         fd, outpath = tempfile.mkstemp(suffix=".out"); os.close(fd)
@@ -229,13 +229,13 @@ def _invoke_runtime_arn(arn, region, prompt):
             try: os.remove(outpath)
             except Exception: pass
 
-def invoke_cloud(name, prompt, region=None):
+def invoke_cloud(name, prompt, region=None, sp=None):
     info = PUBLISHED.get(name)
     if not info:
         # PUBLISHED 无记录（如容器重启清空内存）→ 仍按名字查 AWS 托底，避免误报"尚未发布"
         reg = region or "us-west-2"
         cs = _find_ready_runtime(reg, name)
-        if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt)
+        if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt, sp)
         return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # 托底：本地工作区无部署状态（如托管/全新容器），但云端已有就绪 runtime → 直接按 ARN 调 AWS API
     if not os.path.isfile(os.path.join(info["dir"], ".bedrock_agentcore.yaml")) and info["cfg"].get("deploy_mode") != "harness":
@@ -243,7 +243,7 @@ def invoke_cloud(name, prompt, region=None):
         if not arn and reg:
             cs = _find_ready_runtime(reg, name)
             if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = reg
-        if arn and reg: return _invoke_runtime_arn(arn, reg, prompt)
+        if arn and reg: return _invoke_runtime_arn(arn, reg, prompt, sp)
         return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
@@ -265,7 +265,7 @@ def invoke_cloud(name, prompt, region=None):
         except Exception as e:
             return f"Harness 调用失败: {e}", "error"
     # Runtime 模式: 用 agentcore invoke CLI
-    payload = json.dumps({"prompt": prompt})
+    payload = json.dumps({"prompt": prompt, **({"system_prompt": sp} if sp else {})})
     try:
         r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
                            capture_output=True, text=True, timeout=120,
@@ -342,12 +342,12 @@ class H(BaseHTTPRequestHandler):
                 resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
             self._send(200, json.dumps(resp))
         elif self.path == "/api/invoke":
-            out, mode = run_agent(data["name"], data.get("prompt", ""))
+            out, mode = run_agent(data["name"], data.get("prompt", ""), data.get("system_prompt"))
             self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/deploy":
             self._send(200, json.dumps({"job_id": start_deploy_job(data["name"])}))
         elif self.path == "/api/invoke-cloud":
-            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region")); self._send(200, json.dumps({"result": out, "mode": mode}))
+            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt")); self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/delete-runtime":
             self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
         else: self._send(404, "{}")
