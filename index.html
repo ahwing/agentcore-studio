@@ -292,7 +292,7 @@ const COMPONENTS={
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'expiry',l:'事件保留天数',t:'text',d:'90'}]},
   gateway:{label:'Gateway',ic:'🔌',ac:'var(--gw)',fields:[
-    {k:'gw_name',l:'Gateway 名称',t:'text',d:'my_gateway'},
+    {k:'gw_name',l:'Gateway 名称',t:'text',d:'my_gateway',hint:'⚠ 网关创建后改名/认证/语义搜索需删除网关重建（会换 ARN）'},
     {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'JWT: 用 OAuth/JWT 授权服务器控制访问'},
     {k:'discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 使用，如 https://.../.well-known/openid-configuration'},
     {k:'allowed_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 使用，逗号分隔'},
@@ -333,7 +333,7 @@ const COMPONENTS={
     {k:'in_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 入站，逗号分隔'},
     {k:'in_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 入站，逗号分隔'},
     {k:'outbound_auth',l:'出站认证 (Outbound)',t:'select',o:['none','oauth','apikey'],d:'none',hint:'Agent 如何访问外部服务'},
-    {k:'oauth_provider',l:'OAuth 提供方',t:'select',o:['google','github','slack','microsoft','salesforce','custom'],d:'google',hint:'出站 OAuth 3LO 提供方'},
+    {k:'oauth_provider',l:'OAuth 提供方',t:'select',o:['google','github','slack','microsoft','salesforce','custom'],d:'google',hint:'出站 OAuth 3LO 提供方 ⚠ 创建后改配置需删除该提供方重建'},
     {k:'provider_name',l:'凭证提供方名称',t:'text',d:'my_provider'},
     {k:'client_id',l:'OAuth Client ID',t:'text',d:''},
     {k:'client_secret',l:'OAuth Client Secret',t:'text',d:''},
@@ -347,7 +347,7 @@ const COMPONENTS={
     {k:'sampling',l:'采样率',t:'select',o:['1.0','0.5','0.1'],d:'1.0'},
     {k:'dashboard',l:'CloudWatch 仪表盘',t:'select',o:['true','false'],d:'true'}]},
   policy:{label:'Policy',ic:'🛡️',ac:'var(--pol)',fields:[
-    {k:'engine',l:'策略引擎名称',t:'text',d:'my_engine'},
+    {k:'engine',l:'策略引擎名称',t:'text',d:'my_engine',hint:'⚠ 引擎创建后改 mode/Gateway关联需删除引擎重建；Cedar 策略内容可原地更新'},
     {k:'attach_gateway',l:'关联 Gateway',t:'select',o:['(画布中的 Gateway)','(不关联)'],d:'(画布中的 Gateway)',hint:'策略引擎作用于关联的 Gateway 的工具调用'},
     {k:'mode',l:'执行模式',t:'select',o:['LOG_ONLY','ENFORCE'],d:'LOG_ONLY',hint:'LOG_ONLY: 仅记录; ENFORCE: 强制拦截'},
     {k:'pname',l:'策略名称',t:'text',d:'my_policy'},
@@ -769,9 +769,13 @@ if __name__ == "__main__":
       `# 入站 JWT: discovery=${ident.cfg.in_discovery_url}`,
       `# 在 runtime configure 时通过 --authorizer-config 应用 customJWTAuthorizer，或用 Identity 控制台配置`);
     if(ident.cfg.outbound_auth==='oauth')opt.push('','# 2b) Identity 出站 — OAuth2 凭证提供方 ('+ident.cfg.oauth_provider+')',
-      `PYTHONIOENCODING=utf-8 agentcore identity create-credential-provider --name ${ident.cfg.provider_name} --type ${ident.cfg.oauth_provider} --client-id "${ident.cfg.client_id||'<CLIENT_ID>'}" --client-secret "${ident.cfg.client_secret||'<CLIENT_SECRET>'}"${ident.cfg.scopes?` --scopes ${ident.cfg.scopes}`:''} || echo "⚠ OAuth 凭证提供方创建失败"`);
-    else if(ident.cfg.outbound_auth==='apikey')opt.push('','# 2b) Identity 出站 — API Key 凭证提供方',
-      `PYTHONIOENCODING=utf-8 agentcore identity create-api-key-credential-provider --name ${ident.cfg.provider_name} --api-key "${ident.cfg.api_key||'<API_KEY>'}" -r ${region} || echo "⚠ API Key 凭证提供方创建失败"`);
+      `PYTHONIOENCODING=utf-8 agentcore identity create-credential-provider --name ${ident.cfg.provider_name} --type ${ident.cfg.oauth_provider} --client-id "${ident.cfg.client_id||'<CLIENT_ID>'}" --client-secret "${ident.cfg.client_secret||'<CLIENT_SECRET>'}"${ident.cfg.scopes?` --scopes ${ident.cfg.scopes}`:''} || echo "⚠ OAuth 提供方已存在或创建失败；如需改配置请先删除该提供方再重新发布（暂不支持原地更新）"`);
+    else if(ident.cfg.outbound_auth==='apikey')opt.push('','# 2b) Identity 出站 — API Key 凭证提供方（存在则原地更新，否则创建）',
+      `if aws bedrock-agentcore-control get-api-key-credential-provider --name ${ident.cfg.provider_name} --region ${region} >/dev/null 2>&1; then`,
+      `  aws bedrock-agentcore-control update-api-key-credential-provider --name ${ident.cfg.provider_name} --api-key "${ident.cfg.api_key||'<API_KEY>'}" --region ${region} >/dev/null 2>&1 && echo "✅ API Key 凭证提供方已原地更新（未重建）" || echo "⚠ API Key 更新失败"`,
+      `else`,
+      `  PYTHONIOENCODING=utf-8 agentcore identity create-api-key-credential-provider --name ${ident.cfg.provider_name} --api-key "${ident.cfg.api_key||'<API_KEY>'}" -r ${region} || echo "⚠ API Key 凭证提供方创建失败"`,
+      `fi`);
     opt.push('  _fpset identity "$FP_identity"','fi')}
   if(gw){const gwTools=mcps.filter(m=>!isIncomplete({type:'mcp',cfg:m.cfg}));
     opt.push('',`# ${identActive?'3':'2'}) Gateway — 创建 MCP Gateway 并注册工具目标（指纹未变则整体跳过）`,
@@ -794,9 +798,13 @@ if __name__ == "__main__":
     '  echo "⚠ 未能解析 Gateway ARN，尝试从 list 获取..."',
     `  GW_ARN=$(PYTHONIOENCODING=utf-8 agentcore gateway list-mcp-gateways --region ${region} 2>&1 | grep -o 'arn:aws:bedrock-agentcore:[^"]*gateway/[^"]*' | tail -1)`,
     'fi',
-    'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"');
+    'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"',
+    'GW_ID=$(echo "$GW_ARN" | sed "s#.*gateway/##")');
     mcps.forEach(m=>{if(isIncomplete({type:'mcp',cfg:m.cfg})){opt.push('',`echo "⚠ 跳过未完整配置的 MCP Tool: ${m.cfg.name}"`);return}
-      opt.push('',`echo "###STEP### tool:${m.cfg.name}"`,`echo ">>> 创建 Gateway Target: ${m.cfg.name}"`);
+      opt.push('',`echo "###STEP### tool:${m.cfg.name}"`,
+        `T_ID=$(aws bedrock-agentcore-control list-gateway-targets --gateway-identifier "$GW_ID" --region ${region} --query "items[?name=='${m.cfg.name}'].targetId | [0]" --output text 2>/dev/null)`,
+        `if [ -n "$T_ID" ] && [ "$T_ID" != "None" ]; then aws bedrock-agentcore-control delete-gateway-target --gateway-identifier "$GW_ID" --target-id "$T_ID" --region ${region} >/dev/null 2>&1 && echo ">>> 删除旧 Target ${m.cfg.name}（重建以应用修改）"; sleep 2; fi`,
+        `echo ">>> 创建 Gateway Target: ${m.cfg.name}"`);
       let tcmd=`PYTHONIOENCODING=utf-8 agentcore gateway create-mcp-gateway-target --gateway-arn "$GW_ARN" --gateway-url "$GW_URL" --role-arn "$ROLE_ARN" --region ${region} --name ${m.cfg.name} --target-type ${m.cfg.type}`;
       if(m.cfg.type==='openApiSchema'){
         opt.push(`cat > /tmp/${m.cfg.name}_schema.json <<'SCHEMA_EOF'`,(m.cfg.schema||'{}'),'SCHEMA_EOF');
@@ -815,16 +823,29 @@ if __name__ == "__main__":
     `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region}${attachGw?' --gateway-arn "$GW_ARN"':''}${pol.cfg.mode?` --mode ${pol.cfg.mode}`:''} 2>&1)`,
     'echo "$PE_OUTPUT"',
     'PE_ID=$(echo "$PE_OUTPUT" | grep -oE \'[a-zA-Z0-9_-]+-[a-zA-Z0-9]{10}\' | head -1)',
-    'if [ -n "$PE_ID" ]; then',
-    `  echo ">>> 创建 Policy: ${pol.cfg.pname}"`);
+    `if [ -z "$PE_ID" ]; then PE_ID=$(aws bedrock-agentcore-control list-policy-engines --region ${region} --query "policyEngines[?name=='${pol.cfg.engine}'].policyEngineId | [0]" --output text 2>/dev/null); fi`,
+    `[ -n "$PE_ID" ] && [ "$PE_ID" != "None" ] && echo ">>> Policy Engine: $PE_ID（注：引擎 mode/Gateway 关联如需改，需删除引擎后重建）"`,
+    'if [ -n "$PE_ID" ] && [ "$PE_ID" != "None" ]; then');
     if(pol.cfg.authoring==='natural'){
-      opt.push(`  # 自然语言生成 Cedar（policy authoring service）`,
+      opt.push(`  # 自然语言生成 Cedar（每次发布会重新生成；需稳定可改用 Cedar 模式）`,
         `  PYTHONIOENCODING=utf-8 agentcore policy start-policy-generation --policy-engine-id "$PE_ID" --description ${JSON.stringify(pol.cfg.nl_desc||'')} --validation-mode ${pol.cfg.validation} -r ${region} || echo "⚠ 策略生成失败"`);
     }else{
       opt.push(`  cat > /tmp/${pol.cfg.pname}.cedar <<'CEDAR_EOF'`,(pol.cfg.cedar||'permit(principal, action, resource);'),'CEDAR_EOF',
-        `  PYTHONIOENCODING=utf-8 agentcore policy create-policy --policy-engine-id "$PE_ID" --name ${pol.cfg.pname} --definition file:///tmp/${pol.cfg.pname}.cedar --validation-mode ${pol.cfg.validation} -r ${region} || echo "⚠ Policy 创建失败"`);
+        `  P_ID=$(aws bedrock-agentcore-control list-policies --policy-engine-id "$PE_ID" --region ${region} --query "policies[?name=='${pol.cfg.pname}'].policyId | [0]" --output text 2>/dev/null)`,
+        `  if [ -n "$P_ID" ] && [ "$P_ID" != "None" ]; then`,
+        `    echo ">>> 原地更新 Policy: ${pol.cfg.pname} ($P_ID)"`,
+        `    python3 - "$PE_ID" "$P_ID" /tmp/${pol.cfg.pname}.cedar > /tmp/${pol.cfg.pname}_upd.json <<'PYEOF'`,
+        `import json,sys`,
+        `eng,pid,cf=sys.argv[1],sys.argv[2],sys.argv[3]`,
+        `json.dump({"policyEngineId":eng,"policyId":pid,"definition":{"cedar":{"statement":open(cf).read()}},"validationMode":"${pol.cfg.validation}"},sys.stdout)`,
+        `PYEOF`,
+        `    aws bedrock-agentcore-control update-policy --cli-input-json file:///tmp/${pol.cfg.pname}_upd.json --region ${region} >/dev/null 2>&1 && echo "✅ Policy ${pol.cfg.pname} 已原地更新（未重建）" || echo "⚠ Policy 更新失败"`,
+        `  else`,
+        `    echo ">>> 创建 Policy: ${pol.cfg.pname}"`,
+        `    PYTHONIOENCODING=utf-8 agentcore policy create-policy --policy-engine-id "$PE_ID" --name ${pol.cfg.pname} --definition file:///tmp/${pol.cfg.pname}.cedar --validation-mode ${pol.cfg.validation} -r ${region} || echo "⚠ Policy 创建失败"`,
+        `  fi`);
     }
-    opt.push('else','  echo "⚠ 未能解析 Policy Engine ID（可能已存在）"','fi');opt.push('  _fpset policy "$FP_policy"','fi')}
+    opt.push('else','  echo "⚠ 未能解析 Policy Engine ID"','fi');opt.push('  _fpset policy "$FP_policy"','fi')}
   const bts=[];if(ci)bts.push(`Code Interpreter(network=${ci.cfg.network},timeout=${ci.cfg.timeout})`);if(br)bts.push(`Browser(network=${br.cfg.network},recording=${br.cfg.recording})`);
   if(bts.length)opt.push('','# 内置工具 (随 Runtime 通过 bedrock-agentcore SDK 启用): '+bts.join(', '));
   // Skills: 内联/上传代码写入 skills/<name>.py，路径型直接引用
