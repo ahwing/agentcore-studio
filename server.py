@@ -56,6 +56,26 @@ def _find_ready_runtime(region, name):
         pass
     return None
 
+def delete_runtime(name, region):
+    """按名字删除某 region 内的 agent runtime（用于改名后清理旧孤儿）；不删除关联 Memory。"""
+    if not (name and region): return {"ok": False, "error": "缺少 name 或 region"}
+    try:
+        r = subprocess.run(["aws", "bedrock-agentcore-control", "list-agent-runtimes",
+                            "--region", region, "--output", "json"], capture_output=True, text=True, timeout=20)
+        if r.returncode != 0: return {"ok": False, "error": (r.stderr or "list 失败")[:200]}
+        rid = None
+        for rt in (json.loads(r.stdout or "{}")).get("agentRuntimes", []):
+            nm = str(rt.get("agentRuntimeName", ""))
+            if nm == name or nm.startswith(name):
+                rid = rt.get("agentRuntimeId"); break
+        if not rid: return {"ok": False, "error": "未找到 runtime " + name}
+        dd = subprocess.run(["aws", "bedrock-agentcore-control", "delete-agent-runtime",
+                            "--agent-runtime-id", rid, "--region", region], capture_output=True, text=True, timeout=30)
+        if dd.returncode != 0: return {"ok": False, "error": (dd.stderr or "delete 失败")[:200]}
+        return {"ok": True, "id": rid}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
+
 def cloud_status(d, region, name=None):
     """检测是否已有就绪(READY)的云端 agent，用作演示托底环境。
     优先用本地 .bedrock_agentcore.yaml（本工作区部署过）；否则直接按名字查 AWS（托管/全新容器也能命中）。"""
@@ -318,6 +338,8 @@ class H(BaseHTTPRequestHandler):
             self._stream_deploy(data["name"])
         elif self.path == "/api/invoke-cloud":
             out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region")); self._send(200, json.dumps({"result": out, "mode": mode}))
+        elif self.path == "/api/delete-runtime":
+            self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
         else: self._send(404, "{}")
     def _stream_deploy(self, name):
         # SSE: 逐行流式输出部署日志；无输出时 5s 心跳保活；结束写 data:{done,ok,log}
