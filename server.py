@@ -4,12 +4,14 @@
 仅绑定 127.0.0.1，会在本机执行生成的 agent 代码与 agentcore CLI，请勿暴露到公网。"""
 import json, os, sys, types, importlib.util, subprocess, re, base64, threading, time, queue, shutil, uuid, tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WS = os.path.join(ROOT, "workspace")
 PUBLISHED = {}  # name -> {dir, cfg}
+JOBS = {}  # job_id -> {lines:[], done, ok, log, name}  后台部署任务（轮询式，绕开 App Runner 流式掐断）
 
 def write_project(name, files):
     d = os.path.join(WS, name); os.makedirs(d, exist_ok=True)
@@ -295,6 +297,14 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0"); self.end_headers(); return False
     def do_GET(self):
         if not self._authed(): return
+        if self.path.startswith("/api/deploy-status"):
+            q = parse_qs(urlparse(self.path).query)
+            jid = (q.get("job_id") or [""])[0]; cur = int((q.get("cursor") or ["0"])[0])
+            job = JOBS.get(jid)
+            if not job: self._send(404, json.dumps({"error": "job not found"})); return
+            ln = job["lines"]; resp = {"lines": ln[cur:], "next": len(ln), "done": job["done"], "ok": job["ok"]}
+            if job["done"]: resp["log"] = job["log"]
+            self._send(200, json.dumps(resp)); return
         path = "/index.html" if self.path in ("/", "") else self.path.split("?")[0]
         fp = os.path.join(ROOT, path.lstrip("/"))
         if os.path.isfile(fp):
@@ -335,79 +345,52 @@ class H(BaseHTTPRequestHandler):
             out, mode = run_agent(data["name"], data.get("prompt", ""))
             self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/deploy":
-            self._stream_deploy(data["name"])
+            self._send(200, json.dumps({"job_id": start_deploy_job(data["name"])}))
         elif self.path == "/api/invoke-cloud":
             out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region")); self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/delete-runtime":
             self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
         else: self._send(404, "{}")
-    def _stream_deploy(self, name):
-        # SSE: 逐行流式输出部署日志；无输出时 5s 心跳保活；结束写 data:{done,ok,log}
-        self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream")
-        self.send_header("Cache-Control", "no-cache")
-        self.send_header("X-Accel-Buffering", "no")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        # 立刻写首个字节：App Runner 入口若头 1-2s 收不到 body 会掐断连接
-        try:
-            self.wfile.write(("data: " + json.dumps({"tick": 0}) + "\n\n").encode()); self.wfile.flush()
-        except Exception:
-            return
-        info = PUBLISHED.get(name)
-        if not info:
-            try:
-                self.wfile.write(("data: " + json.dumps({"done": True, "ok": False, "log": "尚未发布"}) + "\n\n").encode()); self.wfile.flush()
-            except Exception: pass
-            return
-        q = queue.Queue(); result = {}
-        def keep(s):
-            s = s.strip()
-            if not s: return False
-            if s.startswith((">>>", "#", "✅", "⚠", "❌", "☁️", "===")): return True
-            low = s.lower()
-            kw = ("error", "exception", "traceback", "failed", "fail:", "denied",
-                  "completed", "created", "created/updated", "deploying", "building",
-                  "pushing", "uploading", "success", "arn:aws", "endpoint", "ready")
-            return any(k in low for k in kw)
-        def worker():
-            lines = []
-            try:
-                env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
-                # stdbuf 强制行缓冲：让 agentcore 输出实时流出，而非被块缓冲憋住（憋住会让 App Runner 误判空闲掐断）
-                cmd = ["stdbuf", "-oL", "-eL", "bash", "deploy.sh"] if shutil.which("stdbuf") else ["bash", "deploy.sh"]
-                p = subprocess.Popen(cmd, cwd=info["dir"],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                     text=True, bufsize=1, env=env)
-                for line in iter(p.stdout.readline, ""):
-                    line = line.rstrip("\n"); lines.append(line)
-                    if keep(line): q.put(("line", line))   # 仅推送关键行，压缩日志量
-                p.stdout.close(); rc = p.wait(timeout=900)
-                out = "\n".join(lines)
-                ok = rc == 0 or "Deployment completed successfully" in out or "Agent created/updated" in out
-                if ok: info["deployed"] = True
-                result["ok"] = ok; result["log"] = out[-4000:]
-            except Exception as e:
-                result["ok"] = False; result["log"] = ("\n".join(lines) + f"\ndeploy error: {e}")[-4000:]
-            q.put(("done", None))
-        threading.Thread(target=worker, daemon=True).start()
-        try:
-            tick = 0
-            while True:
-                try:
-                    kind, val = q.get(timeout=2)
-                except queue.Empty:
-                    # 用真实 data 事件做心跳（App Runner 入口会掐断静默的流式响应，注释行不算数据）
-                    tick += 1
-                    self.wfile.write(("data: " + json.dumps({"tick": tick}) + "\n\n").encode()); self.wfile.flush(); continue
-                if kind == "line":
-                    self.wfile.write(("data: " + json.dumps({"line": val}) + "\n\n").encode()); self.wfile.flush()
-                else:
-                    self.wfile.write(("data: " + json.dumps({"done": True, "ok": result.get("ok", False), "log": result.get("log", "")}) + "\n\n").encode()); self.wfile.flush()
-                    break
-        except (BrokenPipeError, ConnectionResetError):
-            return  # 客户端断了；后台 deploy 仍会跑完
     def log_message(self, *a): pass
+
+def _deploy_keep(s):
+    s = s.strip()
+    if not s: return False
+    if s.startswith((">>>", "#", "✅", "⚠", "❌", "☁️", "===")): return True  # 含 ###STEP###/###SKIP###（trace）
+    low = s.lower()
+    kw = ("error", "exception", "traceback", "failed", "fail:", "denied",
+          "completed", "created", "created/updated", "deploying", "building",
+          "pushing", "uploading", "success", "arn:aws", "endpoint", "ready")
+    return any(k in low for k in kw)
+
+def start_deploy_job(name):
+    """启动后台部署任务，返回 job_id。deploy.sh 在后台线程跑完并把关键行/结果写入 JOBS（前端轮询取增量）。"""
+    jid = uuid.uuid4().hex[:16]
+    JOBS[jid] = {"lines": [], "done": False, "ok": False, "log": "", "name": name}
+    info = PUBLISHED.get(name)
+    if not info:
+        JOBS[jid].update(done=True, ok=False, log="尚未发布")
+        return jid
+    def worker():
+        job = JOBS[jid]; lines = []
+        try:
+            env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+            cmd = ["stdbuf", "-oL", "-eL", "bash", "deploy.sh"] if shutil.which("stdbuf") else ["bash", "deploy.sh"]
+            p = subprocess.Popen(cmd, cwd=info["dir"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                 text=True, bufsize=1, env=env)
+            for line in iter(p.stdout.readline, ""):
+                line = line.rstrip("\n"); lines.append(line)
+                if _deploy_keep(line): job["lines"].append(line)
+            p.stdout.close(); rc = p.wait(timeout=1800)
+            out = "\n".join(lines)
+            ok = rc == 0 or "Deployment completed successfully" in out or "Agent created/updated" in out
+            if ok: info["deployed"] = True
+            job["ok"] = ok; job["log"] = out[-4000:]
+        except Exception as e:
+            job["ok"] = False; job["log"] = ("\n".join(lines) + f"\ndeploy error: {e}")[-4000:]
+        job["done"] = True
+    threading.Thread(target=worker, daemon=True).start()
+    return jid
 
 if __name__ == "__main__":
     os.makedirs(WS, exist_ok=True)
