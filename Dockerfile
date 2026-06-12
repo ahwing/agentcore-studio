@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends zip curl unzip 
     unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscliv2.zip && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY index.html server.py ./
+COPY index.html compare.html server.py ./
 ENV HOST=0.0.0.0 PORT=8080 AGENTCORE_SUPPRESS_RECOMMENDATION=1
 EXPOSE 8080
 CMD ["python3", "server.py"]
