@@ -7,3 +7,4 @@ __pycache__/
 gh-upload.sh
 deployments/
 agentcore-studio.json
+agent-core-studio.json

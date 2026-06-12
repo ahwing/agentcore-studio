@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentCore vs 自建 Agent — 对比</title>
+<style>
+:root{--ink:#0A1120;--ink2:#0F1A2E;--card:rgba(24,38,64,.72);--line:#26365A;--orange:#FF9900;--text:#EAF1FB;--muted:#90A4C6;--green:#5CD6A0;--red:#FF7AA2;--blue:#4FC3F7;--ui:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--ui);background:var(--ink);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(900px 600px at 12% -8%,rgba(255,153,0,.12),transparent 60%),radial-gradient(1000px 700px at 102% 110%,rgba(79,195,247,.1),transparent 55%)}
+header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(15,26,46,.9);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,var(--orange),#EC7211);box-shadow:0 4px 16px rgba(255,153,0,.4)}
+header h1{font-size:18px;font-weight:700}
+header .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.spacer{flex:1}
+header a{color:var(--muted);font-size:13px;text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid var(--line);transition:.15s}
+header a:hover{color:var(--text);border-color:var(--orange)}
+header a.active{color:var(--orange);border-color:var(--orange);background:rgba(255,153,0,.1)}
+main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+h2{font-size:28px;text-align:center;margin-bottom:8px}
+.subtitle{text-align:center;color:var(--muted);margin-bottom:40px;font-size:15px}
+.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(10px)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead{background:rgba(255,153,0,.08)}
+th{padding:14px 16px;text-align:left;font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child{width:180px}
+th.ac{color:var(--orange)}
+th.ec2{color:var(--blue)}
+td{padding:12px 16px;border-bottom:1px solid rgba(38,54,90,.5);vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+tr:hover{background:rgba(255,255,255,.02)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;margin-right:4px}
+.tag-g{background:rgba(92,214,160,.15);color:var(--green)}
+.tag-r{background:rgba(255,122,162,.12);color:var(--red)}
+.tag-o{background:rgba(255,153,0,.15);color:var(--orange)}
+.tag-b{background:rgba(79,195,247,.15);color:var(--blue)}
+.section{margin-top:50px}
+.section h3{font-size:20px;margin-bottom:20px;padding-left:12px;border-left:4px solid var(--orange)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:20px;backdrop-filter:blur(10px)}
+.card h4{font-size:15px;margin-bottom:10px;color:var(--orange)}
+.card p{font-size:13px;color:var(--muted);line-height:1.7}
+.verdict{margin-top:50px;text-align:center;padding:32px;background:rgba(255,153,0,.06);border:1px solid rgba(255,153,0,.3);border-radius:14px}
+.verdict h3{color:var(--orange);font-size:20px;margin-bottom:12px}
+.verdict p{color:var(--muted);line-height:1.8;max-width:700px;margin:0 auto}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🧩</div>
+  <div><h1>AgentCore Studio</h1><div class="sub">对比分析</div></div>
+  <span class="spacer"></span>
+  <a href="/">编排画布</a>
+  <a href="/compare.html" class="active">对比分析</a>
+</header>
+<main>
+<h2>Amazon Bedrock AgentCore vs EC2 / 自建 Agent</h2>
+<p class="subtitle">从开发效率、运维成本、安全合规、弹性伸缩等维度全面对比</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>维度</th><th class="ac">🚀 Bedrock AgentCore</th><th class="ec2">🖥️ EC2 / 自建</th></tr></thead>
+<tbody>
+<tr><td><b>部署时间</b></td>
+  <td><span class="tag tag-g">分钟级</span>一行命令部署，无需管理服务器</td>
+  <td><span class="tag tag-r">小时~天</span>配置 EC2、Docker、负载均衡、网络、安全组…</td></tr>
+<tr><td><b>弹性伸缩</b></td>
+  <td><span class="tag tag-g">自动</span>按会话自动扩缩容，闲时缩至 0</td>
+  <td><span class="tag tag-r">手动</span>需自建 Auto Scaling + 监控告警，冷启动慢</td></tr>
+<tr><td><b>计费模式</b></td>
+  <td><span class="tag tag-g">按用量</span>按调用次数 + 会话时长，无闲置费用</td>
+  <td><span class="tag tag-r">按资源</span>7×24 EC2 运行费；流量低时浪费，高峰时不足</td></tr>
+<tr><td><b>模型集成</b></td>
+  <td><span class="tag tag-g">原生</span>直连 Claude / Nova / Llama 等，无需 API Key 管理</td>
+  <td><span class="tag tag-o">需对接</span>自行调 Bedrock API 或部署开源模型，管理密钥</td></tr>
+<tr><td><b>内存 (Memory)</b></td>
+  <td><span class="tag tag-g">内置</span>STM + LTM 托管，自动检索 + 过期管理</td>
+  <td><span class="tag tag-r">自建</span>需自选 Redis / DynamoDB / VectorDB + 写检索逻辑</td></tr>
+<tr><td><b>工具调用 (MCP)</b></td>
+  <td><span class="tag tag-g">Gateway</span>托管 MCP Gateway，语义路由，注册即用</td>
+  <td><span class="tag tag-r">自建</span>自写 Function Calling 适配层、工具注册表</td></tr>
+<tr><td><b>Code Interpreter</b></td>
+  <td><span class="tag tag-g">沙箱</span>内置安全沙箱，网络隔离，即开即用</td>
+  <td><span class="tag tag-r">自建</span>需部署沙箱（Firecracker/gVisor），安全配置复杂</td></tr>
+<tr><td><b>身份认证</b></td>
+  <td><span class="tag tag-g">托管</span>IAM / Cognito / JWT / OAuth2 一键配置</td>
+  <td><span class="tag tag-o">自建</span>自行集成认证中间件，管理 Token 流转</td></tr>
+<tr><td><b>策略治理</b></td>
+  <td><span class="tag tag-g">Cedar</span>内置策略引擎，声明式权限控制</td>
+  <td><span class="tag tag-r">自建</span>需引入 OPA / 自写权限框架</td></tr>
+<tr><td><b>可观测性</b></td>
+  <td><span class="tag tag-g">内置</span>OpenTelemetry 自动注入，CloudWatch + X-Ray</td>
+  <td><span class="tag tag-o">自建</span>需配置 OTel Collector、Prometheus、Grafana…</td></tr>
+<tr><td><b>安全隔离</b></td>
+  <td><span class="tag tag-g">VPC</span>每个 Runtime 独立隔离，支持 VPC 部署</td>
+  <td><span class="tag tag-o">看配置</span>需手动配安全组、子网、IAM 角色</td></tr>
+<tr><td><b>版本管理</b></td>
+  <td><span class="tag tag-g">原子更新</span>部署期间旧版继续服务，零中断</td>
+  <td><span class="tag tag-o">自建</span>需 Blue-Green / Rolling Update 策略</td></tr>
+<tr><td><b>运维复杂度</b></td>
+  <td><span class="tag tag-g">零运维</span>无需管 OS 补丁、Docker 升级、证书续期</td>
+  <td><span class="tag tag-r">高</span>OS 安全补丁、依赖升级、磁盘监控、日志轮转…</td></tr>
+<tr><td><b>多 Agent 协作</b></td>
+  <td><span class="tag tag-g">原生</span>A2A 协议支持 Agent 间直接通信</td>
+  <td><span class="tag tag-r">自建</span>需设计消息总线 / API 网关协调</td></tr>
+<tr><td><b>适用场景</b></td>
+  <td>快速上线、弹性流量、合规要求高、团队精简</td>
+  <td>极特殊定制需求、自有 GPU 集群、已有成熟平台</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section">
+<h3>成本估算示例</h3>
+<div class="cards">
+<card class="card">
+  <h4>场景：日均 1000 次对话 Agent</h4>
+  <p><b>AgentCore：</b>仅付模型调用费 + 会话时长<br>
+  ≈ $30-80/月（按 Claude Haiku 估算）<br><br>
+  <b>EC2 自建：</b><br>
+  t3.large × 2（高可用）≈ $120/月<br>
+  + ALB $16 + NAT $32 + EBS + 运维人力<br>
+  ≈ $200-400/月（不含人力）</p>
+</card>
+<card class="card">
+  <h4>场景：流量波动大（峰值 10× 平均）</h4>
+  <p><b>AgentCore：</b>自动扩缩，峰值付峰值、低谷无费用<br><br>
+  <b>EC2 自建：</b>需为峰值预留容量，或配置复杂的 Auto Scaling<br>
+  闲时浪费 80% 资源成本</p>
+</card>
+<card class="card">
+  <h4>场景：从 PoC 到生产</h4>
+  <p><b>AgentCore：</b>PoC 代码直接发布生产，零改造<br><br>
+  <b>EC2 自建：</b>PoC → 容器化 → CI/CD → 监控 → 安全审计<br>
+  通常需要 2-4 周额外工程投入</p>
+</card>
+</div>
+</div>
+
+<div class="section">
+<h3>开发体验对比</h3>
+<div class="cards">
+<card class="card">
+  <h4>AgentCore 开发流程</h4>
+  <p>1. 写 Agent 代码（~50 行）<br>
+  2. <code>agentcore deploy</code> 一键部署<br>
+  3. <code>agentcore invoke</code> 即时验证<br>
+  4. 配置 Memory / Gateway / Policy — 声明即生效<br>
+  5. OpenTelemetry 自动观测<br><br>
+  <span class="tag tag-g">总计 &lt;30 分钟上线</span></p>
+</card>
+<card class="card">
+  <h4>EC2 自建流程</h4>
+  <p>1. 写 Agent 代码 + API 服务框架<br>
+  2. 写 Dockerfile + 编排配置<br>
+  3. 配置 EC2 / ECS / EKS + 网络 + 安全组<br>
+  4. 自建 Memory 存储 + 检索逻辑<br>
+  5. 集成认证 + 监控 + 日志<br>
+  6. 配置 CI/CD 流水线<br>
+  7. 压测 + 调优<br><br>
+  <span class="tag tag-r">通常 1-4 周</span></p>
+</card>
+</div>
+</div>
+
+<div class="verdict">
+  <h3>💡 选择建议</h3>
+  <p><b>选 AgentCore</b>：如果你追求快速上线、弹性伸缩、低运维，且 Agent 以调用模型 + 工具为核心能力。<br>
+  <b>选 EC2 自建</b>：如果你需要极度定制的运行环境（自有模型、特殊硬件、已有平台），且团队有充足的 DevOps 能力。<br><br>
+  大多数 AI Agent 场景下，AgentCore 能以 <b>1/10 的工程投入</b> 达到相同甚至更好的生产效果。</p>
+</div>
+</main>
+</body>
+</html>
