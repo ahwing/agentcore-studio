@@ -781,9 +781,16 @@ if __name__ == "__main__":
   const fpIdentity=ident?_fp(ident.cfg):'';
   const fpGateway=gw?_fp({gw:gw.cfg,targets:mcps.map(m=>m.cfg)}):'';
   const fpPolicy=pol?_fp(pol.cfg):'';
-  const helpers=['STATE=".studio_state.json"',
-    `_fpget(){ python3 -c "import json,os,sys;f='.studio_state.json';d=json.load(open(f)) if os.path.isfile(f) else {};print(d.get(sys.argv[1],''))" "$1" 2>/dev/null; }`,
-    `_fpset(){ python3 -c "import json,os,sys;f='.studio_state.json';d=json.load(open(f)) if os.path.isfile(f) else {};d[sys.argv[1]]=sys.argv[2];json.dump(d,open(f,'w'))" "$1" "$2"; }`,
+  const helpers=[
+    `# 增量发布状态存于 S3（与 Studio 运行环境解耦：App Runner 容器重启/换实例也不丢指纹）`,
+    `ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null)`,
+    `STATE_BUCKET="agentcore-studio-state-\${ACCOUNT}-${region}"`,
+    `STATE_KEY="state/${c.name}.json"`,
+    `STATE_LOCAL="/tmp/_studio_state_${c.name}.json"`,
+    `aws s3api head-bucket --bucket "$STATE_BUCKET" --region ${region} 2>/dev/null || aws s3api create-bucket --bucket "$STATE_BUCKET" --region ${region} $([ "${region}" != "us-east-1" ] && echo "--create-bucket-configuration LocationConstraint=${region}") >/dev/null 2>&1 || true`,
+    `aws s3 cp "s3://$STATE_BUCKET/$STATE_KEY" "$STATE_LOCAL" --region ${region} >/dev/null 2>&1 || echo '{}' > "$STATE_LOCAL"`,
+    `_fpget(){ python3 -c "import json,os,sys;f='$STATE_LOCAL';d=json.load(open(f)) if os.path.isfile(f) else {};print(d.get(sys.argv[1],''))" "$1" 2>/dev/null; }`,
+    `_fpset(){ python3 -c "import json,os,sys;f='$STATE_LOCAL';d=json.load(open(f)) if os.path.isfile(f) else {};d[sys.argv[1]]=sys.argv[2];json.dump(d,open(f,'w'))" "$1" "$2"; aws s3 cp "$STATE_LOCAL" "s3://$STATE_BUCKET/$STATE_KEY" --region ${region} >/dev/null 2>&1 || true; }`,
     `FP_art="${fpArt}"`,`FP_cfg="${fpCfg}"`];
   if(ident)helpers.push(`FP_identity="${fpIdentity}"`);
   if(gw)helpers.push(`FP_gateway="${fpGateway}"`);
