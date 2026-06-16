@@ -55,8 +55,20 @@
   .pal-item .tag{margin-left:auto;font-size:9px;color:var(--ac);border:1px solid var(--ac);border-radius:5px;padding:1px 5px;opacity:.8}
   .pal-sub{font-family:var(--ui);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin:15px 4px 7px}.pal-sub:first-child{margin-top:0}
   .pal-note{color:var(--muted2);font-size:11px;line-height:1.6;padding:0 4px;margin-top:4px}
-  .canvas-wrap{flex:1;position:relative;overflow:hidden}
-  #canvas{position:absolute;inset:0;background-image:radial-gradient(rgba(120,150,200,.13) 1px,transparent 1px);background-size:26px 26px}
+  .canvas-wrap{flex:1;position:relative;overflow:hidden;background-image:radial-gradient(rgba(120,150,200,.13) 1px,transparent 1px);background-size:26px 26px}
+  #canvas{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+  .zoomctl{position:absolute;left:16px;bottom:16px;z-index:6;display:flex;align-items:center;gap:6px;background:rgba(15,26,46,.82);border:1px solid var(--line);border-radius:10px;padding:6px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .zoomctl button{width:32px;height:32px;border:none;border-radius:7px;background:rgba(255,255,255,.06);color:var(--text);font-size:16px;line-height:1;cursor:pointer;transition:.15s;font-family:var(--ui);display:flex;align-items:center;justify-content:center}
+  .zoomctl button:hover{background:var(--orange);color:#0A1120}
+  .zoomctl #zlbl{min-width:46px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+  body.demo header{padding:20px 30px}
+  body.demo header h1{font-size:26px}
+  body.demo header .sub{font-size:14px}
+  body.demo .btn-pri,body.demo .btn-cloud,body.demo .btn-ghost,body.demo .scenario-sel{font-size:15px;padding:12px 18px}
+  body.demo #statPill,body.demo .pill{font-size:14px;padding:8px 14px}
+  body.demo .canvas-hint{font-size:20px}
+  body.demo .zoomctl button{width:40px;height:40px;font-size:19px}
+  body.demo .zoomctl #zlbl{font-size:14px;min-width:54px}
   #edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .node{position:absolute;width:188px;border-radius:13px;cursor:grab;user-select:none;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;transition:box-shadow .2s,border-color .2s,transform .12s}
   .node::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--ac);box-shadow:0 0 14px var(--ac)}
@@ -210,6 +222,7 @@
   <span class="spacer"></span>
   <a href="/compare.html" style="color:var(--muted);font-size:12px;text-decoration:none;padding:7px 12px;border-radius:8px;border:1px solid var(--line);transition:.15s" onmouseover="this.style.color='var(--orange)';this.style.borderColor='var(--orange)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--line)'">📊 对比分析</a>
   <span class="pill" id="statPill"><span class="dot"></span><span id="statTxt">空画布</span></span>
+  <button class="btn-ghost" id="demoBtn" onclick="toggleDemo()" title="大屏演示模式 · 放大界面并适配画布 (Esc 退出)">🖥 演示模式</button>
   <button class="btn-ghost" onclick="newAgent()">＋ 新建 Agent</button>
   <select class="scenario-sel" onchange="if(this.value){loadScenario(this.value);this.selectedIndex=0}" title="一键载入演示场景">
     <option value="">📦 载入场景…</option>
@@ -230,7 +243,7 @@
   <div class="canvas-wrap"><div id="canvas">
     <svg id="edges"><defs><linearGradient id="eg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF9900"/><stop offset="1" stop-color="#4FC3F7"/></linearGradient></defs></svg>
     <div class="canvas-hint" id="hint"><span class="big">⬚</span>从左侧拖入组件开始<br>（先拖一个 Runtime）</div>
-  </div><div class="pop" id="pop" hidden></div></div>
+  </div><div class="pop" id="pop" hidden></div><div class="zoomctl"><button onclick="zoomBy(0.87)" title="缩小 (-)">−</button><span id="zlbl" onclick="resetView()" title="点击重置 100%">100%</span><button onclick="zoomBy(1.15)" title="放大 (+)">＋</button><button onclick="fitView(1)" title="适配居中 (0)">⤢</button><button onclick="toggleFull()" title="全屏 (F)">⛶</button></div></div>
   <div class="side">
     <div class="seg" id="seg">
       <button class="on" data-v="cfg" onclick="switchView('cfg')">📄 产物</button>
@@ -370,10 +383,45 @@ const pal=document.getElementById('palette');
     el.addEventListener('dragstart',e=>e.dataTransfer.setData('type',type));pal.appendChild(el)})});
 
 const canvas=document.getElementById('canvas');
+/* ===== 视图变换（演示/缩放/平移）===== */
+let viewX=0,viewY=0,viewScale=1,demoMode=false;
+function applyView(){canvas.style.transformOrigin='0 0';canvas.style.transform=`translate(${viewX}px,${viewY}px) scale(${viewScale})`;
+  const zl=document.getElementById('zlbl');if(zl)zl.textContent=Math.round(viewScale*100)+'%';
+  if(sel){const n=nodes.find(x=>x.id===sel),pop=document.getElementById('pop');if(n&&pop&&!pop.hidden)positionPop(n)}}
+function resetView(){viewX=0;viewY=0;viewScale=1;applyView()}
+function zoomBy(f){const w=canvas.parentElement,ww=w.clientWidth,wh=w.clientHeight,cx=ww/2,cy=wh/2;
+  const lx=(cx-viewX)/viewScale,ly=(cy-viewY)/viewScale;
+  viewScale=Math.min(Math.max(viewScale*f,.2),2.5);viewX=cx-lx*viewScale;viewY=cy-ly*viewScale;applyView()}
+function fitView(boost){const ns=[...canvas.querySelectorAll('.node')],w=canvas.parentElement,ww=w.clientWidth,wh=w.clientHeight;
+  if(!ns.length){resetView();return}
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  ns.forEach(el=>{const x=el.offsetLeft,y=el.offsetTop;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x+el.offsetWidth);maxY=Math.max(maxY,y+el.offsetHeight)});
+  const pad=70,bw=Math.max(1,maxX-minX),bh=Math.max(1,maxY-minY);
+  let s=Math.min((ww-pad*2)/bw,(wh-pad*2)/bh);s=Math.min(s*(boost||1),2.2);s=Math.max(s,.2);
+  viewScale=s;viewX=(ww-bw*s)/2-minX*s;viewY=(wh-bh*s)/2-minY*s;applyView()}
+function toggleDemo(){demoMode=!demoMode;document.body.classList.toggle('demo',demoMode);
+  const b=document.getElementById('demoBtn');if(b)b.textContent=demoMode?'🖥 退出演示':'🖥 演示模式';
+  if(demoMode)setTimeout(()=>fitView(1.1),60);else resetView()}
+function toggleFull(){if(!document.fullscreenElement){(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen).call(document.documentElement)}else{document.exitFullscreen&&document.exitFullscreen()}}
+canvas.parentElement.addEventListener('wheel',e=>{e.preventDefault();const r=canvas.parentElement.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+  const lx=(px-viewX)/viewScale,ly=(py-viewY)/viewScale,f=e.deltaY<0?1.12:0.89;
+  viewScale=Math.min(Math.max(viewScale*f,.2),2.5);viewX=px-lx*viewScale;viewY=py-ly*viewScale;applyView()},{passive:false});
+document.addEventListener('keydown',e=>{const t=document.activeElement,tag=t&&t.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
+  const m=document.getElementById('modal');if(m&&m.offsetParent!==null&&e.key!=='Escape')return;
+  switch(e.key){case'f':case'F':toggleFull();break;case'0':fitView(1);break;
+    case'1':loadScenario('minimal');break;case'2':loadScenario('support');break;case'3':loadScenario('analyst');break;case'4':loadScenario('full');break;
+    case'=':case'+':zoomBy(1.15);break;case'-':case'_':zoomBy(0.87);break;
+    case'Escape':if(demoMode)toggleDemo();if(document.fullscreenElement)document.exitFullscreen&&document.exitFullscreen();break;default:return}
+  if(e.key!=='f'&&e.key!=='F')e.preventDefault()});
 canvas.addEventListener('dragover',e=>e.preventDefault());
 canvas.addEventListener('drop',e=>{e.preventDefault();const t=e.dataTransfer.getData('type');if(!t)return;
-  const r=canvas.getBoundingClientRect();addNode(t,e.clientX-r.left-94,e.clientY-r.top-24)});
-canvas.addEventListener('mousedown',e=>{if(e.target===canvas||e.target.id==='edges'){sel=null;render();renderProps()}});
+  const r=canvas.getBoundingClientRect();addNode(t,(e.clientX-r.left)/viewScale-94,(e.clientY-r.top)/viewScale-24)});
+canvas.addEventListener('mousedown',e=>{if(e.target===canvas||e.target.id==='edges'){
+  const sx=e.clientX,sy=e.clientY,ox=viewX,oy=viewY;let moved=false;
+  function mv(ev){if(Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>3)moved=true;viewX=ox+ev.clientX-sx;viewY=oy+ev.clientY-sy;applyView()}
+  function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);if(!moved){sel=null;render();renderProps()}}
+  document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up)}});
 
 function addNode(type,x,y){
   const c=COMPONENTS[type];
@@ -492,7 +540,7 @@ const ss=document.createElement('style');ss.textContent='@keyframes dash{to{stro
 
 function startDrag(e,n,el){sel=n.id;[...canvas.querySelectorAll('.node')].forEach(x=>x.classList.remove('sel'));el.classList.add('sel');renderProps();
   const sx=e.clientX,sy=e.clientY,ox=n.x,oy=n.y;el.style.cursor='grabbing';const rt=nodes.find(x=>x.type==='runtime');
-  function mv(ev){n.x=Math.max(0,ox+ev.clientX-sx);n.y=Math.max(0,oy+ev.clientY-sy);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges(rt);positionPop(n)}
+  function mv(ev){n.x=Math.max(0,ox+(ev.clientX-sx)/viewScale);n.y=Math.max(0,oy+(ev.clientY-sy)/viewScale);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges(rt);positionPop(n)}
   function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);el.style.cursor='grab'}
   document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up)}
 
@@ -556,9 +604,10 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
     return `<div class="field"><label>${fl}</label>${inp}${hint}</div>`}).join('');
   pop.hidden=false;positionPop(n)}
 function positionPop(n){const pop=document.getElementById('pop'),wrap=document.querySelector('.canvas-wrap');
-  const ww=wrap.clientWidth,wh=wrap.clientHeight,pw=pop.offsetWidth||282,ph=pop.offsetHeight||320,nw=COMPONENTS[n.type].multi?158:188;
-  let x=n.x+nw+12;if(x+pw>ww)x=n.x-pw-12;if(x<8)x=8;
-  pop.style.left=x+'px';pop.style.top=Math.min(n.y,Math.max(8,wh-ph-8))+'px'}
+  const ww=wrap.clientWidth,wh=wrap.clientHeight,pw=pop.offsetWidth||282,ph=pop.offsetHeight||320,nw=(COMPONENTS[n.type].multi?158:188)*viewScale;
+  const nx=viewX+n.x*viewScale,ny=viewY+n.y*viewScale;
+  let x=nx+nw+12;if(x+pw>ww)x=nx-pw-12;if(x<8)x=8;
+  pop.style.left=x+'px';pop.style.top=Math.min(ny,Math.max(8,wh-ph-8))+'px'}
 function closePop(){sel=null;render();renderProps()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sel){closePop()}});
 function setCfg(id,k,v){nodes.find(x=>x.id===id).cfg[k]=v;published=false;render()}
