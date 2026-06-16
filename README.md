@@ -4,6 +4,12 @@
 
 **AgentCore Studio** 是面向 Amazon Bedrock AgentCore 的可视化编排工作台。在画布上拖拽 Runtime、Memory、Gateway、Identity、Observability、Policy 六大核心组件，以及 Code Interpreter、Browser 内置工具和挂载在 Gateway 下的 MCP 工具 / Skill，像搭积木一样组装一个 AI Agent。每次配置都会**实时生成真实可部署的产物**（入口代码、部署脚本、IAM 策略、组件注册表），并在 Registry 中即时登记。配置完成后**一键发布到云端**真实部署到 AWS，再在内置 **Playground** 里与 Agent 直接对话验证：本地接真实 Bedrock 秒级反馈、云端运行真实可信。
 
+## 架构
+
+![AgentCore Studio 架构图](architecture.png)
+
+> 开发者通过 Studio（可部署在 App Runner / EC2 / ECS / EKS / 本地）拖拽编排 → 生成产物经 CI/CD（CodeBuild → S3 → ECR）部署 → Amazon Bedrock AgentCore 中的 Agent Runtime 调度 Memory、Identity、Policy、Observability、Gateway 工具层与内置沙箱工具。可编辑源文件见 [`architecture.drawio`](architecture.drawio)。
+
 ## 功能
 - 🎨 可视化拖拽编排 AgentCore 全部组件，点节点即弹浮层编辑；下拉切换字段联动（如 Skill 来源 inline/path/upload、Identity 入站/出站、Gateway IAM/JWT、Policy Cedar/自然语言、Runtime 代码来源 ECR/S3）
 - 📦 **一键场景模板**：极简对话 / 客服（带工具）/ 数据分析 / 全家桶，秒级铺满画布看效果
