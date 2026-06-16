@@ -1,0 +1,147 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="agentcore-studio" name="AgentCore Studio 架构">
+    <mxGraphModel dx="2800" dy="1600" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1240" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="2400" height="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;AgentCore Studio — 架构图&lt;/b&gt;&lt;br&gt;拖拽编排 · 一键上线 AI Agent" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=18;spacing=8;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="520" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user" value="开发者 / SA" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#232F3D;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.client;" vertex="1" parent="1">
+          <mxGeometry x="60" y="560" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpStudio" value="Studio 托管层 (任选其一)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2E7D32;strokeWidth=2;fontColor=#2E7D32;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="220" y="280" width="460" height="660" as="geometry" />
+        </mxCell>
+        <mxCell id="appRunner" value="AgentCore Studio" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.app_runner;" vertex="1" parent="grpStudio">
+          <mxGeometry x="50" y="60" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="后端 API" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="grpStudio">
+          <mxGeometry x="280" y="60" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="grpCarrier" value="可替换部署载体" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#66BB6A;strokeWidth=1;dashed=1;fontColor=#66BB6A;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="grpStudio">
+          <mxGeometry x="40" y="220" width="380" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="ec2" value="EC2" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;" vertex="1" parent="grpCarrier">
+          <mxGeometry x="50" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs" value="ECS" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecs;" vertex="1" parent="grpCarrier">
+          <mxGeometry x="240" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="eks" value="EKS" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="grpCarrier">
+          <mxGeometry x="50" y="240" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="local" value="本地 / 容器" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#232F3D;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.traditional_server;" vertex="1" parent="grpCarrier">
+          <mxGeometry x="240" y="240" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpPipe" value="生成产物 → CI/CD 部署管线" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7B1FA2;strokeWidth=2;fontColor=#7B1FA2;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="780" y="500" width="620" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="codebuild" value="CodeBuild" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.codebuild;" vertex="1" parent="grpPipe">
+          <mxGeometry x="50" y="70" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="S3 源码包" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" vertex="1" parent="grpPipe">
+          <mxGeometry x="270" y="70" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr" value="ECR 镜像" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.registry;" vertex="1" parent="grpPipe">
+          <mxGeometry x="490" y="70" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="runtime" value="Agent Runtime&#10;my_agent" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#01A88D;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=13;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.bedrock_agentcore;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="560" width="100" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpAC" value="Amazon Bedrock AgentCore (us-east-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#1565C0;strokeWidth=2;fontColor=#1565C0;fontSize=15;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="340" width="900" height="500" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpManaged" value="托管组件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#42A5F5;strokeWidth=1;fontColor=#42A5F5;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="grpAC">
+          <mxGeometry x="30" y="60" width="270" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="memory" value="Memory&#10;STM+LTM" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;" vertex="1" parent="grpManaged">
+          <mxGeometry x="35" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="identity" value="Identity" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cognito;" vertex="1" parent="grpManaged">
+          <mxGeometry x="160" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="policy" value="Policy Cedar" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.permissions;" vertex="1" parent="grpManaged">
+          <mxGeometry x="35" y="270" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="obs" value="Observability" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch_2;" vertex="1" parent="grpManaged">
+          <mxGeometry x="160" y="270" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpGw" value="Gateway 工具层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#26A69A;strokeWidth=1;fontColor=#26A69A;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="grpAC">
+          <mxGeometry x="320" y="60" width="270" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway" value="MCP Gateway" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;" vertex="1" parent="grpGw">
+          <mxGeometry x="95" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp" value="MCP Tools&#10;web_search" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="grpGw">
+          <mxGeometry x="35" y="270" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="skill" value="Skills&#10;summarize" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="grpGw">
+          <mxGeometry x="160" y="270" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpBuiltin" value="内置工具 (沙箱)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#EF6C00;strokeWidth=1;fontColor=#EF6C00;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;container=1;dropTarget=1;collapsible=0;" vertex="1" parent="grpAC">
+          <mxGeometry x="610" y="60" width="260" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="ci" value="Code Interpreter" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="grpBuiltin">
+          <mxGeometry x="90" y="50" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="br" value="Browser" style="sketch=0;points=[];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="grpBuiltin">
+          <mxGeometry x="90" y="270" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <mxCell id="eUser" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#232F3E;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="user" target="appRunner">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eAR" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#2E7D32;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="appRunner" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eGen" value="生成" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#F9A825;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="api" target="codebuild">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eCB" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#7B1FA2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="codebuild" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eS3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;strokeColor=#7B1FA2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="ecr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eDeploy" value="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#1565C0;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ecr" target="runtime">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eInvoke" value="invoke-cloud" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;strokeColor=#4FC3F7;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="api" target="runtime">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eMem" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#42A5F5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="runtime" target="grpManaged">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eGw" value="工具" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#26A69A;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;" edge="1" parent="1" source="runtime" target="gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eCi" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#EF6C00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="runtime" target="ci">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eMcp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#26A69A;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gateway" target="mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eSkill" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#26A69A;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gateway" target="skill">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eCarrier" value="可换为" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;dashed=1;strokeColor=#9E9E9E;labelBackgroundColor=#F5F5F5;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="appRunner" target="grpCarrier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
