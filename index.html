@@ -798,6 +798,19 @@ if __name__ == "__main__":
   if(ident)helpers.push(`FP_identity="${fpIdentity}"`);
   if(gw)helpers.push(`FP_gateway="${fpGateway}"`);
   if(pol)helpers.push(`FP_policy="${fpPolicy}"`);
+  // 方案B：部署后给 Runtime 执行角色补 lambda:InvokeFunction（agentcore 自建执行角色默认无此权限，否则 agent 调用工具 Lambda 会 AccessDenied）
+  const lamArns=mcps.filter(m=>m.cfg.type==='lambda'&&/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:/.test(m.cfg.endpoint||'')).map(m=>m.cfg.endpoint);
+  const lamPolicyDoc=JSON.stringify({Version:'2012-10-17',Statement:[{Effect:'Allow',Action:'lambda:InvokeFunction',Resource:lamArns}]});
+  const lamPermLines=lamArns.length?[
+    'echo "###STEP### lambda-perm"',
+    `_RID=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)`,
+    'if [ -n "$_RID" ] && [ "$_RID" != "None" ]; then',
+    `  _RTROLE=$(aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$_RID" --region ${region} --query roleArn --output text 2>/dev/null)`,
+    '  _RTROLE="${_RTROLE##*/}"',
+    '  if [ -n "$_RTROLE" ] && [ "$_RTROLE" != "None" ]; then',
+    `    aws iam put-role-policy --role-name "$_RTROLE" --policy-name studio-lambda-invoke --policy-document '${lamPolicyDoc}' >/dev/null 2>&1 && echo "✅ 已为 Runtime 角色授予 lambda:InvokeFunction（工具可调用）" || echo "⚠ 授予 lambda 权限失败（需 iam:PutRolePolicy），可手动补"`,
+    '  fi',
+    'fi']:[];
   let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成（增量发布：指纹未变化的组件自动跳过）','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
     ...helpers,'',rtcfgFn,'',
     '# 1) Runtime（核心）— 三态：制品变→重建 / 仅配置变→秒级 update / 未变→跳过','echo "###STEP### runtime"','RTC=0',
@@ -815,7 +828,7 @@ if __name__ == "__main__":
     '  echo "###SKIP### runtime"; echo ">>> Runtime 未变化，跳过（增量发布）"; RTC=0',
     'fi',
     ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
-    '','# 后续组件允许部分失败','set +e',''];
+    '','# 后续组件允许部分失败','set +e','',...lamPermLines];
   let opt=[];
   if(mem)opt.push('echo "###STEP### memory"',
     `# Memory: configure 阶段创建；保留期(expiry) 可原地更新（update-memory），mode/策略改动需随 runtime 重建`,
