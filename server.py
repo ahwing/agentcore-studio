@@ -130,7 +130,7 @@ def bedrock_reply(prompt, cfg):
     br = boto3.client("bedrock-runtime", region_name=region)
     kw = {"modelId": model, "messages": [{"role": "user", "content": [{"text": prompt}]}],
           "inferenceConfig": {"maxTokens": 1024, "temperature": 0.7}}
-    if sp.strip(): kw["system"] = [{"text": sp.strip()}]
+    if sp.strip(): kw["system"] = [{"text": sp.strip()}, {"cachePoint": {"type": "default"}}]
     r = br.converse(**kw)
     return r["output"]["message"]["content"][0]["text"]
 
