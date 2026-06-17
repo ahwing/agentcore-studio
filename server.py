@@ -113,7 +113,7 @@ def _stub_sdk():
         m.BedrockAgentCoreApp = _App
         sys.modules["bedrock_agentcore"] = m
 
-def bedrock_reply(prompt, cfg):
+def bedrock_reply(prompt, cfg, history=None):
     """直接调用 Bedrock converse 返回真实模型回复。无 boto3/凭证/模型权限则抛异常。"""
     import boto3
     model = cfg.get("model") or "anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -128,13 +128,19 @@ def bedrock_reply(prompt, cfg):
     if tools or skills:
         sp += f"\n（可用工具: {', '.join(tools) or '无'}; 技能: {', '.join(skills) or '无'}）"
     br = boto3.client("bedrock-runtime", region_name=region)
-    kw = {"modelId": model, "messages": [{"role": "user", "content": [{"text": prompt}]}],
+    msgs = []
+    for h in (history or []):
+        role = h.get("role"); txt = h.get("content")
+        if role in ("user", "assistant") and txt:
+            msgs.append({"role": role, "content": [{"text": str(txt)}]})
+    msgs.append({"role": "user", "content": [{"text": prompt}]})
+    kw = {"modelId": model, "messages": msgs,
           "inferenceConfig": {"maxTokens": 1024, "temperature": 0.7}}
     if sp.strip(): kw["system"] = [{"text": sp.strip()}, {"cachePoint": {"type": "default"}}]
     r = br.converse(**kw)
     return r["output"]["message"]["content"][0]["text"]
 
-def anthropic_reply(prompt, cfg, sp=None):
+def anthropic_reply(prompt, cfg, sp=None, history=None):
     """Bedrock 不可达时的兜底：经 Anthropic 兼容端点调 Claude。
     需环境变量 ANTHROPIC_API_KEY（必填）与 ANTHROPIC_BASE_URL（代理地址，anthropic SDK 自动读取）。"""
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -154,8 +160,14 @@ def anthropic_reply(prompt, cfg, sp=None):
     if tools or skills:
         system += f"\n（可用工具: {', '.join(tools) or '无'}; 技能: {', '.join(skills) or '无'}）"
     client = anthropic.Anthropic()  # 自动读取 ANTHROPIC_BASE_URL / ANTHROPIC_API_KEY
+    msgs = []
+    for h in (history or []):
+        role = h.get("role"); txt = h.get("content")
+        if role in ("user", "assistant") and txt:
+            msgs.append({"role": role, "content": str(txt)})
+    msgs.append({"role": "user", "content": prompt})
     def _call(mid):
-        kw = {"model": mid, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+        kw = {"model": mid, "max_tokens": 1024, "messages": msgs}
         if system.strip(): kw["system"] = system.strip()
         r = client.messages.create(**kw)
         return "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
@@ -166,7 +178,7 @@ def anthropic_reply(prompt, cfg, sp=None):
             return _call("claude-sonnet-4-5")
         raise
 
-def run_agent(name, prompt, sp=None):
+def run_agent(name, prompt, sp=None, history=None):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布，请先点击「发布」", "error"
     _stub_sdk()
@@ -175,19 +187,19 @@ def run_agent(name, prompt, sp=None):
     try:
         spec = importlib.util.spec_from_file_location("ac_" + name, entry)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-        res = mod.invoke({"prompt": prompt, **({"system_prompt": sp} if sp else {})})
+        res = mod.invoke({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})})
         out = res.get("result") or res.get("error") or json.dumps(res)
         if out and not res.get("error"): return out, "real"
     except Exception:
         pass
     # 2) 直连 Bedrock converse（有 boto3+凭证+模型权限即返回真实回复）
     try:
-        return bedrock_reply(prompt, info["cfg"]), "real"
+        return bedrock_reply(prompt, info["cfg"], history), "real"
     except Exception:
         pass
     # 2.5) Bedrock 不可达时，经 Anthropic 代理端点兜底（ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY）
     try:
-        return anthropic_reply(prompt, info["cfg"], sp), "real"
+        return anthropic_reply(prompt, info["cfg"], sp, history), "real"
     except Exception:
         pass
     # 3) 文本兜底（无依赖/无凭证）
@@ -242,10 +254,11 @@ def _extract(out):
     lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
     return lines[-1] if lines else "（无输出）"
 
-def _invoke_runtime_arn(arn, region, prompt, sp=None):
+def _invoke_runtime_arn(arn, region, prompt, sp=None, history=None, session=None):
     """托底：不依赖本地工作区，直接用 AWS 数据面 API 按 ARN 调用云端 runtime。"""
-    sid = uuid.uuid4().hex + uuid.uuid4().hex  # 64 chars，满足 runtimeSessionId 长度要求
-    payload_b64 = base64.b64encode(json.dumps({"prompt": prompt, **({"system_prompt": sp} if sp else {})}).encode()).decode()  # 默认 cli_binary_format=base64
+    import hashlib as _hl
+    sid = _hl.sha256(session.encode()).hexdigest() if session else (uuid.uuid4().hex + uuid.uuid4().hex)  # 同会话复用稳定 64-hex session id
+    payload_b64 = base64.b64encode(json.dumps({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})}).encode()).decode()  # 默认 cli_binary_format=base64
     outpath = None
     try:
         fd, outpath = tempfile.mkstemp(suffix=".out"); os.close(fd)
@@ -266,13 +279,13 @@ def _invoke_runtime_arn(arn, region, prompt, sp=None):
             try: os.remove(outpath)
             except Exception: pass
 
-def invoke_cloud(name, prompt, region=None, sp=None):
+def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None):
     info = PUBLISHED.get(name)
     if not info:
         # PUBLISHED 无记录（如容器重启清空内存）→ 仍按名字查 AWS 托底，避免误报"尚未发布"
         reg = region or "us-west-2"
         cs = _find_ready_runtime(reg, name)
-        if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt, sp)
+        if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt, sp, history, session)
         return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # 托底：本地工作区无部署状态（如托管/全新容器），但云端已有就绪 runtime → 直接按 ARN 调 AWS API
     if not os.path.isfile(os.path.join(info["dir"], ".bedrock_agentcore.yaml")) and info["cfg"].get("deploy_mode") != "harness":
@@ -280,7 +293,7 @@ def invoke_cloud(name, prompt, region=None, sp=None):
         if not arn and reg:
             cs = _find_ready_runtime(reg, name)
             if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = reg
-        if arn and reg: return _invoke_runtime_arn(arn, reg, prompt, sp)
+        if arn and reg: return _invoke_runtime_arn(arn, reg, prompt, sp, history, session)
         return "尚未发布（云端也未找到同名就绪 Agent）", "error"
     # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
@@ -302,7 +315,7 @@ def invoke_cloud(name, prompt, region=None, sp=None):
         except Exception as e:
             return f"Harness 调用失败: {e}", "error"
     # Runtime 模式: 用 agentcore invoke CLI
-    payload = json.dumps({"prompt": prompt, **({"system_prompt": sp} if sp else {})})
+    payload = json.dumps({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})})
     try:
         r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
                            capture_output=True, text=True, timeout=120,
@@ -379,12 +392,12 @@ class H(BaseHTTPRequestHandler):
                 resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
             self._send(200, json.dumps(resp))
         elif self.path == "/api/invoke":
-            out, mode = run_agent(data["name"], data.get("prompt", ""), data.get("system_prompt"))
+            out, mode = run_agent(data["name"], data.get("prompt", ""), data.get("system_prompt"), data.get("history"))
             self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/deploy":
             self._send(200, json.dumps({"job_id": start_deploy_job(data["name"])}))
         elif self.path == "/api/invoke-cloud":
-            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt")); self._send(200, json.dumps({"result": out, "mode": mode}))
+            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt"), data.get("history"), data.get("session")); self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/delete-runtime":
             self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
         else: self._send(404, "{}")
