@@ -134,6 +134,30 @@ def bedrock_reply(prompt, cfg):
     r = br.converse(**kw)
     return r["output"]["message"]["content"][0]["text"]
 
+def anthropic_reply(prompt, cfg, sp=None):
+    """Bedrock 不可达时的兜底：经 Anthropic 兼容端点调 Claude。
+    需环境变量 ANTHROPIC_API_KEY（必填）与 ANTHROPIC_BASE_URL（代理地址，anthropic SDK 自动读取）。"""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise RuntimeError("未配置 ANTHROPIC_API_KEY")
+    import anthropic, re as _re
+    model = cfg.get("model") or "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    m = model
+    for pre in ("us.", "eu.", "apac.", "us-gov."):
+        if m.startswith(pre): m = m[len(pre):]
+    if m.startswith("anthropic."): m = m[len("anthropic."):]
+    m = _re.sub(r"-v\d+:\d+$", "", m)  # claude-sonnet-4-5-20250929-v1:0 -> claude-sonnet-4-5-20250929
+    if not m.startswith("claude"):
+        raise RuntimeError(f"模型 {model} 非 Claude，Anthropic 代理不支持")
+    system = ((sp if sp is not None else cfg.get("system_prompt")) or "").strip()
+    tools, skills = cfg.get("tools") or [], cfg.get("skills") or []
+    if tools or skills:
+        system += f"\n（可用工具: {', '.join(tools) or '无'}; 技能: {', '.join(skills) or '无'}）"
+    client = anthropic.Anthropic()  # 自动读取 ANTHROPIC_BASE_URL / ANTHROPIC_API_KEY
+    kw = {"model": m, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+    if system.strip(): kw["system"] = system.strip()
+    r = client.messages.create(**kw)
+    return "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
+
 def run_agent(name, prompt, sp=None):
     info = PUBLISHED.get(name)
     if not info: return "尚未发布，请先点击「发布」", "error"
@@ -151,6 +175,11 @@ def run_agent(name, prompt, sp=None):
     # 2) 直连 Bedrock converse（有 boto3+凭证+模型权限即返回真实回复）
     try:
         return bedrock_reply(prompt, info["cfg"]), "real"
+    except Exception:
+        pass
+    # 2.5) Bedrock 不可达时，经 Anthropic 代理端点兜底（ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY）
+    try:
+        return anthropic_reply(prompt, info["cfg"], sp), "real"
     except Exception:
         pass
     # 3) 文本兜底（无依赖/无凭证）
