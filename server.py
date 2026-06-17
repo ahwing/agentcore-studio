@@ -145,7 +145,8 @@ def anthropic_reply(prompt, cfg, sp=None):
     for pre in ("us.", "eu.", "apac.", "us-gov."):
         if m.startswith(pre): m = m[len(pre):]
     if m.startswith("anthropic."): m = m[len("anthropic."):]
-    m = _re.sub(r"-v\d+:\d+$", "", m)  # claude-sonnet-4-5-20250929-v1:0 -> claude-sonnet-4-5-20250929
+    m = _re.sub(r"-v\d+:\d+$", "", m)  # 去 Bedrock 版本后缀 -v1:0
+    m = _re.sub(r"-\d{8}$", "", m)      # 去日期后缀 -> 代理用别名，如 claude-sonnet-4-5
     if not m.startswith("claude"):
         raise RuntimeError(f"模型 {model} 非 Claude，Anthropic 代理不支持")
     system = ((sp if sp is not None else cfg.get("system_prompt")) or "").strip()
@@ -153,10 +154,17 @@ def anthropic_reply(prompt, cfg, sp=None):
     if tools or skills:
         system += f"\n（可用工具: {', '.join(tools) or '无'}; 技能: {', '.join(skills) or '无'}）"
     client = anthropic.Anthropic()  # 自动读取 ANTHROPIC_BASE_URL / ANTHROPIC_API_KEY
-    kw = {"model": m, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
-    if system.strip(): kw["system"] = system.strip()
-    r = client.messages.create(**kw)
-    return "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
+    def _call(mid):
+        kw = {"model": mid, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+        if system.strip(): kw["system"] = system.strip()
+        r = client.messages.create(**kw)
+        return "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
+    try:
+        return _call(m)
+    except Exception:
+        if m != "claude-sonnet-4-5":  # 代理可能无此别名 -> 退回已知可用默认
+            return _call("claude-sonnet-4-5")
+        raise
 
 def run_agent(name, prompt, sp=None):
     info = PUBLISHED.get(name)
