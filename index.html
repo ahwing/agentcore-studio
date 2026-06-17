@@ -811,6 +811,17 @@ if __name__ == "__main__":
     `    aws iam put-role-policy --role-name "$_RTROLE" --policy-name studio-lambda-invoke --policy-document '${lamPolicyDoc}' >/dev/null 2>&1 && echo "✅ 已为 Runtime 角色授予 lambda:InvokeFunction（工具可调用）" || echo "⚠ 授予 lambda 权限失败（需 iam:PutRolePolicy），可手动补"`,
     '  fi',
     'fi']:[];
+  // 内置工具（Browser / Code Interpreter）：给 Runtime 执行角色补 bedrock-agentcore 数据面权限，否则云端调用会 AccessDenied
+  const builtinPermLines=(ci||br)?[
+    'echo "###STEP### tool-perm"',
+    `_RID2=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)`,
+    'if [ -n "$_RID2" ] && [ "$_RID2" != "None" ]; then',
+    `  _RTROLE2=$(aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$_RID2" --region ${region} --query roleArn --output text 2>/dev/null)`,
+    '  _RTROLE2="${_RTROLE2##*/}"',
+    '  if [ -n "$_RTROLE2" ] && [ "$_RTROLE2" != "None" ]; then',
+    `    aws iam put-role-policy --role-name "$_RTROLE2" --policy-name studio-builtin-tools --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["bedrock-agentcore:*Browser*","bedrock-agentcore:*CodeInterpreter*"],"Resource":"*"}]}' >/dev/null 2>&1 && echo "✅ 已为 Runtime 角色授予内置工具(Browser/CodeInterpreter)权限" || echo "⚠ 授予内置工具权限失败（需 iam:PutRolePolicy），可手动补"`,
+    '  fi',
+    'fi']:[];
   let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成（增量发布：指纹未变化的组件自动跳过）','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
     ...helpers,'',rtcfgFn,'',
     '# 1) Runtime（核心）— 三态：制品变→重建 / 仅配置变→秒级 update / 未变→跳过','echo "###STEP### runtime"','RTC=0',
@@ -828,7 +839,7 @@ if __name__ == "__main__":
     '  echo "###SKIP### runtime"; echo ">>> Runtime 未变化，跳过（增量发布）"; RTC=0',
     'fi',
     ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
-    '','# 后续组件允许部分失败','set +e','',...lamPermLines];
+    '','# 后续组件允许部分失败','set +e','',...lamPermLines,...builtinPermLines];
   let opt=[];
   if(mem)opt.push('echo "###STEP### memory"',
     `# Memory: configure 阶段创建；保留期(expiry) 可原地更新（update-memory），mode/策略改动需随 runtime 重建`,
