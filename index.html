@@ -1098,9 +1098,18 @@ async function doPublish(){const rt0=nodes.find(n=>n.type==='runtime');if(rt0&&i
   if(pubNotice)addMsg('sys','🔁 '+pubNotice);
   if(zipWarn)zipWarn.forEach(w=>addMsg('sys','⚠ '+w));
   if(cloudReady){deployed=true;document.getElementById('srcCloud').classList.add('avail');addMsg('sys',`☁️ 检测到云端已就绪的 ${cloudReady.agent}（${cloudReady.region}）— 可直接切「AWS 云端」与托底环境互动；改配置后重新部署会原地更新（重建期间旧版本继续服务）`)}}
+async function autoPublish(){const rt=nodes.find(n=>n.type==='runtime');
+  if(!rt){toast('请先添加 Runtime');switchView('cfg');return false}
+  if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');switchView('cfg');return false}
+  if(isIncomplete(rt)){toast('⛔ Runtime 未配置完整，无法发布');switchView('cfg');return false}
+  curName=rt.cfg.name;
+  try{const r=await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});if(!r.ok)throw 0;await r.json().catch(()=>({}));published=true;toast('已自动发布到本地')}
+  catch(e){published=true;toast('⚠ 后端未启动，按离线模拟')}
+  document.getElementById('pgMode').textContent='已发布';render();return true}
 async function sendMsg(){const inp=document.getElementById('pgIn'),txt=inp.value.trim();if(!txt)return;
-  if(!published){toast('请先点击「本地发布」');return}
-  const cloud=pgSrc==='cloud';if(cloud&&!deployed){toast('请先「发布到云端」');return}
+  const cloud=pgSrc==='cloud';
+  if(!published){if(cloud){toast('请先「发布到云端」');return}const ok=await autoPublish();if(!ok)return}
+  if(cloud&&!deployed){toast('请先「发布到云端」');return}
   inp.value='';addMsg('u',txt);
   let res,mode;try{const rtNode=nodes.find(n=>n.type==='runtime');const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
     const j=await r.json();res=j.result;mode=j.mode}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
