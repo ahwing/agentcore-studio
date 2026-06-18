@@ -246,12 +246,12 @@
   </div><div class="pop" id="pop" hidden></div><div class="zoomctl"><button onclick="zoomBy(0.87)" title="缩小 (-)">−</button><span id="zlbl" onclick="resetView()" title="点击重置 100%">100%</span><button onclick="zoomBy(1.15)" title="放大 (+)">＋</button><button onclick="fitView(1)" title="适配居中 (0)">⤢</button><button onclick="toggleFull()" title="全屏 (F)">⛶</button></div></div>
   <div class="side">
     <div class="seg" id="seg">
-      <button class="on" data-v="cfg" onclick="switchView('cfg')">📄 产物</button>
-      <button data-v="play" onclick="switchView('play')">🎮 Playground</button>
+      <button class="on" data-v="play" onclick="switchView('play')">🎮 Playground</button>
+      <button data-v="cfg" onclick="switchView('cfg')">📄 产物</button>
       <button data-v="reg" onclick="switchView('reg')">📚 Registry</button>
     </div>
     <!-- 配置 -->
-    <div class="view" id="vCfg">
+    <div class="view" id="vCfg" hidden>
       <div class="view" style="flex:1">
         <div class="tabs" id="tabs"></div>
         <div class="code" id="code"></div>
@@ -259,7 +259,7 @@
       </div>
     </div>
     <!-- playground -->
-    <div class="view" id="vPlay" hidden>
+    <div class="view" id="vPlay">
       <div class="pg">
         <div class="pg-bar">来源 <button class="srcbtn on" id="srcLocal" onclick="setSrc('local')">本地模拟</button><button class="srcbtn" id="srcCloud" onclick="setSrc('cloud')">AWS 云端</button><span class="mode mock" id="pgMode">未发布</span></div>
         <div class="msgs" id="msgs"></div>
@@ -371,7 +371,7 @@ const COMPONENTS={
     {k:'validation',l:'校验模式',t:'select',o:['IGNORE_ALL_FINDINGS','FAIL_ON_ANY_FINDINGS'],d:'IGNORE_ALL_FINDINGS'},
     {k:'description',l:'描述',t:'text',d:'治理策略'}]},
 };
-let nodes=[],sel=null,nid=0,tab='entry',fresh=new Set(),published=false,view='cfg',pgSrc='local',deployed=false;
+let nodes=[],sel=null,nid=0,tab='entry',fresh=new Set(),published=false,view='play',pgSrc='local',deployed=false;
 let sessions={},curName=null,lastCloudName=null;  // 每个场景/agent 独立 session：published/deployed/源模式/对话历史；lastCloudName=上次云端部署的名字（改名检测）
 let pgHist=[],pgSession=null;  // 会话内多轮记忆：完整对话历史 + 稳定 session id（随每次对话发给后端）
 
