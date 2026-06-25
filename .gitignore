@@ -6,11 +6,7 @@ __pycache__/
 .bedrock_agentcore.yaml
 gh-upload.sh
 deployments/
-agentcore-studio.json
+*.pptx
+agentcore-studio*.json
 agent-core-studio.json
-agentcore-studio-0615.json
-.gitignore
-agentcore-studio-061619.json
-技术小课堂_AgentCore可视化编排_2026 Summit_BingbingWu&TianyaoRen 1.pptx
-agentcore-studio-0616.json
 studio-*.json
