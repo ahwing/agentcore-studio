@@ -19,7 +19,7 @@
     --ink:#0A1120;--ink2:#0F1A2E;--ink3:#16243E;--card:rgba(24,38,64,.72);
     --line:#26365A;--line2:#32466e;--orange:#FF9900;--orange2:#EC7211;
     --text:#EAF1FB;--muted:#90A4C6;--muted2:#6C7E9F;
-    --rt:#FF9900;--mem:#B388FF;--gw:#4FC3F7;--id:#5CD6A0;--obs:#FFC04D;--pol:#FF7AA2;--mcp:#7FE1C0;--skill:#FFD166;--ci:#6CC4FF;--br:#C792EA;--eval:#9CCC65;--kb:#FFAB91;
+    --rt:#FF9900;--mem:#B388FF;--gw:#4FC3F7;--id:#5CD6A0;--obs:#FFC04D;--pol:#FF7AA2;--mcp:#7FE1C0;--skill:#FFD166;--ci:#6CC4FF;--br:#C792EA;--eval:#9CCC65;--kb:#FFAB91;--opt:#CE93D8;--hn:#26C6DA;
     --ui:'Sora',ui-sans-serif,system-ui,sans-serif;--body:'Manrope',ui-sans-serif,system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -177,6 +177,30 @@
   .pg-in button{font-family:var(--ui);font-weight:600;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#1a1206;border:0;border-radius:10px;padding:0 18px;cursor:pointer}
   .modal{position:fixed;inset:0;z-index:20;background:rgba(5,9,18,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center}
   .modal.show{display:flex}
+  #maModal .mcard,#impModal .mcard{width:min(600px,94vw)}
+  #maModal .mbody,#impModal .mbody{max-height:74vh;overflow:auto;padding:18px 20px}
+  #maModal .ma-sec,#impModal .ma-sec{font-family:var(--ui);font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin:18px 0 10px}
+  #maModal .ma-row,#impModal .ma-row{display:flex;gap:10px;align-items:flex-end}
+  #maModal .ma-row .field,#impModal .ma-row .field{flex:1;margin-bottom:0}
+  #maModal .ma-list,#impModal .ma-list{max-height:200px;overflow:auto;border:1px solid var(--line2);border-radius:8px;padding:2px 10px;color:var(--muted);background:var(--ink3)}
+  #maModal .ma-list .chk,#impModal .ma-list .row{display:flex;align-items:flex-start;gap:9px;padding:9px 2px;border-bottom:1px solid var(--line);color:var(--text)}
+  #maModal .ma-list .chk{cursor:pointer}
+  #maModal .ma-list .chk:last-child,#impModal .ma-list .row:last-child{border-bottom:none}
+  #maModal .ma-list .chk input{accent-color:var(--orange);width:15px;height:15px;margin-top:2px;flex:none;cursor:pointer}
+  #maModal .ma-list .chk>div,#impModal .ma-list .row>div{flex:1;min-width:0;word-break:break-all;line-height:1.5;font-size:12px}
+  #impModal .mcard{width:min(820px,95vw)}
+  #impModal .ma-list{padding:12px;display:flex;flex-direction:column;gap:12px;max-height:60vh}
+  #impModal .imp-hint{font-family:var(--ui);font-size:10.5px;color:var(--muted2);line-height:1.55;margin:2px 0 12px}
+  #impModal .imp-card{position:relative;border-radius:13px;background:var(--card);border:1px solid var(--line2);box-shadow:0 8px 22px rgba(0,0,0,.3);overflow:hidden;display:flex;align-items:center;gap:11px;padding:12px 14px 12px 17px;transition:transform .12s,border-color .2s}
+  #impModal .imp-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--ac);box-shadow:0 0 14px var(--ac)}
+  #impModal .imp-card:hover{border-color:var(--ac);transform:translateY(-1px)}
+  #impModal .imp-card.dim{opacity:.6}#impModal .imp-card.dim::before{box-shadow:none}
+  #impModal .imp-card .chip{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:16px;background:color-mix(in srgb,var(--ac) 22%,transparent);flex:none}
+  #impModal .imp-card .ic-main{flex:1;min-width:0}
+  #impModal .imp-card .ic-nm{font-family:var(--ui);font-weight:600;font-size:14px;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  #impModal .imp-card .badge{font-size:9px;border:1px solid var(--ac);color:var(--ac);border-radius:5px;padding:1px 6px;font-family:var(--ui);letter-spacing:.3px;font-weight:500}
+  #impModal .imp-card .ic-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;white-space:normal;word-break:break-all;line-height:1.5}
+  #impModal .imp-card .imp-btn{flex:none;align-self:center;padding:7px 14px}
   .mcard{width:580px;max-width:92vw;max-height:84vh;display:flex;flex-direction:column;background:var(--ink2);border:1px solid var(--line2);border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden;animation:nodeIn .3s both}
   .mhd{display:flex;align-items:center;padding:16px 20px;font-family:var(--ui);font-weight:700;font-size:16px;border-bottom:1px solid var(--line)}
   .mhd .mx{margin-left:auto;cursor:pointer;color:var(--muted2);font-size:23px;line-height:1}.mhd .mx:hover{color:var(--pol)}
@@ -224,6 +248,8 @@
   <span class="pill" id="statPill"><span class="dot"></span><span id="statTxt">空画布</span></span>
   <button class="btn-ghost" id="demoBtn" onclick="toggleDemo()" title="大屏演示模式 · 放大界面并适配画布 (Esc 退出)">🖥 演示模式</button>
   <button class="btn-ghost" onclick="newAgent()">＋ 新建 Agent</button>
+  <button class="btn-ghost" onclick="openMA()" title="多 Agent 编排：从云端拉取已发布 agent，设定 Supervisor→子 Agent 关系">🧩 多 Agent</button>
+  <button class="btn-ghost" onclick="openImp()" title="导入：从云端拉取 Studio 发布过的 agent，读回画布配置继续编辑">📥 导入</button>
   <select class="scenario-sel" onchange="if(this.value){loadScenario(this.value);this.selectedIndex=0}" title="一键载入演示场景">
     <option value="">📦 载入场景…</option>
     <option value="minimal">极简对话 Agent</option>
@@ -278,12 +304,41 @@
   <div class="mbody" id="reviewBody"></div>
   <div class="mfoot"><button class="btn-ghost" onclick="closeModal()">取消</button><button class="btn-pri" id="pubConfirmBtn" onclick="doPublish()">确认发布</button></div>
 </div></div>
+<div class="modal" id="maModal"><div class="mcard">
+  <div class="mhd">🧩 多 Agent 编排<span class="mx" onclick="closeMA()">×</span></div>
+  <div class="mbody">
+    <div class="ma-sec" style="margin-top:0">① 从云端拉取 Agent</div>
+    <div class="ma-row">
+      <div class="field"><label>区域</label><select id="maRegion"><option>us-east-1</option><option>us-west-2</option><option>ap-southeast-1</option></select></div>
+      <div class="field" style="flex:none"><label>&nbsp;</label><button class="btn-pri" onclick="maPull()" style="white-space:nowrap">⬇ 拉取云端 Agents</button></div>
+    </div>
+    <div id="maList" class="ma-list">尚未拉取。点「拉取云端 Agents」列出该区域已部署的 Runtime。</div>
+    <div class="ma-sec">② 编排配置</div>
+    <div class="field"><label>编排方式</label><select id="maMode" onchange="maOnMode()"><option value="supervisor">Supervisor — 主控路由，子 Agent 作为工具</option><option value="a2a">A2A — 对等协作（子 Agent 须为 A2A 服务）</option></select><div class="hint" id="maModeNote"></div></div>
+    <div class="field"><label>名称</label><input id="maName" value="orchestrator"></div>
+    <div class="field"><label>模型</label><select id="maModel"></select></div>
+    <div class="field"><label>系统提示（路由策略）</label><textarea id="maPrompt">你是一个主控编排 Agent。根据用户请求选择合适的子 Agent 工具来回答；必要时综合多个子 Agent 的结果。</textarea></div>
+    <div id="maWorkers"></div>
+  </div>
+  <div class="mfoot"><button class="btn-ghost" onclick="closeMA()">取消</button><button class="btn-pri" onclick="maGen()">生成编排 Agent</button></div>
+</div></div>
+<div class="modal" id="impModal"><div class="mcard">
+  <div class="mhd">📥 导入已有 Agent<span class="mx" onclick="closeImp()">×</span></div>
+  <div class="mbody">
+    <div class="ma-sec" style="margin-top:0">从云端拉取 Agent</div>
+    <div class="ma-row">
+      <div class="field"><label>区域</label><select id="impRegion"><option>us-east-1</option><option>us-west-2</option><option>ap-southeast-1</option></select></div>
+      <div class="field" style="flex:none"><label>&nbsp;</label><button class="btn-pri" onclick="impPull()" style="white-space:nowrap">⬇ 拉取云端 Agents</button></div>
+    </div>
+    <div class="imp-hint">只有「Studio 发布过」的 agent 带画布配置，可完整导入编辑；其它 agent 的逻辑在容器内、控制面拿不到，无法还原。</div>
+    <div id="impList" class="ma-list">尚未拉取。点「拉取云端 Agents」列出该区域已部署的 Runtime。</div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 <script>
 const COMPONENTS={
   runtime:{label:'Runtime',ic:'⚙️',ac:'var(--rt)',required:true,fields:[
     {k:'name',l:'Agent 名称',t:'text',d:'my_agent',hint:'仅下划线，不能用连字符'},
-    {k:'deploy_mode',l:'部署模式',t:'select',o:['runtime'],d:'runtime',hint:'runtime: 自定义代码部署'},
     {k:'framework',l:'Agent 框架',t:'select',o:['strands','minimal','claude_sdk','langchain','custom'],d:'strands'},
     {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-5-20250929-v1:0','anthropic.claude-haiku-4-5-20251001-v1:0','anthropic.claude-opus-4-1-20250805-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-5-20250929-v1:0'},
     {k:'system_prompt',l:'系统提示 (System Prompt)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
@@ -295,10 +350,37 @@ const COMPONENTS={
     {k:'runtime',l:'运行时',t:'select',o:['PYTHON_3_10','PYTHON_3_11','PYTHON_3_12','PYTHON_3_13','PYTHON_3_14','NODE_22'],d:'PYTHON_3_11'},
     {k:'region',l:'AWS 区域',t:'select',o:['us-west-2','us-east-1','ap-southeast-1'],d:'us-west-2'},
     {k:'protocol',l:'协议',t:'select',o:['HTTP','MCP','A2A'],d:'HTTP'},
+    {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 configure --authorizer-config 声明'},
+    {k:'in_discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 入站，形如 https://.../.well-known/openid-configuration'},
+    {k:'in_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 aud'},
+    {k:'in_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 client_id'},
     {k:'idle_timeout',l:'会话超时(秒)',t:'text',d:'900',hint:'60-28800'},
     {k:'max_lifetime',l:'实例最大存活(秒)',t:'text',d:'28800',hint:'60-28800'},
     {k:'env',l:'环境变量',t:'text',d:'',hint:'KEY=val,KEY2=val2'},
     {k:'description',l:'描述',t:'text',d:'',hint:'Runtime 描述（可选）'}]},
+  harness:{label:'Harness',ic:'🚀',ac:'var(--hn)',fields:[
+    {k:'name',l:'Harness 名称',t:'text',d:'my_harness',hint:'字母数字/下划线，<=48；声明式托管，AgentCore 跑 Agent 循环'},
+    {k:'model_provider',l:'模型提供方',t:'select',o:['bedrock','open_ai','gemini'],d:'bedrock'},
+    {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-5-20250929-v1:0','anthropic.claude-haiku-4-5-20251001-v1:0','anthropic.claude-opus-4-1-20250805-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-5-20250929-v1:0'},
+    {k:'api_key_arn',l:'API Key ARN',t:'text',d:'',hint:'非 Bedrock 模型必填（AgentCore Identity Token Vault ARN）'},
+    {k:'system_prompt',l:'指令 (Instructions)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
+    {k:'max_tokens',l:'每轮最大 Token',t:'text',d:'4096'},
+    {k:'max_iterations',l:'最大迭代轮数',t:'text',d:'10',hint:'Agent 循环上限'},
+    {k:'timeout',l:'单次超时(秒)',t:'text',d:'300'},
+    {k:'truncation',l:'上下文截断策略',t:'select',o:['sliding_window','summarization'],d:'sliding_window'},
+    {k:'memory',l:'记忆',t:'select',o:['auto','none'],d:'auto',hint:'auto: 自动建 STM+LTM; none: 不建'},
+    {k:'region',l:'AWS 区域',t:'select',o:['us-west-2','us-east-1','ap-southeast-1'],d:'us-east-1'},
+    {k:'network_mode',l:'网络模式',t:'select',o:['PUBLIC','VPC'],d:'PUBLIC'},
+    {k:'session_storage',l:'会话存储挂载路径',t:'text',d:'',hint:'如 /mnt/data/（持久化跨会话文件，可选）'},
+    {k:'container',l:'自带容器 (URI/Dockerfile)',t:'text',d:'',hint:'留空用默认环境'},
+    {k:'idle_timeout',l:'会话超时(秒)',t:'text',d:'900'},
+    {k:'max_lifetime',l:'实例最大存活(秒)',t:'text',d:'28800'},
+    {k:'description',l:'描述',t:'text',d:''}]},
+  subagent:{label:'子 Agent',ic:'🤖',ac:'var(--muted2)',parent:'runtime',external:true,fields:[
+    {k:'name',l:'名称',t:'text',d:''},
+    {k:'arn',l:'Runtime ARN',t:'text',d:''},
+    {k:'region',l:'区域',t:'text',d:''},
+    {k:'desc',l:'能力描述（供主控判断何时调用）',t:'text',d:''}]},
   memory:{label:'Memory',ic:'🧠',ac:'var(--mem)',fields:[
     {k:'mem_name',l:'记忆名称',t:'text',d:'my_memory'},
     {k:'mode',l:'记忆模式 (可多选)',t:'checks',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM'},
@@ -347,12 +429,8 @@ const COMPONENTS={
     {k:'live_view',l:'实时画面',t:'select',o:['true','false'],d:'true'},
     {k:'recording',l:'会话录制',t:'select',o:['true','false'],d:'false'},
     {k:'timeout',l:'会话超时(秒)',t:'text',d:'900'}]},
-  identity:{label:'Identity',ic:'🔐',ac:'var(--id)',parent:'gateway',fields:[
-    {k:'inbound_auth',l:'入站认证 (Inbound)',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用 Agent：IAM(SigV4) 或 JWT(OAuth/OIDC)'},
-    {k:'in_discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 入站使用'},
-    {k:'in_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 入站，逗号分隔'},
-    {k:'in_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 入站，逗号分隔'},
-    {k:'outbound_auth',l:'出站认证 (Outbound)',t:'select',o:['none','oauth','apikey'],d:'none',hint:'Agent 如何访问外部服务'},
+  identity:{label:'Identity',ic:'🔐',ac:'var(--id)',parent:'runtime',fields:[
+    {k:'outbound_auth',l:'出站认证 (Outbound)',t:'select',o:['none','oauth','apikey'],d:'none',hint:'仅出站凭证：Agent 在 Runtime 内通过 @requires_access_token 取 token 调外部服务（账户级凭证提供方，连 Runtime）。Gateway→工具的 egress 由各 MCP Target 自带凭证单独管，不经此节点'},
     {k:'oauth_provider',l:'OAuth 提供方',t:'select',o:['google','github','slack','microsoft','salesforce','custom'],d:'google',hint:'出站 OAuth 3LO 提供方 ⚠ 创建后改配置需删除该提供方重建'},
     {k:'provider_name',l:'凭证提供方名称',t:'text',d:'my_provider'},
     {k:'client_id',l:'OAuth Client ID',t:'text',d:''},
@@ -371,6 +449,11 @@ const COMPONENTS={
     {k:'eval_type',l:'评估类型',t:'select',o:['quality','trajectory','safety','custom'],d:'quality',hint:'对 Agent 输出做自动评估，结果汇入 Observability'},
     {k:'sampling',l:'评估采样率',t:'select',o:['1.0','0.5','0.1'],d:'1.0'},
     {k:'dataset',l:'评估数据集 (可选)',t:'text',d:'',hint:'S3 URI；留空则对线上流量抽样评估'}]},
+  optimisation:{label:'Optimization',ic:'🎯',ac:'var(--opt)',parents:['evaluation'],fields:[
+    {k:'enabled',l:'启用优化',t:'select',o:['true','false'],d:'true'},
+    {k:'target_evaluator',l:'目标评估器',t:'text',d:'',hint:'优化所依据的 Evaluator（基于其失败模式生成推荐）'},
+    {k:'recommendations',l:'AI 推荐 (系统提示/工具描述)',t:'select',o:['true','false'],d:'true',hint:'基于真实 traces + 目标评估器生成优化变体'},
+    {k:'config_bundles',l:'配置包 (版本化快照)',t:'select',o:['true','false'],d:'true',hint:'系统提示/模型/工具描述的不可变版本快照，免重新部署即可改行为'}]},
   policy:{label:'Policy',ic:'🛡️',ac:'var(--pol)',parent:'gateway',fields:[
     {k:'engine',l:'策略引擎名称',t:'text',d:'my_engine',hint:'⚠ 引擎创建后改 mode/Gateway关联需删除引擎重建；Cedar 策略内容可原地更新'},
     {k:'attach_gateway',l:'关联 Gateway',t:'select',o:['(画布中的 Gateway)','(不关联)'],d:'(画布中的 Gateway)',hint:'策略引擎作用于关联的 Gateway 的工具调用'},
@@ -387,7 +470,7 @@ let sessions={},curName=null,lastCloudName=null;  // 每个场景/agent 独立 s
 let pgHist=[],pgSession=null;  // 会话内多轮记忆：完整对话历史 + 稳定 session id（随每次对话发给后端）
 
 const pal=document.getElementById('palette');
-[['核心组件',['runtime','memory','gateway','identity','observability','evaluation','policy']],['内置工具',['codeinterp','browser']],['Gateway 工具目标',['mcp','skill','kb']]].forEach(([title,types])=>{
+[['核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy']],['内置工具',['codeinterp','browser']],['Gateway 工具目标',['mcp','skill','kb']]].forEach(([title,types])=>{
   const h=document.createElement('div');h.className='pal-sub';h.textContent=title;pal.appendChild(h);
   types.forEach(type=>{const c=COMPONENTS[type];const el=document.createElement('div');
     el.className='pal-item';el.draggable=true;el.style.setProperty('--ac',c.ac);
@@ -440,13 +523,16 @@ canvas.addEventListener('mousedown',e=>{if(e.target===canvas||e.target.id==='edg
 
 function addNode(type,x,y){
   const c=COMPONENTS[type];
+  if((type==='runtime'||type==='harness')&&nodes.some(n=>n.type==='runtime'||n.type==='harness')){toast('Agent 中枢只能有一个：Runtime 与 Harness 二选一');return}
   if(!c.multi&&nodes.some(n=>n.type===type)){toast('只能有一个 '+c.label);return}
   if(c.parent==='gateway'&&!nodes.some(n=>n.type==='gateway')){toast('请先添加 Gateway — MCP/Skill 是它的工具目标');return}
   const cfg={};c.fields.forEach(f=>cfg[f.k]=f.d);
   if(c.multi){const k=c.fields[0].k;cfg[k]=cfg[k]+'_'+(nodes.filter(n=>n.type===type).length+1)}
   const n={id:++nid,type,x:Math.max(10,x),y:Math.max(10,y),cfg};
   nodes.push(n);fresh.add(n.id);sel=n.id;published=false;render();renderProps()}
-function delNode(id){nodes=nodes.filter(n=>n.id!==id);if(sel===id)sel=null;published=false;render();renderProps()}
+function delNode(id){const dn=nodes.find(n=>n.id===id);
+  if(dn&&dn.type==='subagent'){const _rt=centerNode();if(_rt&&_rt.cfg.workers)_rt.cfg.workers=_rt.cfg.workers.filter(w=>w.arn!==dn.cfg.arn)}
+  nodes=nodes.filter(n=>n.id!==id);if(sel===id)sel=null;published=false;render();renderProps()}
 
 function isNum(v,min,max){const n=Number(v);return v!==''&&!isNaN(n)&&(min==null||n>=min)&&(max==null||n<=max)}
 function isIncomplete(n){
@@ -457,6 +543,16 @@ function isIncomplete(n){
       if(!isNum(c.idle_timeout,60,28800))return 'idle_timeout 需 60-28800';
       if(!isNum(c.max_lifetime,60,28800))return 'max_lifetime 需 60-28800';
       if(c.env&&c.env.trim()&&!/^([A-Za-z_][A-Za-z0-9_]*=[^,]*)(,[A-Za-z_][A-Za-z0-9_]*=[^,]*)*$/.test(c.env.trim()))return '环境变量格式应为 KEY=val,KEY2=val2';
+      if(c.inbound_auth==='JWT'&&(!c.in_discovery_url||!c.in_discovery_url.trim()))return '入站 JWT 需填写 OIDC Discovery URL';
+      break;
+    case'harness':
+      if(!c.name||!c.name.trim())return '需填写 Harness 名称';
+      if(/[^a-zA-Z0-9_]/.test(c.name))return 'Harness 名称仅允许字母/数字/下划线';
+      if(!isNum(c.max_tokens,1,200000))return 'max_tokens 需为正整数';
+      if(!isNum(c.max_iterations,1,1000))return 'max_iterations 需为 1-1000 整数';
+      if(c.model_provider!=='bedrock'&&(!c.api_key_arn||!c.api_key_arn.trim()))return '非 Bedrock 模型需填 API Key ARN';
+      break;
+    case'subagent':
       break;
     case'memory':
       if(!c.mode||!c.mode.trim())return '需选择至少一种记忆模式';
@@ -489,7 +585,6 @@ function isIncomplete(n){
       if(!isNum(c.top_k,1,100))return 'top-k 需为 1-100 整数';
       break;
     case'identity':
-      if(c.inbound_auth==='JWT'&&(!c.in_discovery_url||!c.in_discovery_url.trim()))return '入站 JWT 需填写 OIDC Discovery URL';
       if(c.outbound_auth==='oauth'){
         if(!c.provider_name||c.provider_name==='my_provider')return '出站 OAuth 需配置凭证提供方名称';
         if(!c.client_id||!c.client_id.trim())return '出站 OAuth 需填写 Client ID';
@@ -526,7 +621,7 @@ function newAgent(){
 function render(){
   document.getElementById('hint').style.display=nodes.length?'none':'block';
   [...canvas.querySelectorAll('.node')].forEach(e=>e.remove());
-  const rt=nodes.find(n=>n.type==='runtime');
+  const rt=centerNode();
   nodes.forEach(n=>{const c=COMPONENTS[n.type];const inc=isIncomplete(n);const el=document.createElement('div');
     el.className='node'+(n.id===sel?' sel':'')+(fresh.has(n.id)?' enter':'')+(c.multi?' mini':'')+(inc?' incomplete':'');
     el.style.cssText=`left:${n.x}px;top:${n.y}px;--ac:${c.ac}`;
@@ -537,11 +632,13 @@ function render(){
   fresh.clear();drawEdges(rt);renderPreview();updateStat(rt);renderRegistry()}
 function summary(n){const c=n.cfg;switch(n.type){
   case'runtime':return `<span class="req">${c.name}</span> · ${c.framework}<br>${(c.model_id||'').split('.').pop().slice(0,18)}`;
+  case'harness':return `<span class="req">${c.name}</span> · harness<br>${(c.model_id||'').split('.').pop().slice(0,18)}`;
+  case'subagent':return `<span class="req">${c.name}</span><br><span style="opacity:.55">${(c.arn||'').split('/').pop().slice(0,22)}</span>`;
   case'memory':return `mode: ${c.mode}<br>strategy: ${c.strategy}`;
   case'gateway':return c.gw_name;
   case'mcp':return `${c.name}<br>${c.type}`;
   case'skill':return c.name;
-  case'identity':return `in: ${c.inbound_auth}<br>out: ${c.outbound_auth}`;
+  case'identity':return `out: ${c.outbound_auth}`;
   case'observability':return `OTel: ${c.enabled}`;
   case'codeinterp':return `net: ${c.network}`;
   case'browser':return `net: ${c.network}`;
@@ -549,18 +646,20 @@ function summary(n){const c=n.cfg;switch(n.type){
 
 function drawEdges(rt){const svg=document.getElementById('edges');[...svg.querySelectorAll('path')].forEach(p=>p.remove());
   if(!rt)return;const gw=nodes.find(n=>n.type==='gateway');
-  nodes.filter(n=>n.type!=='runtime').forEach(n=>{
-    const pt=COMPONENTS[n.type].parent;const par=(pt&&nodes.find(x=>x.type===pt))||rt;
+  nodes.filter(n=>n!==rt&&n.type!=='runtime'&&n.type!=='harness'&&!COMPONENTS[n.type].floating).forEach(n=>{
+    const cd=COMPONENTS[n.type];const pts=cd.parents||(cd.parent?[cd.parent]:[]);
+    let pars=pts.map(t=>nodes.find(x=>x.type===t)).filter(Boolean);if(!pars.length)pars=[rt];
+    pars.forEach(par=>{
     const pw=COMPONENTS[par.type].multi?158:188,cx=par.x+pw,cy=par.y+34;
     const x2=n.x,y2=n.y+34,dx=Math.max(30,Math.abs(x2-cx)*0.45)*(x2>=cx?1:-1);
     const p=document.createElementNS('http://www.w3.org/2000/svg','path');
     p.setAttribute('d',`M ${cx} ${cy} C ${cx+dx} ${cy}, ${x2-dx} ${y2}, ${x2} ${y2}`);
     p.setAttribute('fill','none');p.setAttribute('stroke','url(#eg)');p.setAttribute('stroke-width','2.2');
-    p.setAttribute('stroke-dasharray','7 7');p.setAttribute('opacity','.7');p.style.animation='dash 1s linear infinite';svg.appendChild(p)})}
+    p.setAttribute('stroke-dasharray','7 7');p.setAttribute('opacity','.7');p.style.animation='dash 1s linear infinite';svg.appendChild(p)})})}
 const ss=document.createElement('style');ss.textContent='@keyframes dash{to{stroke-dashoffset:-28}}';document.head.appendChild(ss);
 
 function startDrag(e,n,el){sel=n.id;[...canvas.querySelectorAll('.node')].forEach(x=>x.classList.remove('sel'));el.classList.add('sel');renderProps();
-  const sx=e.clientX,sy=e.clientY,ox=n.x,oy=n.y;el.style.cursor='grabbing';const rt=nodes.find(x=>x.type==='runtime');
+  const sx=e.clientX,sy=e.clientY,ox=n.x,oy=n.y;el.style.cursor='grabbing';const rt=centerNode();
   function mv(ev){n.x=Math.max(0,ox+(ev.clientX-sx)/viewScale);n.y=Math.max(0,oy+(ev.clientY-sy)/viewScale);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges(rt);positionPop(n)}
   function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);el.style.cursor='grab'}
   document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up)}
@@ -661,7 +760,7 @@ function updateStat(rt){const p=document.getElementById('statPill'),tx=document.
 // ---- Registry ----
 function renderRegistry(){
   const list=document.getElementById('regList');document.getElementById('regCount').textContent=nodes.length;
-  const order=['runtime','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
+  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
   const st=published?'<span class="st act">Active</span>':'<span class="st reg">Registered</span>';
   let html='';
   const sec=(title,types,ind)=>{const ns=nodes.filter(n=>types.includes(n.type)).sort((a,b)=>order.indexOf(a.type)-order.indexOf(b.type));
@@ -669,7 +768,7 @@ function renderRegistry(){
     return `<div class="reg-grp"${gi}>${title}</div>`+ns.map(n=>{const c=COMPONENTS[n.type];
       const nm=n.cfg.name||n.cfg.gw_name||n.cfg.engine||c.label;
       return `<div class="reg-row" style="--ac:${c.ac}${ind?';margin-left:16px':''}"><span class="chip">${c.ic}</span><div><div class="nm">${nm}</div><div class="ty">${c.label}</div></div>${st}</div>`}).join('')};
-  html=sec('核心组件',['runtime','memory','gateway','identity','observability','evaluation','policy'])+sec('内置工具',['codeinterp','browser'])+sec('↳ Gateway 工具目标',['mcp','skill','kb'],true);
+  html=sec('核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy'])+sec('内置工具',['codeinterp','browser'])+sec('↳ Gateway 工具目标',['mcp','skill','kb'],true);
   list.innerHTML=html||'<div class="empty">尚无注册项<br>拖入组件后将在此显示</div>'}
 
 // ---- 产物生成 ----
@@ -682,8 +781,8 @@ function _hash(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i
 function _fp(o){return _hash(JSON.stringify(o))}
 
 function gen(){
-  const rt=nodes.find(n=>n.type==='runtime');
-  if(!rt)return{entry:'# 请先拖入一个 Runtime 组件',deploy:'# 请先拖入一个 Runtime',registry:'{}',policy:'{}',req:''};
+  const rt=centerNode();
+  if(!rt)return{entry:'# 请先拖入一个 Runtime 或 Harness 组件',deploy:'# 请先拖入一个 Runtime 或 Harness',registry:'{}',policy:'{}',req:''};
   const c=rt.cfg,region=c.region,acct='<ACCOUNT_ID>';
   // 仅纳入配置完整的组件；未配置完整的自动跳过、不发布
   const ok=n=>n&&!isIncomplete(n);
@@ -695,51 +794,54 @@ function gen(){
   const wsTools=mcps.filter(m=>m.cfg.type==='web_search');const hasWS=wsTools.length>0;
 
   // === Harness 模式 ===
-  if(c.deploy_mode==='harness'){
-    const pn=(c.name||'').replace(/[^a-zA-Z0-9]/g,'')||'agent';  // 项目名仅允许字母数字
+  if(rt.type==='harness'){
+    const pn=((c.name||'agent').replace(/[^a-zA-Z0-9]/g,'')||'agent').slice(0,23);  // 项目=harness 名：字母数字，<=23
     const toolsList=[];
     if(ci)toolsList.push('agentcore_code_interpreter');
     if(br)toolsList.push('agentcore_browser');
-    if(gw)toolsList.push('agentcore_gateway');
-    const toolsFlag=toolsList.length?` \\\n    --tools ${toolsList.join(',')}`:'';
-    let s=['#!/usr/bin/env bash','# AgentCore Harness 部署脚本 — 由 AgentCore Studio 生成','# Harness 模式: 零代码托管，AgentCore 管理 Agent 循环（推理→工具→响应）',`# 项目名 ${pn}（仅字母数字；原名 ${c.name}）`,'set -e','',
-      '# 使用新版 Node.js CLI（@aws/agentcore），旧版 Python CLI 不支持 Harness',
-      'AC="npx @aws/agentcore"',
-      'command -v agentcore-new >/dev/null 2>&1 && AC="agentcore-new"',
-      '',
-      '# 1) 创建 Harness 项目（会生成 <name>/ 子目录）',
-      `echo ">>> 创建 Harness 项目: ${pn}"`,
-      `rm -rf ${pn}`,
-      `$AC create --name ${pn} --type create --defaults --output-dir . --json`,
-      '',
-      `# 进入项目目录执行后续命令`,
-      `cd ${pn}`,
-      '',
-      '# 写入部署目标（account + region），否则 deploy 会报 Target not found',
-      `ACCT=$(aws sts get-caller-identity --query Account --output text)`,
-      `echo "[{\\"name\\":\\"default\\",\\"account\\":\\"$ACCT\\",\\"region\\":\\"${region}\\"}]" > agentcore/aws-targets.json`,
-      '',
-      '# 2) 添加 Harness 配置',
-      `echo ">>> 添加 Harness 配置"`,
-      `$AC add harness \\`,
-      `    --name ${pn} \\`,
-      `    --model-provider bedrock \\`,
-      `    --model-id ${c.model_id} \\`,
-      `    --system-prompt "${(c.system_prompt||'').replace(/"/g,'\\"')}"${toolsFlag}`,
-      '',
-      '# 3) 部署',
-      `echo ">>> 部署到 AWS"`,
-      'AWS_REGION='+region+' $AC deploy --target default --yes',
-      '',
-      '# 4) 验证调用',
-      `echo ">>> 验证 Harness"`,
-      `$AC invoke --harness ${pn} --prompt "Hello" || true`];
-    if(gw){s.push('','# 5) Gateway（如需外部 MCP 工具）',
-      `$AC add gateway --name ${gw.cfg.gw_name} 2>/dev/null || true`);
-      mcps.forEach(m=>{if(!isIncomplete({type:'mcp',cfg:m.cfg}))
-        s.push(`$AC add gateway-target --gateway ${gw.cfg.gw_name} --name ${m.cfg.name} --type ${m.cfg.type} 2>/dev/null || true`)});
-      s.push('$AC deploy --target default --yes');}
-    s.push('','echo "✅ Harness 部署完成（项目目录: '+c.name+'/）"');
+    const urlMcp=mcps.find(m=>/^https?:\/\//.test(m.cfg.endpoint||''));  // 取第一个 URL 型 MCP
+    if(urlMcp)toolsList.push('remote_mcp');
+    const hSp=(c.system_prompt||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,' ');
+    let hflags=`--name ${pn} --model-provider ${c.model_provider||'bedrock'} --model-id ${c.model_id} --system-prompt "${hSp}"`;
+    if((c.api_key_arn||'').trim())hflags+=` --api-key-arn ${c.api_key_arn.trim()}`;
+    if(c.memory==='none')hflags+=' --no-memory';
+    if(c.max_iterations)hflags+=` --max-iterations ${parseInt(c.max_iterations)||10}`;
+    if(c.timeout)hflags+=` --timeout ${parseInt(c.timeout)||300}`;
+    if(c.truncation)hflags+=` --truncation-strategy ${c.truncation}`;
+    if((c.container||'').trim())hflags+=` --container ${c.container.trim()}`;
+    if((c.session_storage||'').trim())hflags+=` --session-storage ${c.session_storage.trim()}`;
+    if(c.network_mode==='VPC')hflags+=' --network-mode VPC';
+    if(c.max_tokens)hflags+=` --max-tokens ${parseInt(c.max_tokens)||1024}`;
+    if(toolsList.length)hflags+=` --tools ${toolsList.join(',')}`;
+    if(urlMcp)hflags+=` --mcp-name ${(urlMcp.cfg.name||'mcp').replace(/[^a-zA-Z0-9_]/g,'_')} --mcp-url ${urlMcp.cfg.endpoint}`;
+    const warns=[];
+    if(gw)warns.push('echo "⚠ Gateway 在 harness 模式需先部署再按 ARN 两段式接入（v1 未自动接，可手动 agentcore add tool --harness '+pn+' --type agentcore_gateway --gateway <名>）"');
+    if(kbs.length)warns.push('echo "⚠ Knowledge Base 在 harness 模式需经 Gateway 暴露（v1 未自动接）"');
+    if(skills.length)warns.push('echo "⚠ inline Python Skill 不适用于 harness（其技能为 AWS Skills 目录）；自定义工具请封成 MCP/Gateway"');
+    if(mcps.some(m=>/^arn:aws[a-z-]*:lambda:/.test(m.cfg.endpoint||'')))warns.push('echo "⚠ Lambda 型 MCP 在 harness 模式需经 Gateway 接入（v1 未自动接）"');
+    let s=['#!/usr/bin/env bash','# AgentCore Harness 部署脚本 — 由 AgentCore Studio 生成',
+      '# Harness：声明式托管，AgentCore 跑 Agent 循环（需 Node 20 + @aws/agentcore preview CLI）',
+      `# 项目/harness 名 ${pn}（原名 ${c.name}）`,'set -e','',
+      '# harness 用 npm 版 CLI（preview）；npx 显式调用，避免与 Python 版 agentcore 命名冲突',
+      'AC="npx @aws/agentcore@preview"','',
+      `echo ">>> 创建空项目 ${pn}"`,`rm -rf ${pn}`,
+      `$AC create --project-name ${pn} --no-agent --defaults --json`,
+      `cd ${pn}`,'',
+      '# 写部署目标（account + region），否则 deploy 报 Target not found',
+      'ACCT=$(aws sts get-caller-identity --query Account --output text)',
+      `echo "[{\\"name\\":\\"default\\",\\"account\\":\\"$ACCT\\",\\"region\\":\\"${region}\\"}]" > agentcore/aws-targets.json`,'',
+      ...warns,
+      `echo ">>> 添加 Harness（model/prompt/工具/记忆）"`,
+      `$AC add harness ${hflags}`,'',
+      `echo ">>> 部署到 AWS（CDK，首次较慢，会 bootstrap）"`,
+      `AWS_REGION=${region} $AC deploy --target default --yes`,'',
+      `echo ">>> 验证调用"`,
+      `$AC invoke --harness ${pn} --prompt "Hello" || true`,
+      '# 方案②：画布 spec 存档到 state 桶，供「导入」读回重建可编辑视图',
+      `_SB="agentcore-studio-state-$ACCT-${region}"`,
+      `aws s3api head-bucket --bucket "$_SB" --region ${region} 2>/dev/null || aws s3api create-bucket --bucket "$_SB" --region ${region} $([ "${region}" != "us-east-1" ] && echo "--create-bucket-configuration LocationConstraint=${region}") >/dev/null 2>&1 || true`,
+      `[ -f ../.studio_spec.json ] && aws s3 cp ../.studio_spec.json "s3://$_SB/specs/${c.name}.json" --region ${region} >/dev/null 2>&1 && echo "✅ Studio 配置已存档（可后续导入编辑）" || echo "⚠ Studio 配置存档跳过"`,
+      `echo "✅ Harness 部署完成（项目目录: ${pn}/）"`];
     const deploy=s.join('\n');
 
     // Harness invoke script as entry
@@ -792,10 +894,16 @@ if __name__ == "__main__":
   let cfg=`PYTHONIOENCODING=utf-8 agentcore configure -e ${c.entry||'agentcore_entry.py'} -n ${c.name} \\\n  --deployment-type ${c.deploy_type} --runtime ${c.runtime} -r ${region} --protocol ${c.protocol} --idle-timeout ${c.idle_timeout} --max-lifetime ${c.max_lifetime}`;
   if(c.deploy_type==='container'&&(c.container_uri||'').trim())cfg+=` --ecr ${c.container_uri.trim()}`;
   if(c.deploy_type==='direct_code_deploy'&&(c.code_s3||'').trim())cfg+=` --s3 ${c.code_s3.trim()}`;
+  // 入站认证：JWT → 声明式 --authorizer-config（IAM=默认 SigV4，无需 flag）。入站归 Runtime 自身，不再由 Identity 节点承载
+  if(c.inbound_auth==='JWT'&&(c.in_discovery_url||'').trim()){
+    const _aud=c.in_audience?`,"allowedAudience":[${c.in_audience.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
+    const _cli=c.in_clients?`,"allowedClients":[${c.in_clients.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
+    cfg+=` --authorizer-config '{"customJWTAuthorizer":{"discoveryUrl":"${c.in_discovery_url.trim()}"${_aud}${_cli}}}'`;
+  }
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
   // 增量发布：各单元指纹（runtime 折入 memory/obs/tools/skills/model/framework，因其随 runtime 制品打包/配置）
   // 制品指纹（变了才重建）：代码/依赖/框架/模型/记忆/可观测/工具/skills/部署方式/运行时/镜像/S3
-  const fpArt=_fp({entry,region,dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname})),kb:kbs.map(k=>({n:k.cfg.name,id:k.cfg.kb_id,r:k.cfg.region,t:k.cfg.top_k}))});
+  const fpArt=_fp({entry,region,dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname})),kb:kbs.map(k=>({n:k.cfg.name,id:k.cfg.kb_id,r:k.cfg.region,t:k.cfg.top_k})),inb:{a:c.inbound_auth||'IAM',d:c.in_discovery_url||'',au:c.in_audience||'',cl:c.in_clients||''}});
   // 配置指纹（只它变 → update-agent-runtime 秒级，不重建）：协议/超时/环境变量/描述/系统提示(外置为 env)
   const fpCfg=_fp({protocol:c.protocol,idle:c.idle_timeout,max:c.max_lifetime,env:c.env||'',desc:c.description||'',sp:c.system_prompt||''});  // system_prompt 纳入配置指纹：仅改 prompt → update-agent-runtime 秒级推送 SYSTEM_PROMPT 环境变量到云端（不重建镜像）；Playground 仍每次对话 payload 即时生效
   const envObj={};(c.env||'').split(',').forEach(p=>{const i=p.indexOf('=');if(i>0)envObj[p.slice(0,i).trim()]=p.slice(i+1)});if((c.system_prompt||'').length)envObj['SYSTEM_PROMPT']=c.system_prompt;const envJson=JSON.stringify(envObj);
@@ -852,6 +960,17 @@ if __name__ == "__main__":
     `    aws iam put-role-policy --role-name "$_RTROLE3" --policy-name studio-kb-retrieve --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["bedrock:Retrieve","bedrock:RetrieveAndGenerate"],"Resource":"*"}]}' >/dev/null 2>&1 && echo "✅ 已为 Runtime 角色授予知识库检索权限(bedrock:Retrieve)" || echo "⚠ 授予知识库权限失败（需 iam:PutRolePolicy），可手动补"`,
     '  fi',
     'fi']:[];
+  const _wk=(c.workers||[]).filter(w=>w&&w.arn);
+  const wkPermLines=_wk.length?[
+    'echo "###STEP### subagent-invoke-perm"',
+    `_RID4=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)`,
+    'if [ -n "$_RID4" ] && [ "$_RID4" != "None" ]; then',
+    `  _RTROLE4=$(aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$_RID4" --region ${region} --query roleArn --output text 2>/dev/null)`,
+    '  _RTROLE4="${_RTROLE4##*/}"',
+    '  if [ -n "$_RTROLE4" ] && [ "$_RTROLE4" != "None" ]; then',
+    `    aws iam put-role-policy --role-name "$_RTROLE4" --policy-name studio-invoke-subagents --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["bedrock-agentcore:InvokeAgentRuntime"],"Resource":"*"}]}' >/dev/null 2>&1 && echo "✅ 已为编排器 Runtime 授予子 Agent 调用权限(InvokeAgentRuntime)" || echo "⚠ 授予子 Agent 调用权限失败（需 iam:PutRolePolicy），可手动补"`,
+    '  fi',
+    'fi']:[];
   let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成（增量发布：指纹未变化的组件自动跳过）','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
     ...helpers,'',rtcfgFn,'',
     '# 1) Runtime（核心）— 三态：制品变→重建 / 仅配置变→秒级 update / 未变→跳过','echo "###STEP### runtime"','RTC=0',
@@ -869,22 +988,19 @@ if __name__ == "__main__":
     '  echo "###SKIP### runtime"; echo ">>> Runtime 未变化，跳过（增量发布）"; RTC=0',
     'fi',
     ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
-    '','# 后续组件允许部分失败','set +e','',...lamPermLines,...builtinPermLines,...kbPermLines];
+    '','# 后续组件允许部分失败','set +e','',...lamPermLines,...builtinPermLines,...kbPermLines,...wkPermLines];
   let opt=[];
   if(mem)opt.push('echo "###STEP### memory"',
     `# Memory: configure 阶段创建；保留期(expiry) 可原地更新（update-memory），mode/策略改动需随 runtime 重建`,
     `MEM_ID=$(aws bedrock-agentcore-control list-memories --region ${region} --query "memories[?starts_with(id, '${c.name}_mem-')].id | [0]" --output text 2>/dev/null)`,
     `if [ -n "$MEM_ID" ] && [ "$MEM_ID" != "None" ]; then aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --event-expiry-duration ${parseInt(mem.cfg.expiry)||30} --region ${region} >/dev/null 2>&1 && echo "✅ Memory 保留期=${parseInt(mem.cfg.expiry)||30} 天（原地更新，未重建）" || echo ">>> Memory 保留期更新跳过（可能正在创建中）"; else echo ">>> Memory 将随 runtime 创建"; fi`);
-  const identActive=ident&&(ident.cfg.inbound_auth==='JWT'||ident.cfg.outbound_auth!=='none');
+  const identActive=ident&&ident.cfg.outbound_auth!=='none';  // Identity 仅出站凭证；入站鉴权已移至 Runtime/Gateway 各自的 --authorizer-config
   if(identActive){
     opt.push('echo "###STEP### identity"',
       'if [ "$(_fpget identity)" = "$FP_identity" ]; then',
       '  echo "###SKIP### identity"; echo ">>> Identity 未变化，跳过"',
       'else');
-    if(ident.cfg.inbound_auth==='JWT')opt.push('','# 2a) Identity 入站 — JWT 授权器（保护 Runtime 端点）',
-      `# 入站 JWT: discovery=${ident.cfg.in_discovery_url}`,
-      `# 在 runtime configure 时通过 --authorizer-config 应用 customJWTAuthorizer，或用 Identity 控制台配置`);
-    if(ident.cfg.outbound_auth==='oauth')opt.push('','# 2b) Identity 出站 — OAuth2 凭证提供方 ('+ident.cfg.oauth_provider+')',
+    if(ident.cfg.outbound_auth==='oauth')opt.push('','# Identity 出站 — OAuth2 凭证提供方 ('+ident.cfg.oauth_provider+')',
       `PYTHONIOENCODING=utf-8 agentcore identity create-credential-provider --name ${ident.cfg.provider_name} --type ${ident.cfg.oauth_provider} --client-id "${ident.cfg.client_id||'<CLIENT_ID>'}" --client-secret "${ident.cfg.client_secret||'<CLIENT_SECRET>'}"${ident.cfg.scopes?` --scopes ${ident.cfg.scopes}`:''} || echo "⚠ OAuth 提供方已存在或创建失败；如需改配置请先删除该提供方再重新发布（暂不支持原地更新）"`);
     else if(ident.cfg.outbound_auth==='apikey')opt.push('','# 2b) Identity 出站 — API Key 凭证提供方（存在则原地更新，否则创建）',
       `if aws bedrock-agentcore-control get-api-key-credential-provider --name ${ident.cfg.provider_name} --region ${region} >/dev/null 2>&1; then`,
@@ -1031,6 +1147,9 @@ if __name__ == "__main__":
       else if(kc.source_type==='upload'){const zf=`skills/${kc.name}.zip`;skillZips[zf]=kc._zipdata;opt.push(`echo ">>> Skill ${kc.name}: 解压 ${kc._zipname||zf}"`,`mkdir -p skills/${kc.name} && unzip -o ${zf} -d skills/${kc.name} >/dev/null && rm -f ${zf} || echo "⚠ 解压失败"`);}
       else{const fn=`skills/${kc.name}.py`;skillFiles[fn]=kc.code||'';opt.push(`echo ">>> Skill ${kc.name}: 已打包 ${fn}"`);}});}
   if(opt.length)s.push(...opt);
+  // 方案②：把画布 spec 存档到 state 桶，供「导入」读回重建可编辑视图（复用上面已建的 $STATE_BUCKET）
+  s.push('','echo "###STEP### studio-spec"',
+    `[ -f .studio_spec.json ] && aws s3 cp .studio_spec.json "s3://$STATE_BUCKET/specs/${c.name}.json" --region ${region} >/dev/null 2>&1 && echo "✅ Studio 配置已存档（可后续导入编辑）" || echo "⚠ Studio 配置存档跳过（不影响部署）"`);
   s.push('','echo "✅ 所有组件部署完成"');
   const deploy=s.join('\n').replace(/uv run agentcore/g,'agentcore');
   const registry={agent:c.name,framework:c.framework,model:c.model_id,region,
@@ -1043,6 +1162,7 @@ if __name__ == "__main__":
     {Sid:'SecretsManager',Effect:'Allow',Action:['secretsmanager:GetSecretValue'],Resource:[`arn:aws:secretsmanager:${region}:${acct}:secret:${c.name}/*`]}];
   if(obs&&obs.cfg.enabled!=='false')stmts.push({Sid:'Observability',Effect:'Allow',Action:['logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents','xray:PutTraceSegments'],Resource:'*'});
   if(gw)stmts.push({Sid:'Gateway',Effect:'Allow',Action:['bedrock-agentcore:InvokeGateway','lambda:InvokeFunction'],Resource:'*'});
+  if((c.workers||[]).some(w=>w&&w.arn))stmts.push({Sid:'InvokeSubAgents',Effect:'Allow',Action:['bedrock-agentcore:InvokeAgentRuntime'],Resource:'*'});
   const policy=JSON.stringify({Version:'2012-10-17',Statement:stmts},null,4);
   let req=['bedrock-agentcore>=0.1.0','bedrock-agentcore-starter-toolkit>=0.1.0'];
   if(c.framework==='strands')req.push('strands-agents>=0.1.0');if(c.framework==='claude_sdk')req.push('anthropic>=0.39.0');if(c.framework==='langchain')req.push('langchain>=0.3.0','langchain-aws>=0.2.0');
@@ -1082,12 +1202,15 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   const kbTools=kbs.filter(k=>!isIncomplete({type:'kb',cfg:k.cfg}));
   const kbDefs=kbTools.map(k=>{const fn=pyId(k.cfg.name);const tk=parseInt(k.cfg.top_k)||5;
     return `@tool\ndef ${fn}(query: str) -> str:\n    """${escPy(k.cfg.description||k.cfg.name)}（从知识库检索，传入查询文本）。"""\n    return _kb_retrieve("${k.cfg.kb_id}", "${k.cfg.region||c.region||'us-east-1'}", query, ${tk})\n`;}).join('\n');
-  const toolList=[...lamTools.map(m=>pyId(m.cfg.name)),...skTools.map(k=>pyId(k.cfg.name)),...kbTools.map(k=>pyId(k.cfg.name)),...(ci?['code_interpreter']:[]),...(br?['browser']:[])].join(', ');
+  const wkTools=(c.workers||[]).filter(w=>w&&w.arn);
+  const _wkfn=(c.orch_mode==='a2a')?'_invoke_a2a':'_invoke_agent';
+  const wkDefs=wkTools.map(w=>{const fn=pyId(w.name);return `@tool\ndef ${fn}(query: str) -> str:\n    """${escPy(w.desc||('调用子 Agent '+w.name+' 处理相关请求'))}"""\n    return ${_wkfn}("${w.arn}", "${w.region||c.region||'us-east-1'}", query)\n`;}).join('\n');
+  const toolList=[...lamTools.map(m=>pyId(m.cfg.name)),...skTools.map(k=>pyId(k.cfg.name)),...kbTools.map(k=>pyId(k.cfg.name)),...wkTools.map(w=>pyId(w.name)),...(ci?['code_interpreter']:[]),...(br?['browser']:[])].join(', ');
   const wsSetup=(c.framework==='strands'&&hasWS)?`_GW_URL = os.environ.get("GATEWAY_URL")\n_GW_MCP = None\nif _GW_URL:\n    try:\n        import httpx, botocore.session\n        from botocore.auth import SigV4Auth\n        from botocore.awsrequest import AWSRequest\n        from strands.tools.mcp.mcp_client import MCPClient\n        from mcp.client.streamable_http import streamablehttp_client\n        class _SigV4Auth(httpx.Auth):\n            def auth_flow(self, request):\n                _cr = botocore.session.get_session().get_credentials().get_frozen_credentials()\n                _ar = AWSRequest(method=request.method, url=str(request.url), data=request.content, headers=dict(request.headers))\n                SigV4Auth(_cr, "bedrock-agentcore", "${c.region}").add_auth(_ar)\n                request.headers.update(dict(_ar.headers))\n                yield request\n        _GW_MCP = MCPClient(lambda: streamablehttp_client(_GW_URL, auth=_SigV4Auth()))\n    except Exception as _e:\n        _GW_MCP = None\n\n`:'';
   const strandsProc=hasWS?`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    if _GW_MCP is not None:\n        try:\n            with _GW_MCP:\n                _gwt = _GW_MCP.list_tools_sync()\n                agent = Agent(model=model, system_prompt=sp, tools=_TOOLS + _gwt, messages=_hist_msgs(history))\n                return str(agent(prompt))\n        except Exception:\n            pass\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    return str(agent(prompt))\n`:`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result)\n`;
   let logic;
   if(c.framework==='strands'){
-    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}\n_TOOLS = [${toolList}]\n\n${wsSetup}${strandsProc}`;
+    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n_TOOLS = [${toolList}]\n\n${wsSetup}${strandsProc}`;
     else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result)\n`;
   }
   else if(c.framework==='claude_sdk')logic=`import anthropic\n_c = anthropic.Anthropic()\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    _msgs = [{"role": h["role"], "content": h["content"]} for h in (history or []) if h.get("role") in ("user", "assistant") and h.get("content")]\n    _msgs.append({"role": "user", "content": prompt})\n    msg = _c.messages.create(model="${mid}", max_tokens=${c.max_tokens}, temperature=${c.temperature},\n        system=sp, messages=_msgs)\n    return msg.content[0].text\n`;
@@ -1106,11 +1229,13 @@ function switchView(v){view=v;['cfg','play','reg'].forEach(x=>{document.getEleme
   [...document.getElementById('seg').children].forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
 
 // ---- 发布 / Playground / 云部署 ----
-function agentName(){const rt=nodes.find(n=>n.type==='runtime');return rt?rt.cfg.name:null}
-function payload(){const rt=nodes.find(n=>n.type==='runtime');const o=gen();
-  return{name:rt.cfg.name,files:{'agentcore_entry.py':o.entry,'deploy.sh':o.deploy,'registry.json':o.registry,'iam-policy.json':o.policy,'requirements.txt':o.req,...(o.skillFiles||{})},
+function centerNode(){return nodes.find(n=>n.type==='runtime')||nodes.find(n=>n.type==='harness')||null}
+function agentName(){const rt=centerNode();return rt?rt.cfg.name:null}
+function payload(){const rt=centerNode();const o=gen();
+  const spec=JSON.stringify({v:1,name:rt.cfg.name,ts:Date.now(),nodes},null,2);
+  return{name:rt.cfg.name,files:{'agentcore_entry.py':o.entry,'deploy.sh':o.deploy,'registry.json':o.registry,'iam-policy.json':o.policy,'requirements.txt':o.req,'.studio_spec.json':spec,...(o.skillFiles||{})},
     zips:o.skillZips||{},
-    cfg:{entry:'agentcore_entry.py',deploy_mode:rt.cfg.deploy_mode,harness_name:(rt.cfg.name||'').replace(/[^a-zA-Z0-9]/g,'')||'agent',region:rt.cfg.region,framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,
+    cfg:{entry:'agentcore_entry.py',deploy_mode:rt.type==='harness'?'harness':(rt.cfg.deploy_mode||'runtime'),harness_name:(rt.cfg.name||'').replace(/[^a-zA-Z0-9]/g,'')||'agent',region:rt.cfg.region,framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,
       tools:nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),skills:nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name)}}}
 function collectWarnings(){
   const w=[];
@@ -1124,11 +1249,12 @@ function collectWarnings(){
   skNames.forEach((nm,i)=>{if(nm&&skNames.indexOf(nm)!==i&&skNames.indexOf(nm)<i)w.push(`✨ Skill 名称重复: 「${nm}」`)});
   // MCP/Skill 但缺 Gateway
   if((nodes.some(n=>n.type==='mcp')||nodes.some(n=>n.type==='skill'))&&!nodes.some(n=>n.type==='gateway'))w.push('🔌 存在 MCP/Skill 但缺少 Gateway（工具目标需挂在 Gateway 下）');
+  if(nodes.some(n=>n.type==='runtime')&&nodes.some(n=>n.type==='harness'))w.push('⚙️🚀 Runtime 与 Harness 二选一：二者都是 Agent 中枢，同时存在时仅以 Runtime 为准，请删除其一');
   return [...new Set(w)]}
-function publish(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
+function publish(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
   curName=rt.cfg.name;  // session 按实际发布的 agent 名对齐（处理改名）
-  const order=['runtime','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
+  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
   const rtInc=isIncomplete(rt);
   // 未配置完整的组件（Runtime 除外）→ 将被跳过、不发布
   const skip=nodes.filter(n=>isIncomplete(n)&&n.type!=='runtime').map(n=>{const c=COMPONENTS[n.type];const nm=n.cfg.name||n.cfg.gw_name||n.cfg.engine||c.label;return `${c.ic} ${c.label}「${nm}」：${isIncomplete(n)}`});
@@ -1139,6 +1265,7 @@ function publish(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请
   const skN=nodes.filter(n=>n.type==='skill').map(n=>(n.cfg.name||'').trim());
   skN.forEach((nm,i)=>{if(nm&&skN.indexOf(nm)<i)adv.push(`✨ Skill 名称重复:「${nm}」`)});
   if((nodes.some(n=>n.type==='mcp')||nodes.some(n=>n.type==='skill'))&&!nodes.some(n=>n.type==='gateway'))adv.push('🔌 存在 MCP/Skill 但缺少 Gateway（工具目标需挂在 Gateway 下）');
+  if(nodes.some(n=>n.type==='runtime')&&nodes.some(n=>n.type==='harness'))adv.push('⚙️🚀 Runtime 与 Harness 二选一：请只保留一个作为 Agent 中枢');
   let topHtml='';
   if(rtInc)topHtml+=`<div class="errbox"><div class="errhd">⛔ Runtime 未配置完整，无法发布：${rtInc}</div></div>`;
   if(skip.length)topHtml+=`<div class="skipbox"><div class="skiphd">⏭ ${skip.length} 个组件未配置完整，将被跳过（不发布），其余照常发布</div>${skip.map(x=>`<div class="warnitem">• ${x}</div>`).join('')}</div>`;
@@ -1152,9 +1279,9 @@ function publish(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请
   else{btn.disabled=false;btn.textContent=skip.length?`确认发布（跳过 ${skip.length} 个未配置）`:'确认发布';btn.classList.remove('disabled')}
   document.getElementById('modal').classList.add('show')}
 function closeModal(){document.getElementById('modal').classList.remove('show')}
-async function doPublish(){const rt0=nodes.find(n=>n.type==='runtime');if(rt0&&isIncomplete(rt0)){toast('⛔ Runtime 未配置完整，请先修复');return}
+async function doPublish(){const rt0=centerNode();if(rt0&&isIncomplete(rt0)){toast('⛔ Runtime 未配置完整，请先修复');return}
   const skipped=nodes.filter(n=>isIncomplete(n)&&n.type!=='runtime');
-  closeModal();const rt=nodes.find(n=>n.type==='runtime');
+  closeModal();const rt=centerNode();
   toast('正在发布…');let pubNotice=null,zipWarn=null,cloudReady=null;try{const r=await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
     if(!r.ok)throw 0;const j=await r.json().catch(()=>({}));pubNotice=j.region_notice;zipWarn=(j.zip_warn||[]).length?j.zip_warn:null;if(j.cloud_ready)cloudReady={agent:j.cloud_agent,region:j.cloud_region};published=true;toast('✅ 已发布到本地工作区')}catch(e){published=true;toast('⚠ 后端未启动，已切换离线模拟')}
   render();document.getElementById('pgMode').textContent='已发布';switchView('play');
@@ -1162,9 +1289,10 @@ async function doPublish(){const rt0=nodes.find(n=>n.type==='runtime');if(rt0&&i
   if(skipped.length)addMsg('sys','⏭ 已跳过 '+skipped.length+' 个未配置组件（不发布）：'+skipped.map(n=>{const c=COMPONENTS[n.type];return c.ic+(n.cfg.name||n.cfg.gw_name||n.cfg.engine||c.label)}).join('、'));
   if(pubNotice)addMsg('sys','🔁 '+pubNotice);
   if(zipWarn)zipWarn.forEach(w=>addMsg('sys','⚠ '+w));
-  if(cloudReady){deployed=true;document.getElementById('srcCloud').classList.add('avail');addMsg('sys',`☁️ 检测到云端已就绪的 ${cloudReady.agent}（${cloudReady.region}）— 可直接切「AWS 云端」与托底环境互动；改配置后重新部署会原地更新（重建期间旧版本继续服务）`)}}
-async function autoPublish(){const rt=nodes.find(n=>n.type==='runtime');
-  if(!rt){toast('请先添加 Runtime');switchView('cfg');return false}
+  if(cloudReady){deployed=true;document.getElementById('srcCloud').classList.add('avail');addMsg('sys',`☁️ 检测到云端已就绪的 ${cloudReady.agent}（${cloudReady.region}）— 可直接切「AWS 云端」与托底环境互动；改配置后重新部署会原地更新（重建期间旧版本继续服务）`)}
+  if(rt.type==='harness')addMsg('sys','🧩 Harness 模式：发布到云端会用 @aws/agentcore(preview) 创建独立的 Harness 资源（声明式，AgentCore 托管 Agent 循环）。它与 runtime 是不同资源——同名 runtime 不会被覆盖；harness 走不可变版本 + 命名 endpoint，可即时回滚（非 runtime 的「原地重建」语义）。需容器内含 Node 20 + preview CLI。');}
+async function autoPublish(){const rt=centerNode();
+  if(!rt){toast('请先添加 Runtime 或 Harness');switchView('cfg');return false}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');switchView('cfg');return false}
   if(isIncomplete(rt)){toast('⛔ Runtime 未配置完整，无法发布');switchView('cfg');return false}
   curName=rt.cfg.name;
@@ -1176,11 +1304,11 @@ async function sendMsg(){const inp=document.getElementById('pgIn'),txt=inp.value
   if(!published){if(cloud){toast('请先「发布到云端」');return}const ok=await autoPublish();if(!ok)return}
   if(cloud&&!deployed){toast('请先「发布到云端」');return}
   inp.value='';addMsg('u',txt);
-  let res,mode;try{const rtNode=nodes.find(n=>n.type==='runtime');const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
+  let res,mode;try{const rtNode=centerNode();const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
     const j=await r.json();res=j.result;mode=j.mode}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
   setMode(mode);addMsg('a',res);
   if(res&&(mode==='real'||mode==='cloud'))pgHist.push({role:'user',content:txt},{role:'assistant',content:res})}
-function localReply(p){const rt=nodes.find(n=>n.type==='runtime');const sp=rt?rt.cfg.system_prompt:'';
+function localReply(p){const rt=centerNode();const sp=rt?rt.cfg.system_prompt:'';
   const tl=nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),sk=nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name);
   const ex=(tl.length||sk.length)?` （已注册工具: ${tl.join(', ')||'无'}; 技能: ${sk.join(', ')||'无'}）`:'';
   return `${sp?'依据设定「'+sp+'」，':''}针对「${p}」给出演示回复。${ex}`}
@@ -1235,8 +1363,8 @@ function completeTrace(){if(!traceEl)return;traceStages.forEach(s=>{const el=tra
   const skn=traceEl.querySelectorAll('.dt-stage.skip').length;
   const hd=traceEl.querySelector('.dt-hd');if(hd)hd.textContent='🎉 发布完成（'+traceStages.length+' 个组件'+(skn?'，'+skn+' 个未变化已跳过':'')+'）'}
 function isHosted(){const h=location.hostname;return !(h==='127.0.0.1'||h==='localhost'||h==='0.0.0.0')}
-async function deployCloud(){const rt=nodes.find(n=>n.type==='runtime');if(!rt){toast('请先添加 Runtime');return}
-  if(!published){toast('请先「本地发布」并在 Playground 验证后再部署到云端');switchView('cfg');return}
+async function deployCloud(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
+  if(!published){toast('尚未本地发布，正在自动发布…');const ok=await autoPublish();if(!ok)return}
   if(isIncomplete(rt)){toast('⛔ Runtime 未配置完整，无法部署');switchView('cfg');return}
   const skipped=nodes.filter(n=>isIncomplete(n)&&n.type!=='runtime');
   const adv=collectWarnings().filter(w=>!nodes.some(n=>isIncomplete(n)&&w.includes(isIncomplete(n))));
@@ -1288,7 +1416,7 @@ const SCENARIOS={
   minimal:{label:'极简对话 Agent',desc:'Runtime + Memory + Browser + Gateway(Web Search)，可对话+联网搜索+网页访问',nodes:[['runtime',40,250,{name:'chat_agent',region:'us-east-1',system_prompt:'你是一个友好的对话助手。需要最新或实时信息时调用 web_search 工具联网搜索；需要打开某个具体网页时调用 browser 工具。'}],['memory',300,60],['browser',300,210,{network:'SANDBOX'}],['gateway',300,360,{gw_name:'chat_gw'}],['mcp',560,480,{name:'web_search',type:'web_search',description:'AgentCore 托管联网搜索，返回正文摘要与来源链接'}]]},
   support:{label:'客服 Agent（带工具）',desc:'Runtime + Memory + Identity + Gateway + 真实工具 order_lookup',nodes:[['runtime',40,250,{name:'support_agent',region:'us-east-1',system_prompt:'你是一个专业的客服助手。当用户询问订单时，调用 order_lookup 工具（参数 order_id）查询，并用简洁中文汇报订单状态、物流与预计送达时间。'}],['memory',320,40],['identity',320,150],['gateway',320,320,{gw_name:'support_gw'}],['mcp',610,300,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-east-1:527165314912:function:order_lookup',description:'按订单号查询订单状态/物流/金额'}]]},
   analyst:{label:'数据分析 Agent',desc:'Runtime + Code Interpreter + Memory + Observability + Gateway + Skill',nodes:[['runtime',40,210,{name:'analyst_agent',system_prompt:'你是一个数据分析助手，可运行 Python 代码处理数据，并可调用 descriptive_stats 技能做描述性统计。'}],['memory',340,110],['codeinterp',340,250,{network:'SANDBOX'}],['observability',340,390],['gateway',620,110,{gw_name:'analyst_gw'}],['skill',620,270,{name:'descriptive_stats',desc:'计算一组数值的均值/中位数/标准差/最值',category:'analysis',source_type:'inline',code:'import statistics as _st\n\ndef run(numbers):\n    """对一组数值计算描述性统计。numbers 可为列表或逗号分隔字符串。返回 count/mean/median/min/max/stdev/variance。"""\n    if isinstance(numbers, str):\n        numbers = [float(x) for x in numbers.replace("，", ",").split(",") if x.strip()]\n    nums = [float(x) for x in numbers]\n    if not nums:\n        return {"error": "未提供有效数值"}\n    out = {"count": len(nums), "mean": round(_st.mean(nums), 4), "median": round(_st.median(nums), 4), "min": min(nums), "max": max(nums)}\n    if len(nums) > 1:\n        out["stdev"] = round(_st.stdev(nums), 4)\n        out["variance"] = round(_st.variance(nums), 4)\n    return out\n'}]]},
-  full:{label:'全家桶（全部组件）',desc:'12 个组件全部展示',nodes:[['runtime',40,400],['memory',320,40],['observability',320,180],['evaluation',620,140],['gateway',320,400],['codeinterp',320,620],['browser',320,760],['identity',620,300],['policy',620,420],['mcp',620,540],['skill',620,660],['kb',620,780]]}
+  full:{label:'全家桶（全部组件）',desc:'13 个组件全部展示',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480],['skill',640,600],['kb',640,720],['optimisation',940,200]]}
 };
 // 每个场景/agent 独立 session：保存/恢复 published/deployed/源模式/对话历史
 function snapshotSession(){if(curName==null)return;
@@ -1318,10 +1446,102 @@ function loadScenario(key){const sc=SCENARIOS[key]||SCENARIOS.full;
     if(ov)Object.assign(cfg,ov);
     nodes.push({id:++nid,type:t,x,y,cfg});fresh.add(nid)});
   sel=null;render();[...canvas.querySelectorAll('.node')].forEach((el,i)=>{el.style.animation='none';void el.offsetWidth;el.classList.add('enter');el.style.animationDelay=(i*70)+'ms'});renderProps();
-  const rt=nodes.find(n=>n.type==='runtime');
+  const rt=centerNode();
   applySession(rt?(rt.cfg.name||('scenario:'+key)):('scenario:'+key),sc.label);
   toast('已载入场景：'+sc.label)}
 function loadSample(){loadScenario('full')}
+// ---- 多 Agent 编排（Supervisor）：从云端拉取 agent → 选 → 生成编排器 Runtime ----
+let maAgents=[],maSelDesc={};
+function openMA(){maAgents=[];maSelDesc={};
+  document.getElementById('maList').innerHTML='尚未拉取。点「拉取云端 Agents」列出该区域已部署的 Runtime。';
+  document.getElementById('maWorkers').innerHTML='';document.getElementById('maName').value='orchestrator';
+  document.getElementById('maMode').value='supervisor';maOnMode();
+  const mf=COMPONENTS.runtime.fields.find(f=>f.k==='model_id');const ms=(mf&&mf.o)||['anthropic.claude-sonnet-4-5-20250929-v1:0'];
+  document.getElementById('maModel').innerHTML=ms.map(o=>`<option>${o}</option>`).join('');
+  document.getElementById('maModal').classList.add('show')}
+function closeMA(){document.getElementById('maModal').classList.remove('show')}
+function maOnMode(){const m=document.getElementById('maMode').value;
+  document.getElementById('maModeNote').textContent=m==='a2a'
+    ?'A2A：协调器经 InvokeAgentRuntime 透传 JSON-RPC(message/send) 与各对等 Agent 通信。所选 Agent 必须以 A2A 协议部署，否则调用失败。'
+    :'Supervisor：主控把每个子 Agent 包成工具，按需调用并综合结果。'
+  ;if(maAgents.length)maRenderList()}
+async function maPull(){const region=document.getElementById('maRegion').value;const el=document.getElementById('maList');el.textContent='⏳ 拉取中…';
+  try{const r=await fetch('/api/list-agents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region})});
+    if(!r.ok){el.textContent='❌ HTTP '+r.status+(r.status===404?'：接口不存在——请重启 server.py（新增的拉取接口需重启后端才生效）':'');return}
+    const d=await r.json();
+    if(!d.ok){el.textContent='❌ '+(d.error||'拉取失败');return}
+    maAgents=d.agents||[];maSelDesc={};maRenderWorkers();
+    if(!maAgents.length){el.textContent='（该区域没有已部署的 agent runtime）';return}
+    maRenderList()}catch(e){el.textContent='❌ '+e}}
+function maRenderList(){const a2a=document.getElementById('maMode').value==='a2a';
+  const rows=maAgents.map((a,i)=>({a,i})).filter(({a})=>!a2a||(a.protocol||'').toUpperCase()==='A2A');
+  const el=document.getElementById('maList');
+  if(!rows.length){el.textContent=a2a?'该区域没有 A2A 协议的 Agent（A2A 模式只显示以 --protocol A2A 部署的 agent）':'（无 agent）';return}
+  el.innerHTML=rows.map(({a,i})=>`<label class="chk"><input type="checkbox" ${maSelDesc[a.arn]!=null?'checked':''} onchange="maToggle(${i},this.checked)"><div><b>${a.name||'(无名)'}</b> <span style="opacity:.55">${a.status||''} ${a.protocol||''}</span><br><span style="opacity:.45;font-size:11px">${a.arn||''}</span></div></label>`).join('')}
+function maToggle(i,on){const a=maAgents[i];if(!a||!a.arn)return;if(on)maSelDesc[a.arn]=maSelDesc[a.arn]||'';else delete maSelDesc[a.arn];maRenderWorkers()}
+function maRenderWorkers(){const arns=Object.keys(maSelDesc),w=document.getElementById('maWorkers');
+  if(!arns.length){w.innerHTML='';return}
+  w.innerHTML='<div class="ma-sec">③ 子 Agent 能力描述（供主控判断何时调用）</div>'+arns.map(arn=>{const a=maAgents.find(x=>x.arn===arn)||{};return `<div class="field"><label>${a.name||arn}</label><input value="${(maSelDesc[arn]||'').replace(/"/g,'&quot;')}" oninput="maSelDesc['${arn}']=this.value" placeholder="如：处理账单与发票相关问题"></div>`}).join('')}
+function maGen(){const arns=Object.keys(maSelDesc);if(!arns.length){toast('请至少选择一个子 Agent');return}
+  const regSel=document.getElementById('maRegion').value;
+  const arnReg=a=>{const p=(a||'').split(':');return p.length>3&&p[3]?p[3]:regSel};
+  const workers=arns.map(arn=>{const a=maAgents.find(x=>x.arn===arn)||{};return {name:a.name||'subagent',arn,region:arnReg(arn),desc:maSelDesc[arn]||''}});
+  snapshotSession();
+  nodes=[];nid=0;fresh.clear();sel=null;
+  const c={};COMPONENTS.runtime.fields.forEach(f=>c[f.k]=f.d);
+  c.name=(document.getElementById('maName').value||'orchestrator').trim();c.framework='strands';
+  c.model_id=document.getElementById('maModel').value;c.region=regSel;
+  c.system_prompt=document.getElementById('maPrompt').value;c.workers=workers;c.orch_mode=document.getElementById('maMode').value;
+  const orx=140,ory=300;nodes.push({id:++nid,type:'runtime',x:orx,y:ory,cfg:c});fresh.add(nid);
+  workers.forEach((w,i)=>{nodes.push({id:++nid,type:'subagent',x:orx+380,y:Math.max(20,ory-((workers.length-1)*75)+i*150),cfg:{name:w.name,arn:w.arn,region:w.region,desc:w.desc}});fresh.add(nid)});
+  closeMA();render();renderProps();switchView('cfg');
+  applySession(c.name,'编排器 '+c.name);
+  toast('已生成'+(c.orch_mode==='a2a'?'A2A 协调器':'编排器')+'「'+c.name+'」：'+workers.length+' 个'+(c.orch_mode==='a2a'?'对等 Agent':'子 Agent'))}
+// ---- 导入已有 Agent（方案②：读回 Studio 发布时存档的画布 spec → 重建可编辑视图）----
+let impAgents=[],impSpecs=[];
+function openImp(){impAgents=[];impSpecs=[];
+  document.getElementById('impList').innerHTML='尚未拉取。点「拉取云端 Agents」列出该区域已部署的 Runtime。';
+  document.getElementById('impModal').classList.add('show')}
+function closeImp(){document.getElementById('impModal').classList.remove('show')}
+async function impPull(){const region=document.getElementById('impRegion').value;const el=document.getElementById('impList');el.textContent='⏳ 拉取中…';
+  try{
+    const [ra,rs]=await Promise.all([
+      fetch('/api/list-agents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region})}),
+      fetch('/api/list-specs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region})})]);
+    if(!ra.ok){el.textContent='❌ HTTP '+ra.status+(ra.status===404?'：接口不存在——请重启 server.py（新增接口需重启后端才生效）':'');return}
+    const da=await ra.json();if(!da.ok){el.textContent='❌ '+(da.error||'拉取失败');return}
+    impAgents=da.agents||[];
+    let ds={ok:false,specs:[]};try{ds=await rs.json()}catch(e){}
+    impSpecs=(ds&&ds.specs)||[];
+    impRenderList(region,ds&&ds.ok===false?(ds.error||''):'')}catch(e){el.textContent='❌ '+e}}
+function impRenderList(region,specErr){const el=document.getElementById('impList');const specSet=new Set(impSpecs);
+  if(!impAgents.length){el.textContent='（该区域没有已部署的 agent runtime）';return}
+  const note=specErr?`<div class="hint" style="color:var(--pol)">spec 列表读取失败：${specErr}</div>`:'';
+  el.innerHTML=note+impAgents.map(a=>{const has=specSet.has(a.name);
+    const ac=has?'var(--rt)':'var(--muted2)';const ic=has?'⚙️':'☁️';
+    const nm=(a.name||'(无名)').replace(/</g,'&lt;');
+    const meta=[a.status,a.protocol].filter(Boolean).join(' · ');
+    const arn=(a.arn||'').replace(/</g,'&lt;');
+    const badge=has?'<span class="badge">可导入</span>':'<span class="badge" style="opacity:.6">无配置</span>';
+    const btn=has?`<button class="btn-pri imp-btn" onclick="impDo('${(a.name||'').replace(/'/g,"\\'")}','${region}')">导入编辑</button>`
+      :`<button class="btn-ghost imp-btn" disabled title="非 Studio 发布，容器内逻辑无法还原" style="opacity:.5;cursor:not-allowed">—</button>`;
+    return `<div class="imp-card${has?'':' dim'}" style="--ac:${ac}"><span class="chip">${ic}</span>`+
+      `<div class="ic-main"><div class="ic-nm">${nm}${badge}${meta?`<span style="font-weight:400;font-size:11px;color:var(--muted)">${meta}</span>`:''}</div>`+
+      `<div class="ic-sub">${arn||'—'}</div></div>${btn}</div>`}).join('')}
+async function impDo(name,region){
+  try{const r=await fetch('/api/get-spec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region,name})});
+    const d=await r.json();
+    if(!d.ok||!d.spec){toast('❌ '+(d.error||'读取配置失败'));return}
+    const ns=(d.spec.nodes)||[];
+    if(!ns.length){toast('该配置为空，无法重建');return}
+    snapshotSession();
+    nodes=ns.map(n=>({id:n.id,type:n.type,x:n.x,y:n.y,cfg:n.cfg||{}}));
+    nid=nodes.reduce((m,n)=>Math.max(m,n.id||0),0);
+    fresh.clear();sel=null;render();renderProps();
+    const rt=centerNode();applySession(rt?(rt.cfg.name||name):name,'导入 '+name);
+    switchView('cfg');closeImp();
+    toast('已导入「'+name+'」：'+nodes.length+' 个组件，可编辑后重新发布')}
+  catch(e){toast('❌ '+e)}}
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1900)}
 render();loadSample();
 </script>

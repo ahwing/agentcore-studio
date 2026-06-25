@@ -78,6 +78,86 @@ def delete_runtime(name, region):
     except Exception as e:
         return {"ok": False, "error": str(e)[:200]}
 
+def list_agents(region):
+    """列出某 region 内所有 agent runtime（多 Agent 编排：从云端拉取已发布 agent）。"""
+    if not region:
+        return {"ok": False, "error": "缺少 region", "agents": []}
+    try:
+        r = subprocess.run(["aws", "bedrock-agentcore-control", "list-agent-runtimes",
+                            "--region", region, "--output", "json"],
+                           capture_output=True, text=True, timeout=20)
+        if r.returncode != 0:
+            return {"ok": False, "error": (r.stderr or "list 失败")[:300], "agents": []}
+        out = []
+        rts = (json.loads(r.stdout or "{}")).get("agentRuntimes", [])
+        def _proto(aid):
+            try:
+                g = subprocess.run(["aws", "bedrock-agentcore-control", "get-agent-runtime",
+                                    "--agent-runtime-id", aid, "--region", region,
+                                    "--query", "protocolConfiguration.serverProtocol", "--output", "text"],
+                                   capture_output=True, text=True, timeout=12)
+                p = (g.stdout or "").strip()
+                return p if p and p != "None" else None
+            except Exception:
+                return None
+        import concurrent.futures as _cf
+        protos = {}
+        ids = [rt.get("agentRuntimeId") for rt in rts if rt.get("agentRuntimeId")]
+        with _cf.ThreadPoolExecutor(max_workers=8) as _ex:
+            for aid, pr in zip(ids, _ex.map(_proto, ids)):
+                protos[aid] = pr
+        for rt in rts:
+            out.append({"name": rt.get("agentRuntimeName"), "arn": rt.get("agentRuntimeArn"),
+                        "id": rt.get("agentRuntimeId"), "status": rt.get("status"),
+                        "protocol": protos.get(rt.get("agentRuntimeId"))})
+        return {"ok": True, "agents": out, "region": region}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:300], "agents": []}
+
+def _spec_bucket(region):
+    try:
+        r = subprocess.run(["aws", "sts", "get-caller-identity", "--query", "Account", "--output", "text"],
+                           capture_output=True, text=True, timeout=15)
+        acct = (r.stdout or "").strip()
+        if not acct or acct == "None": return None
+        return f"agentcore-studio-state-{acct}-{region}"
+    except Exception:
+        return None
+
+def list_specs(region):
+    """列出 state 桶 specs/ 下已存档的 Studio 画布 spec（agent 名集合），供导入交叉标注。"""
+    if not region: return {"ok": False, "error": "缺少 region", "specs": []}
+    bucket = _spec_bucket(region)
+    if not bucket: return {"ok": False, "error": "无法获取账号（凭证缺失）", "specs": []}
+    try:
+        r = subprocess.run(["aws", "s3api", "list-objects-v2", "--bucket", bucket,
+                            "--prefix", "specs/", "--region", region,
+                            "--query", "Contents[].Key", "--output", "json"],
+                           capture_output=True, text=True, timeout=20)
+        if r.returncode != 0:
+            # 桶不存在 = 还没发布过任何带 spec 的 agent，视作空集（非错误）
+            return {"ok": True, "specs": [], "region": region}
+        keys = json.loads(r.stdout or "null") or []
+        names = [k[len("specs/"):-len(".json")] for k in keys
+                 if k.startswith("specs/") and k.endswith(".json")]
+        return {"ok": True, "specs": names, "region": region}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:300], "specs": []}
+
+def get_spec(region, name):
+    """读回某 agent 的 Studio 画布 spec（用于导入重建画布）。"""
+    if not region or not name: return {"ok": False, "error": "缺少 region/name"}
+    bucket = _spec_bucket(region)
+    if not bucket: return {"ok": False, "error": "无法获取账号（凭证缺失）"}
+    try:
+        r = subprocess.run(["aws", "s3", "cp", f"s3://{bucket}/specs/{name}.json", "-", "--region", region],
+                           capture_output=True, text=True, timeout=20)
+        if r.returncode != 0:
+            return {"ok": False, "error": ("未找到该 agent 的 Studio 配置（可能不是 Studio 发布的）：" + (r.stderr or ""))[:300]}
+        return {"ok": True, "spec": json.loads(r.stdout or "{}")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:300]}
+
 def cloud_status(d, region, name=None):
     """检测是否已有就绪(READY)的云端 agent，用作演示托底环境。
     优先用本地 .bedrock_agentcore.yaml（本工作区部署过）；否则直接按名字查 AWS（托管/全新容器也能命中）。"""
@@ -303,7 +383,7 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
             proj_dir = info["dir"]  # 回退：项目可能直接在 dir
         try:
             r = subprocess.run(
-                ["npx", "@aws/agentcore", "invoke", "--harness", pn, "--prompt", prompt],
+                ["npx", "@aws/agentcore@preview", "invoke", "--harness", pn, "--prompt", prompt],
                 cwd=proj_dir, capture_output=True, text=True, timeout=120,
                 env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
             out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
@@ -385,7 +465,8 @@ class H(BaseHTTPRequestHandler):
             region_notice = clean_stale_region(d, (data.get("cfg") or {}).get("region"))
             resp = {"ok": True, "dir": d, "zip_warn": zip_warn}
             if region_notice: resp["region_notice"] = region_notice
-            cs = cloud_status(d, (data.get("cfg") or {}).get("region"), data.get("name"))
+            # harness 与 runtime 是不同资源类型；runtime 云端就绪检测(list-agent-runtimes)对 harness 会误报（命中同名旧 runtime），故 harness 模式跳过
+            cs = cloud_status(d, (data.get("cfg") or {}).get("region"), data.get("name")) if (data.get("cfg") or {}).get("deploy_mode") != "harness" else None
             if cs:
                 PUBLISHED[data["name"]]["cloud_arn"] = cs.get("arn")
                 PUBLISHED[data["name"]]["cloud_region"] = cs.get("region")
@@ -400,6 +481,12 @@ class H(BaseHTTPRequestHandler):
             out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt"), data.get("history"), data.get("session")); self._send(200, json.dumps({"result": out, "mode": mode}))
         elif self.path == "/api/delete-runtime":
             self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
+        elif self.path == "/api/list-agents":
+            self._send(200, json.dumps(list_agents(data.get("region"))))
+        elif self.path == "/api/list-specs":
+            self._send(200, json.dumps(list_specs(data.get("region"))))
+        elif self.path == "/api/get-spec":
+            self._send(200, json.dumps(get_spec(data.get("region"), data.get("name"))))
         else: self._send(404, "{}")
     def log_message(self, *a): pass
 

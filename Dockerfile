@@ -5,6 +5,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends zip curl unzip 
     curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
     unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscliv2.zip && \
     rm -rf /var/lib/apt/lists/*
+# Node 20 + @aws/agentcore preview CLI（harness 模式需要；用 npx 调用，不全局装以免与 Python 版 agentcore 命名冲突，构建时预热缓存）
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesetup.sh && bash /tmp/nodesetup.sh && \
+    apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/* /tmp/nodesetup.sh && \
+    (npx -y @aws/agentcore@preview --version >/dev/null 2>&1 || true)
 WORKDIR /app
 COPY index.html compare.html server.py ./
 ENV HOST=0.0.0.0 PORT=8080 AGENTCORE_SUPPRESS_RECOMMENDATION=1
