@@ -218,7 +218,12 @@ def bedrock_reply(prompt, cfg, history=None):
           "inferenceConfig": {"maxTokens": 1024, "temperature": 0.7}}
     if sp.strip(): kw["system"] = [{"text": sp.strip()}, {"cachePoint": {"type": "default"}}]
     r = br.converse(**kw)
-    return r["output"]["message"]["content"][0]["text"]
+    text = r["output"]["message"]["content"][0]["text"]
+    u = r.get("usage") or {}
+    trace = {"model": model,
+             "usage": {"input_tokens": u.get("inputTokens"), "output_tokens": u.get("outputTokens"), "total_tokens": u.get("totalTokens")},
+             "latency_ms": (r.get("metrics") or {}).get("latencyMs")}
+    return text, trace
 
 def anthropic_reply(prompt, cfg, sp=None, history=None):
     """Bedrock 不可达时的兜底：经 Anthropic 兼容端点调 Claude。
@@ -250,7 +255,10 @@ def anthropic_reply(prompt, cfg, sp=None, history=None):
         kw = {"model": mid, "max_tokens": 1024, "messages": msgs}
         if system.strip(): kw["system"] = system.strip()
         r = client.messages.create(**kw)
-        return "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
+        _txt = "".join(b.text for b in r.content if getattr(b, "type", "") == "text") or "（空响应）"
+        _u = getattr(r, "usage", None)
+        _tr = {"model": mid, "usage": ({"input_tokens": getattr(_u, "input_tokens", None), "output_tokens": getattr(_u, "output_tokens", None)} if _u else {})}
+        return _txt, _tr
     try:
         return _call(m)
     except Exception:
@@ -258,9 +266,18 @@ def anthropic_reply(prompt, cfg, sp=None, history=None):
             return _call("claude-sonnet-4-5")
         raise
 
+def llm_complete(prompt, system_prompt, model=None, region=None):
+    """单次 LLM 补全（NL→画布等用）。优先 Bedrock converse，不可达则 Anthropic 代理兜底。"""
+    cfg = {"model": model or "anthropic.claude-sonnet-4-5-20250929-v1:0",
+           "region": region or "us-west-2", "system_prompt": system_prompt or ""}
+    try:
+        return bedrock_reply(prompt, cfg, None)[0]
+    except Exception:
+        return anthropic_reply(prompt, cfg, system_prompt, None)[0]
+
 def run_agent(name, prompt, sp=None, history=None):
     info = PUBLISHED.get(name)
-    if not info: return "尚未发布，请先点击「发布」", "error"
+    if not info: return "尚未发布，请先点击「发布」", "error", None
     _stub_sdk()
     entry = os.path.join(info["dir"], info["cfg"].get("entry", "agentcore_entry.py"))
     # 1) 优先真实运行已发布的 entry.py（需框架依赖，如 strands）
@@ -269,21 +286,21 @@ def run_agent(name, prompt, sp=None, history=None):
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
         res = mod.invoke({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})})
         out = res.get("result") or res.get("error") or json.dumps(res)
-        if out and not res.get("error"): return out, "real"
+        if out and not res.get("error"): return out, "real", res.get("trace")
     except Exception:
         pass
-    # 2) 直连 Bedrock converse（有 boto3+凭证+模型权限即返回真实回复）
+    # 2) 直连 Bedrock converse（有 boto3+凭证+模型权限即返回真实回复；但不执行已编排的工具）
     try:
-        return bedrock_reply(prompt, info["cfg"], history), "real"
+        txt, tr = bedrock_reply(prompt, info["cfg"], history); return txt, "bedrock", tr
     except Exception:
         pass
     # 2.5) Bedrock 不可达时，经 Anthropic 代理端点兜底（ANTHROPIC_BASE_URL/ANTHROPIC_API_KEY）
     try:
-        return anthropic_reply(prompt, info["cfg"], sp, history), "real"
+        txt, tr = anthropic_reply(prompt, info["cfg"], sp, history); return txt, "bedrock", tr
     except Exception:
         pass
     # 3) 文本兜底（无依赖/无凭证）
-    return fallback(prompt, info["cfg"]), "mock"
+    return fallback(prompt, info["cfg"]), "mock", None
 
 def fallback(prompt, cfg):
     sp = (cfg.get("system_prompt") or "").strip()
@@ -305,7 +322,7 @@ def deploy_cloud(name):
         return f"部署失败: {e}", False
 
 def _extract(out):
-    """从 agentcore invoke 的噪声输出里提取 agent 实际响应。"""
+    """从 agentcore invoke 的噪声输出里提取 agent 实际响应。返回 (text, trace|None)。"""
     dec = json.JSONDecoder(); i = 0; cand = None; any_d = None
     while True:
         j = out.find("{", i)
@@ -319,7 +336,8 @@ def _extract(out):
             i = j + 1
     d = cand or any_d
     if isinstance(d, dict):
-        return d.get("result") or d.get("response") or d.get("output") or json.dumps(d, ensure_ascii=False)
+        text = d.get("result") or d.get("response") or d.get("output") or json.dumps(d, ensure_ascii=False)
+        return text, d.get("trace")
     # 防御：CLI 可能按终端宽度把 JSON 折行（插入真实换行），尝试在 Response 段去掉折行后重组解析
     m = re.search(r"Response:\s*(\{.*\})", out, re.DOTALL)
     if m:
@@ -327,12 +345,13 @@ def _extract(out):
             collapsed = re.sub(r"\n", "", m.group(1))
             obj = json.loads(collapsed)
             if isinstance(obj, dict):
-                return obj.get("result") or obj.get("response") or obj.get("output") or json.dumps(obj, ensure_ascii=False)
+                text = obj.get("result") or obj.get("response") or obj.get("output") or json.dumps(obj, ensure_ascii=False)
+                return text, obj.get("trace")
         except Exception:
             pass
     noise = ("suppress_recommendation", "silence this warning", "recommendation", "set agentcore_", "💡", "⚠")
     lines = [l for l in out.splitlines() if l.strip() and not any(k in l.lower() for k in noise)]
-    return lines[-1] if lines else "（无输出）"
+    return (lines[-1] if lines else "（无输出）"), None
 
 def _invoke_runtime_arn(arn, region, prompt, sp=None, history=None, session=None):
     """托底：不依赖本地工作区，直接用 AWS 数据面 API 按 ARN 调用云端 runtime。"""
@@ -349,11 +368,12 @@ def _invoke_runtime_arn(arn, region, prompt, sp=None, history=None, session=None
                             "--payload", payload_b64, outpath],
                            capture_output=True, text=True, timeout=120)
         if r.returncode != 0:
-            return (r.stderr or r.stdout).strip()[-1500:] or "云端调用失败", "cloud-error"
+            return (r.stderr or r.stdout).strip()[-1500:] or "云端调用失败", "cloud-error", None
         body = open(outpath, encoding="utf-8", errors="replace").read()
-        return _extract(body), "cloud"
+        text, trace = _extract(body)
+        return text, "cloud", trace
     except Exception as e:
-        return f"云端调用失败: {e}", "error"
+        return f"云端调用失败: {e}", "error", None
     finally:
         if outpath and os.path.isfile(outpath):
             try: os.remove(outpath)
@@ -366,7 +386,7 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
         reg = region or "us-west-2"
         cs = _find_ready_runtime(reg, name)
         if cs: return _invoke_runtime_arn(cs["arn"], reg, prompt, sp, history, session)
-        return "尚未发布（云端也未找到同名就绪 Agent）", "error"
+        return "尚未发布（云端也未找到同名就绪 Agent）", "error", None
     # 托底：本地工作区无部署状态（如托管/全新容器），但云端已有就绪 runtime → 直接按 ARN 调 AWS API
     if not os.path.isfile(os.path.join(info["dir"], ".bedrock_agentcore.yaml")) and info["cfg"].get("deploy_mode") != "harness":
         arn = info.get("cloud_arn"); reg = info.get("cloud_region") or info["cfg"].get("region") or region
@@ -374,7 +394,7 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
             cs = _find_ready_runtime(reg, name)
             if cs: arn = cs["arn"]; info["cloud_arn"] = arn; info["cloud_region"] = reg
         if arn and reg: return _invoke_runtime_arn(arn, reg, prompt, sp, history, session)
-        return "尚未发布（云端也未找到同名就绪 Agent）", "error"
+        return "尚未发布（云端也未找到同名就绪 Agent）", "error", None
     # Harness 模式: 用 agentcore invoke --harness CLI（项目在 <pn>/ 子目录）
     if info["cfg"].get("deploy_mode") == "harness":
         pn = info["cfg"].get("harness_name") or "".join(ch for ch in name if ch.isalnum()) or "agent"
@@ -388,12 +408,13 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
                 env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
             out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
             if r.returncode == 0:
-                return _extract(out), "cloud"
-            return out.strip()[-1500:] or "（无输出）", "cloud-error"
+                text, trace = _extract(out)
+                return text, "cloud", trace
+            return out.strip()[-1500:] or "（无输出）", "cloud-error", None
         except FileNotFoundError:
-            return "未找到 @aws/agentcore CLI，请运行: npm install -g @aws/agentcore@preview", "error"
+            return "未找到 @aws/agentcore CLI，请运行: npm install -g @aws/agentcore@preview", "error", None
         except Exception as e:
-            return f"Harness 调用失败: {e}", "error"
+            return f"Harness 调用失败: {e}", "error", None
     # Runtime 模式: 用 agentcore invoke CLI
     payload = json.dumps({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})})
     try:
@@ -402,12 +423,13 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
                            env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
         out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
         if r.returncode == 0:
-            return _extract(out), "cloud"
-        return out.strip()[-1500:] or "（无输出）", "cloud-error"
+            text, trace = _extract(out)
+            return text, "cloud", trace
+        return out.strip()[-1500:] or "（无输出）", "cloud-error", None
     except FileNotFoundError:
-        return "未找到 uv / agentcore CLI，无法调用云端 runtime", "error"
+        return "未找到 uv / agentcore CLI，无法调用云端 runtime", "error", None
     except Exception as e:
-        return f"云端调用失败: {e}", "error"
+        return f"云端调用失败: {e}", "error", None
 
 class H(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype="application/json"):
@@ -473,12 +495,18 @@ class H(BaseHTTPRequestHandler):
                 resp["cloud_ready"] = True; resp["cloud_agent"] = cs["agent_id"]; resp["cloud_region"] = cs["region"]
             self._send(200, json.dumps(resp))
         elif self.path == "/api/invoke":
-            out, mode = run_agent(data["name"], data.get("prompt", ""), data.get("system_prompt"), data.get("history"))
-            self._send(200, json.dumps({"result": out, "mode": mode}))
+            out, mode, trace = run_agent(data["name"], data.get("prompt", ""), data.get("system_prompt"), data.get("history"))
+            self._send(200, json.dumps({"result": out, "mode": mode, "trace": trace}))
+        elif self.path == "/api/llm":
+            try:
+                txt = llm_complete(data.get("prompt", ""), data.get("system_prompt", ""), data.get("model"), data.get("region"))
+                self._send(200, json.dumps({"ok": True, "text": txt}))
+            except Exception as e:
+                self._send(200, json.dumps({"ok": False, "error": str(e)[:300]}))
         elif self.path == "/api/deploy":
             self._send(200, json.dumps({"job_id": start_deploy_job(data["name"])}))
         elif self.path == "/api/invoke-cloud":
-            out, mode = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt"), data.get("history"), data.get("session")); self._send(200, json.dumps({"result": out, "mode": mode}))
+            out, mode, trace = invoke_cloud(data["name"], data.get("prompt", ""), (data.get("cfg") or {}).get("region") or data.get("region"), data.get("system_prompt"), data.get("history"), data.get("session")); self._send(200, json.dumps({"result": out, "mode": mode, "trace": trace}))
         elif self.path == "/api/delete-runtime":
             self._send(200, json.dumps(delete_runtime(data.get("name"), data.get("region"))))
         elif self.path == "/api/list-agents":

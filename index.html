@@ -42,6 +42,7 @@
   .set-wrap{position:relative;display:inline-flex}
   .set-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:190px;background:#141b2c;border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:60;display:flex;flex-direction:column;gap:2px}
   .set-menu[hidden]{display:none}
+  #addMenu{left:0;right:auto}
   .set-menu .set-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;border:0!important;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:600;color:#fff;font-family:var(--ui);cursor:pointer;text-decoration:none;transition:.15s}
   .set-menu .set-item:hover{background:rgba(255,255,255,.1)}
   .scenario-sel{font-family:var(--ui);font-weight:600;font-size:13px;color:#fff;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:.18s}
@@ -162,9 +163,44 @@
   .deploylog .dl-hd{font-family:var(--ui);font-size:11.5px;color:var(--muted2);margin-bottom:6px;font-weight:600}
   .deploylog pre{margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5;color:#b8c2d0;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto}
   .deploylog .dl-step{color:#ffb454;font-weight:600}
-  .msg.deploytrace{align-self:stretch;max-width:100%;background:#0c0f16;border:1px solid var(--line2);border-radius:10px;padding:11px 12px}
+  .deploytrace{background:#0c0f16;border:1px solid var(--line2);border-radius:10px;padding:11px 12px}
+  .msg.deploytrace{align-self:stretch;max-width:100%}
   .deploytrace .dt-hd{font-family:var(--ui);font-size:12px;color:var(--muted2);margin-bottom:9px;font-weight:600}
   .deploytrace .dt-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+  .deploytrace .dt-chip{font-family:var(--mono);font-size:10.5px;color:var(--muted2);background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
+  .deploytrace .dt-call{margin-top:7px;padding:7px 8px;background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:7px}
+  .deploytrace .dt-tool{font-family:var(--mono);font-size:11px;color:var(--orange);margin-bottom:4px}
+  .deploytrace .dt-kv{display:flex;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+  .deploytrace .dt-kv span{flex-shrink:0;color:var(--muted2);width:20px}
+  .deploytrace .dt-kv code{white-space:pre-wrap;word-break:break-all;color:var(--text)}
+  .ab-setup{padding:8px 10px;border-bottom:1px solid var(--line2);background:rgba(255,255,255,.02)}
+  .ab-setup label{display:block;font-size:11px;color:var(--muted2);margin-bottom:4px;font-family:var(--ui)}
+  .ab-setup textarea{width:100%;box-sizing:border-box;background:#0c0f16;border:1px solid var(--line2);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:11.5px;padding:6px 8px;resize:vertical}
+  .ab-setup .hint{font-size:10px;color:var(--muted);margin-top:4px}
+  .msg.abtest{align-self:stretch;max-width:100%;display:flex;gap:8px;background:none;padding:0;flex-wrap:wrap}
+  .ab-col{flex:1;min-width:220px;background:#0c0f16;border:1px solid var(--line2);border-radius:10px;padding:10px 11px}
+  .ab-col.b{border-color:var(--orange)}
+  .ab-h{font-family:var(--ui);font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:7px}
+  .ab-col.b .ab-h{color:var(--orange)}
+  .ab-body{font-size:12.5px;color:var(--text);white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  #aiModal .mcard{width:min(560px,94vw)}
+  #aiModal .mbody{padding:18px 20px}
+  #aiModal .ma-sec{font-family:var(--ui);font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin:18px 0 9px}
+  #aiModal textarea{min-height:74px;line-height:1.5}
+  #aiModal .ai-egs{display:flex;flex-wrap:wrap;gap:7px}
+  #aiModal .ai-eg{font-size:11.5px;color:var(--muted);background:var(--ink3);border:1px solid var(--line2);border-radius:16px;padding:5px 11px;cursor:pointer;transition:.15s;user-select:none}
+  #aiModal .ai-eg:hover{border-color:var(--orange);color:var(--text);transform:translateY(-1px)}
+  .msg.setrun{align-self:stretch;max-width:100%;background:#0c0f16;border:1px solid var(--line2);border-radius:10px;padding:11px 12px}
+  .setrun .sr-hd{font-family:var(--ui);font-size:12px;color:var(--muted2);font-weight:600;margin-bottom:8px}
+  .set-item{padding:8px 0;border-top:1px solid var(--line2)}
+  .set-item:first-of-type{border-top:0;padding-top:0}
+  .set-q{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-bottom:4px}
+  .set-q b{color:var(--text)}
+  .set-a{font-size:12.5px;color:var(--text);white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .set-badge{font-family:var(--mono);font-size:10px;border-radius:5px;padding:1px 5px;margin-left:6px}
+  .set-badge.chg{color:var(--orange);background:rgba(255,153,0,.12)}
+  .set-badge.same{color:var(--muted);background:rgba(255,255,255,.05)}
+  .set-badge.new{color:var(--muted2);background:rgba(255,255,255,.07)}
   .dt-stage{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line2);background:rgba(255,255,255,.03);font-family:var(--ui);font-size:12px;font-weight:600;transition:.25s;opacity:.45}
   .dt-stage .dt-ic{font-size:13px}.dt-stage .dt-lb{color:var(--muted)}.dt-stage .dt-ck{display:none;color:var(--id);font-weight:800}
   .dt-stage.active{opacity:1;border-color:var(--orange);background:rgba(255,153,0,.12);box-shadow:0 0 0 0 rgba(255,153,0,.5);animation:dtpulse 1.2s infinite}
@@ -258,9 +294,15 @@
       <button class="set-item" id="demoBtn" onclick="toggleDemo();closeSettings()" data-i18n data-i18n-title title="大屏演示模式 · 放大界面并适配画布 (Esc 退出)">🖥 演示模式</button>
     </div>
   </div>
-  <button class="btn-ghost" onclick="newAgent()" data-i18n>＋ 新建 Agent</button>
-  <button class="btn-ghost" onclick="openMA()" data-i18n data-i18n-title title="多 Agent 编排：从云端拉取已发布 agent，设定 Supervisor→子 Agent 关系">🧩 多 Agent</button>
-  <button class="btn-ghost" onclick="openImp()" data-i18n data-i18n-title title="导入：从云端拉取 Studio 发布过的 agent，读回画布配置继续编辑">📥 导入</button>
+  <div class="set-wrap">
+    <button class="btn-ghost" id="addBtn" onclick="toggleAdd(event)" data-i18n data-i18n-title title="新增：新建 / AI 生成 / 多 Agent / 导入">＋ 新增</button>
+    <div class="set-menu" id="addMenu" hidden>
+      <button class="set-item" onclick="newAgent();closeAdd()" data-i18n>＋ 新建 Agent</button>
+      <button class="set-item" onclick="openAI();closeAdd()" data-i18n>✨ AI 生成</button>
+      <button class="set-item" onclick="openMA();closeAdd()" data-i18n>🧩 多 Agent</button>
+      <button class="set-item" onclick="openImp();closeAdd()" data-i18n>📥 导入</button>
+    </div>
+  </div>
   <select class="scenario-sel" onchange="if(this.value){loadScenario(this.value);this.selectedIndex=0}" data-i18n-title title="一键载入演示场景">
     <option value="" data-i18n>📦 载入场景…</option>
     <option value="minimal" data-i18n>极简对话 Agent</option>
@@ -298,7 +340,17 @@
     <!-- playground -->
     <div class="view" id="vPlay">
       <div class="pg">
-        <div class="pg-bar"><span data-i18n>来源</span> <button class="srcbtn on" id="srcLocal" onclick="setSrc('local')" data-i18n>本地模拟</button><button class="srcbtn" id="srcCloud" onclick="setSrc('cloud')" data-i18n>AWS 云端</button><span class="mode mock" id="pgMode" data-i18n>未发布</span></div>
+        <div class="pg-bar"><span data-i18n>来源</span> <button class="srcbtn on" id="srcLocal" onclick="setSrc('local')" data-i18n>本地模拟</button><button class="srcbtn" id="srcCloud" onclick="setSrc('cloud')" data-i18n>AWS 云端</button><span class="mode mock" id="pgMode" data-i18n>未发布</span><button class="srcbtn" id="abBtn" onclick="toggleAB()" style="margin-left:auto" data-i18n data-i18n-title title="A/B 对比：同一句输入，基线 vs 候选 System Prompt 并排跑，不写入对话历史">⚖ A/B</button><button class="srcbtn" id="tsetBtn" onclick="toggleSet()" data-i18n>📋 测试集</button></div>
+        <div class="ab-setup" id="abSetup" hidden>
+          <label data-i18n>B 版 System Prompt（候选）</label>
+          <textarea id="abPrompt" rows="2" data-i18n-ph placeholder="留空=复制画布当前 System Prompt"></textarea>
+          <div class="hint" data-i18n>A=画布当前 System Prompt（基线），B=上面的候选；发送一句并排对比，不写入对话历史</div>
+        </div>
+        <div class="ab-setup" id="setSetup" hidden>
+          <label data-i18n>测试集（每行一个输入）</label>
+          <textarea id="setPrompts" rows="4" data-i18n-ph placeholder="每行一个测试输入…"></textarea>
+          <div style="margin-top:6px;display:flex;align-items:center;gap:8px"><button class="srcbtn" onclick="runSet()" data-i18n>▶ 全跑</button><span class="hint" data-i18n>结果与上次对比标注变化；每条独立单轮，不写入对话历史</span></div>
+        </div>
         <div class="msgs" id="msgs"></div>
         <div class="pg-in"><input id="pgIn" data-i18n-ph placeholder="输入消息…" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()" data-i18n>发送</button></div>
       </div>
@@ -314,6 +366,25 @@
   <div class="mhd"><span data-i18n>🚀 发布前确认</span><span class="mx" onclick="closeModal()">×</span></div>
   <div class="mbody" id="reviewBody"></div>
   <div class="mfoot"><button class="btn-ghost" onclick="closeModal()" data-i18n>取消</button><button class="btn-pri" id="pubConfirmBtn" onclick="doPublish()" data-i18n>确认发布</button></div>
+</div></div>
+<div class="modal" id="aiModal"><div class="mcard">
+  <div class="mhd"><span data-i18n>✨ AI 生成画布</span><span class="mx" onclick="closeAI()">×</span></div>
+  <div class="mbody">
+    <div class="ma-sec" style="margin-top:0" data-i18n>用一句话描述你想要的 Agent</div>
+    <div class="field">
+      <textarea id="aiDesc" rows="3" data-i18n-ph placeholder="例如：一个客服 Agent，能查订单（Lambda 工具）、检索 FAQ 知识库，并记住用户偏好"></textarea>
+      <div class="hint" data-i18n>AI 生成节点与连线，生成后可继续拖拽编辑并自动 pre-flight 校验。需要 AWS 凭证（Bedrock）。</div>
+    </div>
+    <div class="ma-sec" data-i18n>试试这些</div>
+    <div class="ai-egs">
+      <span class="ai-eg" onclick="aiEg(this.dataset.eg)" data-eg="一个客服 Agent，能查订单（Lambda 工具）、检索 FAQ 知识库，并记住用户偏好">🎧 <span data-i18n>客服助手</span></span>
+      <span class="ai-eg" onclick="aiEg(this.dataset.eg)" data-eg="一个数据分析助手，能用 Python 代码做计算、统计和绘图">📊 <span data-i18n>数据分析</span></span>
+      <span class="ai-eg" onclick="aiEg(this.dataset.eg)" data-eg="一个联网研究助手，能搜索网页并总结要点">🔎 <span data-i18n>联网研究</span></span>
+      <span class="ai-eg" onclick="aiEg(this.dataset.eg)" data-eg="一个极简的对话助手">💬 <span data-i18n>极简对话</span></span>
+    </div>
+    <div id="aiErr" class="hint" style="color:var(--pol);margin-top:8px"></div>
+  </div>
+  <div class="mfoot"><button class="btn-ghost" onclick="closeAI()" data-i18n>取消</button><button class="btn-pri" id="aiGoBtn" onclick="aiGenerate()" data-i18n>✨ 生成</button></div>
 </div></div>
 <div class="modal" id="maModal"><div class="mcard">
   <div class="mhd"><span data-i18n>🧩 多 Agent 编排</span><span class="mx" onclick="closeMA()">×</span></div>
@@ -354,6 +425,28 @@ const EN={
   '拖拽编排 · 一键上线你的 AI Agent':'Drag-and-drop orchestration · ship your AI Agent in one click',
   '📊 对比分析':'📊 Compare','空画布':'Empty canvas','🖥 演示模式':'🖥 Demo Mode','🖥 退出演示':'🖥 Exit Demo','⚙️ 设置':'⚙️ Settings','设置：对比 / 语言 / 演示模式':'Settings: Compare / Language / Demo',
   '＋ 新建 Agent':'＋ New Agent','🧩 多 Agent':'🧩 Multi-Agent','📥 导入':'📥 Import',
+  '＋ 新增':'＋ New','新增：新建 / AI 生成 / 多 Agent / 导入':'New: blank / AI generate / Multi-Agent / Import',
+  '调用透视':'Trace','次工具调用':'tool calls',
+  'B 版 System Prompt（候选）':'B System Prompt (candidate)','留空=复制画布当前 System Prompt':'Empty = copy current canvas System Prompt',
+  'A=画布当前 System Prompt（基线），B=上面的候选；发送一句并排对比，不写入对话历史':'A = current canvas System Prompt (baseline), B = candidate above; send one message to compare side by side, not added to chat history',
+  '基线':'Baseline','候选':'Candidate',
+  '📋 测试集':'📋 Test set','测试集（每行一个输入）':'Test set (one input per line)','每行一个测试输入…':'One test input per line…',
+  '▶ 全跑':'▶ Run all','结果与上次对比标注变化；每条独立单轮，不写入对话历史':'Compares with last run and flags changes; each runs as an isolated single turn, not added to chat history',
+  '测试集结果':'Test set results','条':'items','新':'new','变化':'changed','未变':'unchanged','测试集为空':'Test set is empty',
+  '● 本地·真跑':'● Local · live','● 本地·模型':'● Local · model',
+  '✨ AI 生成':'✨ AI generate','用一句话描述你的 Agent，AI 自动生成画布':'Describe your agent in one line; AI builds the canvas',
+  '✨ AI 生成画布':'✨ AI generate canvas','用一句话描述你想要的 Agent':'Describe the agent you want in one line',
+  '例如：一个客服 Agent，能查订单（Lambda 工具）、检索 FAQ 知识库，并记住用户偏好':'e.g. a customer-support agent that looks up orders (Lambda tool), searches a FAQ knowledge base, and remembers user preferences',
+  'AI 生成节点与连线，生成后可继续拖拽编辑并自动 pre-flight 校验。需要 AWS 凭证（Bedrock）。':'AI builds nodes and edges; keep editing by drag-and-drop afterward with automatic pre-flight checks. Requires AWS credentials (Bedrock).',
+  '取消':'Cancel','✨ 生成':'✨ Generate','生成中…':'Generating…','请先描述你的 Agent':'Please describe your agent first',
+  '生成失败：':'Generation failed: ','（需 AWS 凭证或检查后端）':' (needs AWS credentials, or check the backend)','生成失败：后端未启动':'Generation failed: backend not running',
+  'AI 返回无法解析，请重试或换种描述':'AI response could not be parsed; retry or rephrase','✨ 已生成画布':'✨ Canvas generated',
+  '试试这些':'Try one of these','客服助手':'Support bot','数据分析':'Data analysis','联网研究':'Web research','极简对话':'Minimal chat',
+  '一个客服 Agent，能查订单（Lambda 工具）、检索 FAQ 知识库，并记住用户偏好':'A customer-support agent that looks up orders (Lambda tool), searches a FAQ knowledge base, and remembers user preferences',
+  '一个数据分析助手，能用 Python 代码做计算、统计和绘图':'A data-analysis assistant that runs Python code for computation, statistics, and plotting',
+  '一个联网研究助手，能搜索网页并总结要点':'A web-research assistant that searches the web and summarizes key points',
+  '一个极简的对话助手':'A minimal conversational assistant',
+  'A/B 对比：同一句输入，基线 vs 候选 System Prompt 并排跑，不写入对话历史':'A/B compare: same input, baseline vs candidate System Prompt side by side, not added to chat history',
   '大屏演示模式 · 放大界面并适配画布 (Esc 退出)':'Big-screen demo mode · zoom UI & fit canvas (Esc to exit)',
   '多 Agent 编排：从云端拉取已发布 agent，设定 Supervisor→子 Agent 关系':'Multi-agent orchestration: pull published agents from the cloud and set Supervisor→sub-agent relationships',
   '导入：从云端拉取 Studio 发布过的 agent，读回画布配置继续编辑':'Import: pull Studio-published agents from the cloud and load their canvas config to keep editing',
@@ -451,6 +544,9 @@ function toggleLang(){LANG=(LANG==='en')?'zh':'en';localStorage.setItem('acs_lan
 function _setOutside(e){if(!e.target.closest('.set-wrap'))closeSettings()}
 function closeSettings(){const m=document.getElementById('settingsMenu');if(m)m.hidden=true;document.removeEventListener('click',_setOutside)}
 function toggleSettings(e){if(e)e.stopPropagation();const m=document.getElementById('settingsMenu');if(!m)return;if(m.hidden){m.hidden=false;setTimeout(()=>document.addEventListener('click',_setOutside),0)}else{closeSettings()}}
+function _addOutside(e){const w=document.getElementById('addBtn'),m=document.getElementById('addMenu');if(m&&!m.contains(e.target)&&w&&!w.contains(e.target))closeAdd()}
+function closeAdd(){const m=document.getElementById('addMenu');if(m)m.hidden=true;document.removeEventListener('click',_addOutside)}
+function toggleAdd(e){if(e)e.stopPropagation();const m=document.getElementById('addMenu');if(!m)return;if(m.hidden){m.hidden=false;setTimeout(()=>document.addEventListener('click',_addOutside),0)}else{closeAdd()}}
 const COMPONENTS={
   runtime:{label:'Runtime',ic:'⚙️',ac:'var(--rt)',required:true,fields:[
     {k:'name',l:'Agent 名称',t:'text',d:'my_agent',hint:'仅下划线，不能用连字符'},
@@ -582,6 +678,7 @@ const COMPONENTS={
 };
 let nodes=[],sel=null,nid=0,tab='entry',fresh=new Set(),published=false,view='play',pgSrc='local',deployed=false;
 let sessions={},curName=null,lastCloudName=null;  // 每个场景/agent 独立 session：published/deployed/源模式/对话历史；lastCloudName=上次云端部署的名字（改名检测）
+try{const _ss=JSON.parse(localStorage.getItem('acs_sessions'));if(_ss&&typeof _ss==='object')sessions=_ss}catch(e){}  // B4：刷新后恢复各 agent 的对话历史
 let pgHist=[],pgSession=null;  // 会话内多轮记忆：完整对话历史 + 稳定 session id（随每次对话发给后端）
 
 const pal=document.getElementById('palette');
@@ -870,9 +967,11 @@ function toggleCheck(id,k,val,checked){const n=nodes.find(x=>x.id===id);let vals
 function updateStat(rt){const p=document.getElementById('statPill'),tx=document.getElementById('statTxt');
   if(!rt){p.classList.remove('ready');tx.textContent=tr('空画布 — 需要 Runtime')}
   else{const inc=nodes.filter(n=>isIncomplete(n)).length,total=nodes.length,ok=total-inc;
+    const risks=graphWarnings().length;
     p.classList.toggle('ready',inc===0);
-    if(inc>0)tx.innerHTML=`<b>${ok}/${total}</b> ${LANG==='en'?('components · ⚠ '+inc+' to configure'):('组件 · ⚠ '+inc+' 待配置')}`;
-    else tx.innerHTML=`<b>${total}</b> ${LANG==='en'?('components · '+(published?'Published 🟢':'Deploy-ready')):('组件 · '+(published?'已发布 🟢':'Deploy-ready'))}`}}
+    const riskTag=risks>0?(LANG==='en'?(' · ⚠ '+risks+' risk'+(risks>1?'s':'')):(' · ⚠ '+risks+' 风险')):'';
+    if(inc>0)tx.innerHTML=`<b>${ok}/${total}</b> ${LANG==='en'?('components · ⚠ '+inc+' to configure'):('组件 · ⚠ '+inc+' 待配置')}${riskTag}`;
+    else tx.innerHTML=`<b>${total}</b> ${LANG==='en'?('components · '+(published?'Published 🟢':'Deploy-ready')):('组件 · '+(published?'已发布 🟢':'Deploy-ready'))}${riskTag}`}}
 
 // ---- Registry ----
 function renderRegistry(){
@@ -1303,7 +1402,8 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   if(br)tools+=`\nfrom bedrock_agentcore.tools.browser_client import browser_session\n\ndef browse(url: str) -> str:\n    """打开网页并返回标题与正文摘要（AgentCore 受管浏览器 + Playwright over CDP，network=${br.cfg.network}）。"""\n    from playwright.sync_api import sync_playwright\n    with browser_session("${c.region}") as _bc:\n        ws_url, headers = _bc.generate_ws_headers()\n        with sync_playwright() as _pw:\n            _b = _pw.chromium.connect_over_cdp(ws_url, headers=headers)\n            try:\n                _ctx = _b.contexts[0]\n                _pg = _ctx.pages[0] if _ctx.pages else _ctx.new_page()\n                _pg.goto(url, wait_until="domcontentloaded", timeout=45000)\n                _pg.wait_for_timeout(2500)\n                return f"标题: {_pg.title()}\\n正文摘录:\\n{_pg.inner_text('body')[:2000]}"\n            except Exception as _e:\n                return f"浏览失败: {_e}"\n            finally:\n                _b.close()\n`;
   // Skills: 从 skills/ 目录动态加载已打包的技能模块
   if(skills.length)tools+=`\nimport importlib.util, os as _os\n\ndef _load_skills():\n    """加载 skills/ 目录下的技能模块，返回 {name: run_callable}。"""\n    loaded = {}\n    d = _os.path.join(_os.path.dirname(__file__), "skills")\n    if not _os.path.isdir(d):\n        return loaded\n    for fn in _os.listdir(d):\n        if fn.endswith(".py"):\n            name = fn[:-3]\n            try:\n                spec = importlib.util.spec_from_file_location("skill_" + name, _os.path.join(d, fn))\n                mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)\n                if hasattr(mod, "run"):\n                    loaded[name] = mod.run\n            except Exception as e:\n                print(f"加载技能 {name} 失败: {e}")\n    return loaded\n\nSKILL_FNS = _load_skills()\n`;
-  const head=`# ABOUTME: AgentCore 入口 (${c.name}) — 由 AgentCore Studio 生成\nimport os\nfrom typing import Any, Dict\nfrom bedrock_agentcore import BedrockAgentCoreApp\n\nSYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT") or "You are a helpful AI assistant."\nSKILLS = ${JSON.stringify(sk)}\nTOOLS = ${JSON.stringify(tl)}\n\ndef _hist_msgs(history):\n    """会话历史 -> strands/bedrock 消息格式（多轮记忆）。"""\n    out = []\n    for h in (history or []):\n        role = h.get("role"); txt = h.get("content")\n        if role in ("user", "assistant") and txt:\n            out.append({"role": role, "content": [{"text": str(txt)}]})\n    return out\n`;
+  const _TRACEFN=`\ndef _trace_from(result, agent=None):\n    """从 strands AgentResult 提取结构化 trace（工具调用/token）；失败返回 {}，绝不影响主响应。"""\n    tr = {}\n    try:\n        m = getattr(result, "metrics", None)\n        au = getattr(m, "accumulated_usage", None) if m is not None else None\n        if au:\n            tr["usage"] = {"input_tokens": au.get("inputTokens"), "output_tokens": au.get("outputTokens"), "total_tokens": au.get("totalTokens")}\n        sr = getattr(result, "stop_reason", None)\n        if sr: tr["stop_reason"] = sr\n    except Exception:\n        pass\n    try:\n        uses, outs = [], {}\n        for _msg in (getattr(agent, "messages", None) or []):\n            for _blk in (_msg.get("content") or []):\n                if not isinstance(_blk, dict): continue\n                if "toolUse" in _blk:\n                    _tu = _blk["toolUse"]; uses.append({"id": _tu.get("toolUseId"), "name": _tu.get("name"), "input": _tu.get("input")})\n                elif "toolResult" in _blk:\n                    _tres = _blk["toolResult"]; _txt = ""\n                    for _c in (_tres.get("content") or []):\n                        if isinstance(_c, dict) and "text" in _c: _txt += str(_c["text"])\n                    outs[_tres.get("toolUseId")] = _txt\n        calls = []\n        for _u in uses:\n            _o = outs.get(_u.get("id"), "")\n            calls.append({"name": _u.get("name"), "input": _u.get("input"), "output": (_o[:600] if isinstance(_o, str) else _o)})\n        if calls: tr["tool_calls"] = calls\n    except Exception:\n        pass\n    return tr\n`;
+  const head=`# ABOUTME: AgentCore 入口 (${c.name}) — 由 AgentCore Studio 生成\nimport os\nfrom typing import Any, Dict\nfrom bedrock_agentcore import BedrockAgentCoreApp\n\nSYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT") or "You are a helpful AI assistant."\nMODEL_ID = "${mid}"\nSKILLS = ${JSON.stringify(sk)}\nTOOLS = ${JSON.stringify(tl)}\n\ndef _hist_msgs(history):\n    """会话历史 -> strands/bedrock 消息格式（多轮记忆）。"""\n    out = []\n    for h in (history or []):\n        role = h.get("role"); txt = h.get("content")\n        if role in ("user", "assistant") and txt:\n            out.append({"role": role, "content": [{"text": str(txt)}]})\n    return out\n`+_TRACEFN;
   // 方案B：将 lambda 型 MCP 工具接线为 strands 可调用 @tool（boto3 直接 invoke 真实 Lambda）
   const lamTools=mcps.filter(m=>m.cfg.type==='lambda'&&/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:/.test(m.cfg.endpoint||''));
   const lamRegion=lamTools.length?lamTools[0].cfg.endpoint.split(':')[3]:(c.region||'us-east-1');
@@ -1324,16 +1424,16 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   const wkDefs=wkTools.map(w=>{const fn=pyId(w.name);return `@tool\ndef ${fn}(query: str) -> str:\n    """${escPy(w.desc||('调用子 Agent '+w.name+' 处理相关请求'))}"""\n    return ${_wkfn}("${w.arn}", "${w.region||c.region||'us-east-1'}", query)\n`;}).join('\n');
   const toolList=[...lamTools.map(m=>pyId(m.cfg.name)),...skTools.map(k=>pyId(k.cfg.name)),...kbTools.map(k=>pyId(k.cfg.name)),...wkTools.map(w=>pyId(w.name)),...(ci?['code_interpreter']:[]),...(br?['browser']:[])].join(', ');
   const wsSetup=(c.framework==='strands'&&hasWS)?`_GW_URL = os.environ.get("GATEWAY_URL")\n_GW_MCP = None\nif _GW_URL:\n    try:\n        import httpx, botocore.session\n        from botocore.auth import SigV4Auth\n        from botocore.awsrequest import AWSRequest\n        from strands.tools.mcp.mcp_client import MCPClient\n        from mcp.client.streamable_http import streamablehttp_client\n        class _SigV4Auth(httpx.Auth):\n            def auth_flow(self, request):\n                _cr = botocore.session.get_session().get_credentials().get_frozen_credentials()\n                _ar = AWSRequest(method=request.method, url=str(request.url), data=request.content, headers=dict(request.headers))\n                SigV4Auth(_cr, "bedrock-agentcore", "${c.region}").add_auth(_ar)\n                request.headers.update(dict(_ar.headers))\n                yield request\n        _GW_MCP = MCPClient(lambda: streamablehttp_client(_GW_URL, auth=_SigV4Auth()))\n    except Exception as _e:\n        _GW_MCP = None\n\n`:'';
-  const strandsProc=hasWS?`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    if _GW_MCP is not None:\n        try:\n            with _GW_MCP:\n                _gwt = _GW_MCP.list_tools_sync()\n                agent = Agent(model=model, system_prompt=sp, tools=_TOOLS + _gwt, messages=_hist_msgs(history))\n                return str(agent(prompt))\n        except Exception:\n            pass\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    return str(agent(prompt))\n`:`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result)\n`;
+  const strandsProc=hasWS?`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    if _GW_MCP is not None:\n        try:\n            with _GW_MCP:\n                _gwt = _GW_MCP.list_tools_sync()\n                agent = Agent(model=model, system_prompt=sp, tools=_TOOLS + _gwt, messages=_hist_msgs(history))\n                _r = agent(prompt)\n                return str(_r), _trace_from(_r, agent)\n        except Exception:\n            pass\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    _r = agent(prompt)\n    return str(_r), _trace_from(_r, agent)\n`:`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   let logic;
   if(c.framework==='strands'){
     if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n_TOOLS = [${toolList}]\n\n${wsSetup}${strandsProc}`;
-    else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result)\n`;
+    else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   }
   else if(c.framework==='claude_sdk')logic=`import anthropic\n_c = anthropic.Anthropic()\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    _msgs = [{"role": h["role"], "content": h["content"]} for h in (history or []) if h.get("role") in ("user", "assistant") and h.get("content")]\n    _msgs.append({"role": "user", "content": prompt})\n    msg = _c.messages.create(model="${mid}", max_tokens=${c.max_tokens}, temperature=${c.temperature},\n        system=sp, messages=_msgs)\n    return msg.content[0].text\n`;
   else if(c.framework==='langchain')logic=`from langchain_aws import ChatBedrock\n_llm = ChatBedrock(model_id="${mid}", model_kwargs={"temperature": ${c.temperature}, "max_tokens": ${c.max_tokens}})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    return _llm.invoke(sp + "\\n\\n" + prompt).content\n`;
   else logic=`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    # === 在此实现你的 agent 逻辑 ===\n    note = f" (已注册技能: {SKILLS}, 工具: {TOOLS})" if SKILLS or TOOLS else ""\n    return f"[{sp[:20]}] 收到: {prompt}{note}"\n`;
-  return head+tools+`\napp = BedrockAgentCoreApp()\n\n${logic}\n@app.entrypoint\ndef invoke(payload: Dict[str, Any]) -> Dict[str, Any]:\n    prompt = payload.get("prompt", "")\n    sp = payload.get("system_prompt") or SYSTEM_PROMPT  # 每次请求可覆盖系统提示（改 prompt 即时生效，无需重新部署）\n    history = payload.get("history") or []  # 会话内多轮记忆\n    if not prompt:\n        return {"error": "No prompt provided", "result": ""}\n    try:\n        return {"result": process_request(prompt, sp, history)}\n    except Exception as e:\n        return {"error": str(e), "result": ""}\n\n\nif __name__ == "__main__":\n    app.run()\n`}
+  return head+tools+`\napp = BedrockAgentCoreApp()\n\n${logic}\n@app.entrypoint\ndef invoke(payload: Dict[str, Any]) -> Dict[str, Any]:\n    import time as _t\n    prompt = payload.get("prompt", "")\n    sp = payload.get("system_prompt") or SYSTEM_PROMPT  # 每次请求可覆盖系统提示（改 prompt 即时生效，无需重新部署）\n    history = payload.get("history") or []  # 会话内多轮记忆\n    if not prompt:\n        return {"error": "No prompt provided", "result": ""}\n    _t0 = _t.time()\n    try:\n        _out = process_request(prompt, sp, history)\n    except Exception as e:\n        return {"error": str(e), "result": ""}\n    if isinstance(_out, tuple):\n        _text, _trace = _out[0], dict(_out[1] or {})\n    else:\n        _text, _trace = _out, {}\n    _trace.setdefault("latency_ms", int((_t.time() - _t0) * 1000))\n    _trace.setdefault("model", MODEL_ID)\n    return {"result": _text, "trace": _trace}\n\n\nif __name__ == "__main__":\n    app.run()\n`}
 function renderPreview(){[...tabsEl.children].forEach(b=>b.classList.toggle('on',b.dataset.k===tab));
   const o=gen(),m={entry:o.entry,deploy:o.deploy,registry:o.registry,policy:o.policy,req:o.req};
   const el=document.getElementById('code');el.innerHTML=highlight(m[tab]||'');el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
@@ -1367,7 +1467,27 @@ function collectWarnings(){
   // MCP/Skill 但缺 Gateway
   if((nodes.some(n=>n.type==='mcp')||nodes.some(n=>n.type==='skill'))&&!nodes.some(n=>n.type==='gateway'))w.push('🔌 存在 MCP/Skill 但缺少 Gateway（工具目标需挂在 Gateway 下）');
   if(nodes.some(n=>n.type==='runtime')&&nodes.some(n=>n.type==='harness'))w.push('⚙️🚀 Runtime 与 Harness 二选一：二者都是 Agent 中枢，同时存在时仅以 Runtime 为准，请删除其一');
+  w.push(...graphWarnings());  // A1 pre-flight：跨节点语义/区域/行为风险
   return [...new Set(w)]}
+function graphWarnings(){  // 完整性检查抓不到的"能部署但会出错/有风险"——跨节点语义、区域、行为
+  const w=[];const _rt=centerNode();const _region=_rt?(_rt.cfg.region||''):'';
+  // web_search 托管 connector 仅 us-east-1
+  if(nodes.some(n=>n.type==='mcp'&&n.cfg.type==='web_search')&&_region&&_region!=='us-east-1')
+    w.push('🧰 web_search 托管 connector 仅支持 us-east-1，当前 Agent 区域 '+_region+' 将无法使用（改区域或换工具）');
+  // 知识库跨区
+  nodes.filter(n=>n.type==='kb').forEach(n=>{const kr=(n.cfg.region||'').trim();
+    if(kr&&_region&&kr!==_region)w.push('📚 知识库「'+(n.cfg.name||'kb')+'」区域 '+kr+' 与 Agent 区域 '+_region+' 不一致（跨区检索，注意延迟/权限/费用）')});
+  // Policy ENFORCE 但 Cedar 无 permit → 拦截所有调用
+  nodes.filter(n=>n.type==='policy').forEach(n=>{const c=n.cfg;
+    if(c.mode==='ENFORCE'&&c.authoring==='cedar'&&!/permit\s*\(/.test(c.cedar||''))
+      w.push('🛡️ Policy「'+(c.pname||c.engine||'policy')+'」为 ENFORCE 但 Cedar 无 permit 语句，将拦截全部工具调用')});
+  // Policy 但无 Gateway
+  if(nodes.some(n=>n.type==='policy')&&!nodes.some(n=>n.type==='gateway'))
+    w.push('🛡️ 存在 Policy 但缺少 Gateway（策略作用于 Gateway 的工具调用，否则无对象）');
+  // Code Interpreter / Browser 出公网
+  nodes.filter(n=>(n.type==='codeinterp'||n.type==='browser')&&n.cfg.network==='PUBLIC').forEach(n=>{
+    w.push((n.type==='browser'?'🌐 Browser':'💻 Code Interpreter')+' 网络为 PUBLIC（可出公网，注意数据外泄；默认 SANDBOX 更安全）')});
+  return w}
 function publish(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
   curName=rt.cfg.name;  // session 按实际发布的 agent 名对齐（处理改名）
@@ -1420,22 +1540,118 @@ async function sendMsg(){const inp=document.getElementById('pgIn'),txt=inp.value
   const cloud=pgSrc==='cloud';
   if(!published){if(cloud){toast('请先「发布到云端」');return}const ok=await autoPublish();if(!ok)return}
   if(cloud&&!deployed){toast('请先「发布到云端」');return}
+  if(abMode){inp.value='';return sendAB(txt,cloud);}
   inp.value='';addMsg('u',txt);
-  let res,mode;try{const rtNode=centerNode();const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
-    const j=await r.json();res=j.result;mode=j.mode}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
+  let res,mode,trace;try{const rtNode=centerNode();const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
+    const j=await r.json();res=j.result;mode=j.mode;trace=j.trace}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
   setMode(mode);addMsg('a',res);
-  if(res&&(mode==='real'||mode==='cloud'))pgHist.push({role:'user',content:txt},{role:'assistant',content:res})}
+  if(trace)addTrace(trace);
+  if(res&&(mode==='real'||mode==='cloud'||mode==='bedrock'))pgHist.push({role:'user',content:txt},{role:'assistant',content:res})}
 function localReply(p){const rt=centerNode();const sp=rt?rt.cfg.system_prompt:'';
   const tl=nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),sk=nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name);
   const ex=(tl.length||sk.length)?` （已注册工具: ${tl.join(', ')||'无'}; 技能: ${sk.join(', ')||'无'}）`:'';
   return `${sp?'依据设定「'+sp+'」，':''}针对「${p}」给出演示回复。${ex}`}
 function setMode(m){const e=document.getElementById('pgMode');
-  const map={real:['real','● 实时模型'],cloud:['real','● AWS 云端'],mock:['mock','● 本地模拟'],'cloud-error':['mock','● 云端报错'],error:['mock','● 调用失败']};
+  const map={real:['real','● 本地·真跑'],bedrock:['real','● 本地·模型'],cloud:['real','● AWS 云端'],mock:['mock','● 本地模拟'],'cloud-error':['mock','● 云端报错'],error:['mock','● 调用失败']};
   const v=map[m]||['mock','●'];e.className='mode '+v[0];e.textContent=tr(v[1])}
 function setSrc(s){if(s==='cloud'&&!deployed){toast('请先点击「发布到云端」');return}
   pgSrc=s;document.getElementById('srcLocal').classList.toggle('on',s==='local');document.getElementById('srcCloud').classList.toggle('on',s==='cloud')}
 function addMsg(t,txt){const d=document.createElement('div');d.className='msg '+t;d.textContent=(''+txt).replace(/\\r\\n/g,'\n').replace(/\\n/g,'\n').replace(/\\t/g,'\t');
   const m=document.getElementById('msgs');m.appendChild(d);m.scrollTop=m.scrollHeight}
+function buildTraceEl(T){if(!T||typeof T!=='object')return null;
+  const calls=Array.isArray(T.tool_calls)?T.tool_calls:[];const u=T.usage||{};
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const bits=[];
+  if(T.model)bits.push('🧠 '+(''+T.model).replace(/^(us|eu|apac|us-gov)\./,''));
+  if(u.input_tokens!=null||u.output_tokens!=null)bits.push('🎫 '+(u.input_tokens||0)+'→'+(u.output_tokens||0)+' tok');
+  if(T.latency_ms!=null)bits.push('⏱ '+T.latency_ms+' ms');
+  if(T.stop_reason)bits.push('⏹ '+T.stop_reason);
+  if(!bits.length&&!calls.length)return null;  // 无可展示信息 → 优雅降级
+  const d=document.createElement('div');d.className='deploytrace';
+  const open=calls.length>0;
+  const lbl=()=>tr('调用透视')+(calls.length?' · '+calls.length+' '+tr('次工具调用'):'');
+  const hd=document.createElement('div');hd.className='dt-hd';hd.style.cursor='pointer';hd.textContent=(open?'▾ ':'▸ ')+lbl();
+  const body=document.createElement('div');body.hidden=!open;
+  const meta=document.createElement('div');meta.className='dt-row';meta.style.marginBottom=calls.length?'8px':'0';
+  bits.forEach(b=>{const s=document.createElement('span');s.className='dt-chip';s.textContent=b;meta.appendChild(s)});
+  body.appendChild(meta);
+  calls.forEach(c=>{const row=document.createElement('div');row.className='dt-call';
+    const inp=(c&&typeof c.input==='object')?JSON.stringify(c.input):(''+((c&&c.input)==null?'':c.input));
+    const out=''+((c&&c.output)==null?'':c.output);
+    row.innerHTML='<div class="dt-tool">🔧 '+E((c&&c.name)||'tool')+'</div>'+
+      '<div class="dt-kv"><span>in</span><code>'+E(inp.slice(0,400))+'</code></div>'+
+      (out?'<div class="dt-kv"><span>out</span><code>'+E(out.slice(0,400))+'</code></div>':'');
+    body.appendChild(row)});
+  d.appendChild(hd);d.appendChild(body);
+  hd.onclick=()=>{body.hidden=!body.hidden;hd.textContent=(body.hidden?'▸ ':'▾ ')+lbl()};
+  return d}
+function addTrace(T){const el=buildTraceEl(T);if(!el)return;el.classList.add('msg');
+  const m=document.getElementById('msgs');m.appendChild(el);m.scrollTop=m.scrollHeight}
+let abMode=false;
+function toggleAB(){abMode=!abMode;
+  if(abMode&&setRunMode)toggleSet();  // 与测试集互斥
+  const b=document.getElementById('abBtn');if(b)b.classList.toggle('on',abMode);
+  const s=document.getElementById('abSetup');if(s)s.hidden=!abMode;
+  if(abMode){const rt=centerNode();const p=document.getElementById('abPrompt');if(p&&!p.value&&rt)p.value=rt.cfg.system_prompt||''}}
+async function sendAB(txt,cloud){
+  const rt=centerNode();const baseSp=rt?rt.cfg.system_prompt:'';
+  let candSp=(document.getElementById('abPrompt').value||'').trim();if(!candSp)candSp=baseSp;
+  addMsg('u',txt);
+  const call=sp=>fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:agentName(),prompt:txt,region:rt?rt.cfg.region:undefined,system_prompt:sp,history:pgHist,session:pgSession})})
+    .then(r=>r.json()).catch(()=>({result:cloud?'云端调用失败（后端未启动）':localReply(txt),mode:cloud?'error':'mock'}));
+  const [A,B]=await Promise.all([call(baseSp),call(candSp)]);  // A/B 为对比探针，不写入 pgHist
+  renderAB(A,B)}
+function renderAB(A,B){const m=document.getElementById('msgs');
+  const wrap=document.createElement('div');wrap.className='msg abtest';
+  [['A',tr('基线'),A,''],['B',tr('候选'),B,'b']].forEach(([k,sub,R,cls])=>{
+    const col=document.createElement('div');col.className='ab-col '+cls;
+    const h=document.createElement('div');h.className='ab-h';h.textContent=k+' · '+sub;col.appendChild(h);
+    const body=document.createElement('div');body.className='ab-body';
+    body.textContent=(''+((R&&R.result)==null?'（无输出）':R.result)).replace(/\\r\\n/g,'\n').replace(/\\n/g,'\n');col.appendChild(body);
+    const te=buildTraceEl(R&&R.trace);if(te){te.style.marginTop='8px';col.appendChild(te)}
+    wrap.appendChild(col)});
+  m.appendChild(wrap);m.scrollTop=m.scrollHeight}
+let setRunMode=false;
+function toggleSet(){setRunMode=!setRunMode;
+  if(setRunMode&&abMode)toggleAB();  // 与 A/B 互斥
+  const b=document.getElementById('tsetBtn');if(b)b.classList.toggle('on',setRunMode);
+  const s=document.getElementById('setSetup');if(s)s.hidden=!setRunMode;
+  if(setRunMode)loadSet()}
+function _setKey(){return 'acs_set_'+(agentName()||'_')}
+function _runKey(){return 'acs_runs_'+(agentName()||'_')}
+function loadSet(){const t=document.getElementById('setPrompts');if(t){const v=localStorage.getItem(_setKey());if(v!=null)t.value=v}}
+function saveSet(){const t=document.getElementById('setPrompts');if(t)try{localStorage.setItem(_setKey(),t.value||'')}catch(e){}}
+async function runSet(){
+  const cloud=pgSrc==='cloud';
+  if(!published){if(cloud){toast('请先「发布到云端」');return}const ok=await autoPublish();if(!ok)return}
+  if(cloud&&!deployed){toast('请先「发布到云端」');return}
+  const t=document.getElementById('setPrompts');const lines=(t.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length){toast(tr('测试集为空'));return}
+  saveSet();
+  const rt=centerNode();const sp=rt?rt.cfg.system_prompt:undefined;
+  let prev={};try{prev=JSON.parse(localStorage.getItem(_runKey())||'{}')}catch(e){}
+  const call=q=>fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:agentName(),prompt:q,region:rt?rt.cfg.region:undefined,system_prompt:sp,history:[]})})  // 每条独立单轮
+    .then(r=>r.json()).catch(()=>({result:cloud?'调用失败（后端未启动）':localReply(q),mode:'error'}));
+  const results=await Promise.all(lines.map(call));
+  renderSetRun(lines,results,prev);
+  const cur={};lines.forEach((q,i)=>{cur[q]=(results[i]&&results[i].result)||''});
+  try{localStorage.setItem(_runKey(),JSON.stringify(cur))}catch(e){}}
+function renderSetRun(qs,results,prev){const m=document.getElementById('msgs');
+  const wrap=document.createElement('div');wrap.className='msg setrun';
+  const hd=document.createElement('div');hd.className='sr-hd';hd.textContent='📋 '+tr('测试集结果')+' · '+qs.length+' '+tr('条');wrap.appendChild(hd);
+  qs.forEach((q,i)=>{const R=results[i]||{};const res=(''+((R&&R.result)==null?'（无输出）':R.result));
+    const it=document.createElement('div');it.className='set-item';
+    const qd=document.createElement('div');qd.className='set-q';qd.innerHTML='▸ <b></b>';qd.querySelector('b').textContent=q;
+    const p=prev[q];let cls,lbl;
+    if(p===undefined){cls='new';lbl=tr('新')}else if(p!==res){cls='chg';lbl=tr('变化')}else{cls='same';lbl=tr('未变')}
+    const bd=document.createElement('span');bd.className='set-badge '+cls;bd.textContent=lbl;qd.appendChild(bd);
+    it.appendChild(qd);
+    const ad=document.createElement('div');ad.className='set-a';ad.textContent=res.replace(/\\r\\n/g,'\n').replace(/\\n/g,'\n');it.appendChild(ad);
+    const te=buildTraceEl(R&&R.trace);if(te){te.style.marginTop='6px';it.appendChild(te)}
+    wrap.appendChild(it)});
+  m.appendChild(wrap);m.scrollTop=m.scrollHeight}
 let curDeployLog=null;
 let curDeployHd=null,deployTimer=null,deployStart=0;
 function newDeployLog(){const m=document.getElementById('msgs');const d=document.createElement('div');d.className='msg sys deploylog';
@@ -1536,10 +1752,19 @@ const SCENARIOS={
   full:{label:'全家桶（全部组件）',desc:'13 个组件全部展示',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480],['skill',640,600],['kb',640,720],['optimisation',940,200]]}
 };
 // 每个场景/agent 独立 session：保存/恢复 published/deployed/源模式/对话历史
+function persistSessions(){  // B4：把 sessions 落地 localStorage，刷新不丢
+  try{localStorage.setItem('acs_sessions',JSON.stringify(sessions))}
+  catch(e){  // 配额超限 → 退化为只存历史与标志，丢弃 chat HTML
+    try{const slim={};for(const k in sessions){const s=sessions[k]||{};
+        slim[k]={published:s.published,deployed:s.deployed,pgSrc:s.pgSrc,lastCloudName:s.lastCloudName,hist:s.hist,session:s.session,cloudAvail:s.cloudAvail,chat:''}}
+      localStorage.setItem('acs_sessions',JSON.stringify(slim))}catch(_){}
+  }}
+window.addEventListener('beforeunload',()=>{try{snapshotSession();persistSessions()}catch(e){}});
 function snapshotSession(){if(curName==null)return;
   sessions[curName]={published,deployed,pgSrc,lastCloudName,chat:document.getElementById('msgs').innerHTML,
     hist:pgHist.slice(),session:pgSession,
-    cloudAvail:document.getElementById('srcCloud').classList.contains('avail')}}
+    cloudAvail:document.getElementById('srcCloud').classList.contains('avail')};
+  persistSessions()}
 function syncSrcPills(){document.getElementById('srcLocal').classList.toggle('on',pgSrc==='local');
   document.getElementById('srcCloud').classList.toggle('on',pgSrc==='cloud')}
 function applySession(name,label){
@@ -1567,6 +1792,69 @@ function loadScenario(key){const sc=SCENARIOS[key]||SCENARIOS.full;
   applySession(rt?(rt.cfg.name||('scenario:'+key)):('scenario:'+key),sc.label);
   toast('已载入场景：'+sc.label)}
 function loadSample(){loadScenario('full')}
+// ---- A2 NL→画布：一句话描述 → LLM 生成 spec → 重建可编辑画布 ----
+function openAI(){document.getElementById('aiErr').textContent='';document.getElementById('aiModal').classList.add('show')}
+function closeAI(){document.getElementById('aiModal').classList.remove('show')}
+function aiEg(s){const el=document.getElementById('aiDesc');el.value=tr(s);el.focus()}
+function _aiCatalog(){
+  const pick={runtime:['name','framework','model_id','system_prompt','region'],memory:['mem_name'],gateway:['gw_name'],
+    mcp:['name','type','endpoint','description'],skill:['name','desc'],kb:['name','kb_id','region'],
+    codeinterp:[],browser:[],identity:['outbound_auth'],observability:[],policy:['mode','authoring']};
+  const lines=[];
+  for(const t in pick){const c=COMPONENTS[t];if(!c)continue;
+    const fs=pick[t].map(k=>{const f=c.fields.find(x=>x.k===k);if(!f)return k;return f.o?(k+'['+f.o.join('|')+']'):k}).join(', ');
+    lines.push(t+(c.multi?'(multiple)':'')+': '+(fs||'(no config)'))}
+  return lines.join('\n')}
+async function aiGenerate(){
+  const desc=(document.getElementById('aiDesc').value||'').trim();
+  if(!desc){toast(tr('请先描述你的 Agent'));return}
+  const btn=document.getElementById('aiGoBtn'),err=document.getElementById('aiErr');err.textContent='';
+  const orig=btn.textContent;btn.disabled=true;btn.textContent=tr('生成中…');
+  const sys='You design Amazon Bedrock AgentCore agent architectures for AgentCore Studio.\n'+
+    'Output ONLY a JSON object (no markdown, no prose): {"nodes":[{"type":"<type>","cfg":{...}}],"note":"<one short line>"}.\n'+
+    'Valid node types and the cfg keys you may set (omit keys to use defaults):\n'+_aiCatalog()+'\n'+
+    'RULES:\n- Always include exactly one "runtime" (the hub). runtime.name must be snake_case (letters/digits/underscore, no spaces or hyphens).\n'+
+    '- If you include any mcp/skill/kb, also include exactly one "gateway".\n'+
+    '- For mcp type "web_search", set runtime.region to "us-east-1".\n'+
+    '- Only include nodes the use case truly needs. Prefer minimal. Return JSON only.';
+  let txt='';
+  try{const r=await fetch('/api/llm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:desc,system_prompt:sys})});
+    const j=await r.json();
+    if(!j.ok){err.textContent=tr('生成失败：')+(j.error||'')+tr('（需 AWS 凭证或检查后端）');btn.disabled=false;btn.textContent=orig;return}
+    txt=j.text||''}
+  catch(e){err.textContent=tr('生成失败：后端未启动');btn.disabled=false;btn.textContent=orig;return}
+  let spec=null;
+  try{spec=JSON.parse(txt)}catch(e){const m=txt.match(/\{[\s\S]*\}/);if(m){try{spec=JSON.parse(m[0])}catch(_){}}}
+  if(!spec||!Array.isArray(spec.nodes)){err.textContent=tr('AI 返回无法解析，请重试或换种描述');btn.disabled=false;btn.textContent=orig;return}
+  buildFromSpec(spec.nodes);
+  closeAI();btn.disabled=false;btn.textContent=orig;
+  toast(tr('✨ 已生成画布')+(spec.note?('：'+spec.note):''))}
+function layoutSpec(made){const HUB=60,MID=430,TOOL=800;
+  const hubKids=['memory','identity','observability','evaluation','optimisation','codeinterp','browser'];
+  const rt=made.find(n=>n.type==='runtime'),gw=made.find(n=>n.type==='gateway'),pol=made.find(n=>n.type==='policy');
+  const tools=made.filter(n=>['mcp','skill','kb'].includes(n.type)),kids=made.filter(n=>hubKids.includes(n.type));
+  if(rt){rt.x=HUB;rt.y=260}
+  let y=40;kids.forEach(n=>{n.x=MID;n.y=y;y+=120});
+  if(gw){gw.x=MID;gw.y=Math.max(y,300);y=gw.y+120}
+  if(pol){pol.x=MID;pol.y=Math.max(y,420)}
+  let ty=110;tools.forEach(n=>{n.x=TOOL;n.y=ty;ty+=110});
+  made.forEach(n=>{nodes.push({id:++nid,type:n.type,x:(n.x||HUB),y:(n.y||260),cfg:n.cfg});fresh.add(nid)})}
+function buildFromSpec(specNodes){
+  snapshotSession();
+  nodes=[];nid=0;fresh.clear();
+  const made=[];
+  specNodes.forEach(sn=>{const t=sn&&sn.type,c=COMPONENTS[t];if(!c)return;
+    if(!c.multi&&made.some(n=>n.type===t))return;  // 非 multi 去重
+    const cfg={};c.fields.forEach(f=>cfg[f.k]=f.d);
+    const ov=(sn.cfg&&typeof sn.cfg==='object')?sn.cfg:{};
+    Object.keys(ov).forEach(k=>{if(c.fields.some(f=>f.k===k)&&ov[k]!=null&&ov[k]!=='')cfg[k]=''+ov[k]});
+    if(c.multi){const k=c.fields[0].k;if(ov[k]==null||ov[k]==='')cfg[k]=cfg[k]+'_'+(made.filter(n=>n.type===t).length+1)}
+    made.push({type:t,cfg})});
+  if(!made.some(n=>n.type==='runtime')){const c=COMPONENTS.runtime,cfg={};c.fields.forEach(f=>cfg[f.k]=f.d);made.unshift({type:'runtime',cfg})}
+  layoutSpec(made);
+  sel=null;render();[...canvas.querySelectorAll('.node')].forEach((el,i)=>{el.style.animation='none';void el.offsetWidth;el.classList.add('enter');el.style.animationDelay=(i*70)+'ms'});renderProps();
+  const rt=centerNode();updateStat(rt);renderRegistry();
+  applySession(rt?(rt.cfg.name||'ai-agent'):'ai-agent','AI 生成')}
 // ---- 多 Agent 编排（Supervisor）：从云端拉取 agent → 选 → 生成编排器 Runtime ----
 let maAgents=[],maSelDesc={};
 function openMA(){maAgents=[];maSelDesc={};
