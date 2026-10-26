@@ -19,7 +19,7 @@
     --ink:#0A1120;--ink2:#0F1A2E;--ink3:#16243E;--card:rgba(24,38,64,.72);
     --line:#26365A;--line2:#32466e;--orange:#FF9900;--orange2:#EC7211;
     --text:#EAF1FB;--muted:#90A4C6;--muted2:#6C7E9F;
-    --rt:#FF9900;--mem:#B388FF;--gw:#4FC3F7;--id:#5CD6A0;--obs:#FFC04D;--pol:#FF7AA2;--mcp:#7FE1C0;--skill:#FFD166;--ci:#6CC4FF;--br:#C792EA;--eval:#9CCC65;--kb:#FFAB91;--opt:#CE93D8;--hn:#26C6DA;
+    --rt:#FF9900;--mem:#B388FF;--gw:#4FC3F7;--id:#5CD6A0;--obs:#FFC04D;--pol:#FF7AA2;--mcp:#7FE1C0;--skill:#FFD166;--ci:#6CC4FF;--br:#C792EA;--eval:#9CCC65;--kb:#FFAB91;--opt:#CE93D8;--hn:#26C6DA;--pay:#80CBC4;
     --ui:'Sora',ui-sans-serif,system-ui,sans-serif;--body:'Manrope',ui-sans-serif,system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -617,6 +617,46 @@ const EN={
   '出站认证 (Outbound)':'Outbound auth','OAuth 提供方':'OAuth provider','凭证提供方名称':'Credential provider name','授权范围 (scopes)':'Scopes','Token 时长(秒)':'Token duration (s)','存入 Token Vault':'Stored in the Token Vault',
   '启用 OpenTelemetry':'Enable OpenTelemetry','日志级别':'Log level','链路追踪':'Tracing','采样率':'Sampling rate','CloudWatch 仪表盘':'CloudWatch dashboard',
   '启用评估':'Enable evaluations','评估类型':'Evaluation type','评估采样率':'Evaluation sampling rate','评估数据集 (可选)':'Evaluation dataset (optional)',
+  // item 4: custom evaluators
+  '自定义 evaluator 类型':'Custom evaluator type','自定义 evaluator 名称':'Custom evaluator name','评估粒度 (level)':'Evaluation level','裁判模型 ID':'Judge model ID','裁判指令 (instructions)':'Judge instructions','评分标尺 (rating scale)':'Rating scale','代码评估器 Lambda ARN':'Code evaluator Lambda ARN','评估模式':'Evaluation mode',
+  '随发布调 create-evaluator 建一个自定义 evaluator：llm_judge=LLM 裁判（模型+指令+评分标尺）；code_lambda=代码评估器（你的 Lambda 函数）；none=只用内置/追加 ID':'On publish, calls create-evaluator to build a custom evaluator: llm_judge = LLM-as-a-Judge (model + instructions + rating scale); code_lambda = code evaluator (your Lambda); none = built-in / extra IDs only',
+  'create-evaluator 的 evaluatorName，账户内唯一':'evaluatorName for create-evaluator; unique within the account',
+  'TOOL_CALL=单次工具调用；TRACE=单轮请求-响应；SESSION=整段会话':'TOOL_CALL = single tool call; TRACE = one request-response; SESSION = whole conversation',
+  'llm_judge 的 bedrockEvaluatorModelConfig.modelId':'bedrockEvaluatorModelConfig.modelId for llm_judge',
+  'llm_judge 的 llmAsAJudge.instructions（评估标准）':'llmAsAJudge.instructions for llm_judge (evaluation criteria)',
+  'llm_judge 的 ratingScale：数值 1-5，或 分类 pass/fail':'ratingScale for llm_judge: numerical 1-5, or categorical pass/fail',
+  'code_lambda 的 codeBased.lambdaConfig.lambdaArn，形如 arn:aws:lambda:<region>:<ACCOUNT_ID>:function:my_eval':'codeBased.lambdaConfig.lambdaArn for code_lambda, e.g. arn:aws:lambda:<region>:<ACCOUNT_ID>:function:my_eval',
+  'online=持续对线上流量抽样评估；on_demand=按需对指定 trace/session 跑一次（CI/CD、回归）':'online = continuously sample live traffic; on_demand = run once against a given trace/session (CI/CD, regression)',
+  'S3 URI；on_demand 模式下作为数据集批量评估的输入，留空则对线上流量抽样评估':'S3 URI; in on_demand mode it is the dataset batch-evaluation input; leave empty to sample live traffic',
+  '内置 ID（如 Builtin.Faithfulness、Builtin.InstructionFollowing），或已建好的自定义 evaluator ID':'Built-in IDs (e.g. Builtin.Faithfulness, Builtin.InstructionFollowing), or an already-created custom evaluator ID',
+  // item 5: memory self-managed
+  '自管理触发：消息条数':'Self-managed trigger: message count','自管理触发：token 数':'Self-managed trigger: token count','自管理触发：空闲秒数':'Self-managed trigger: idle seconds','自管理：历史上下文窗口':'Self-managed: historical context window','自管理：SNS 主题 ARN':'Self-managed: SNS topic ARN','自管理：S3 载荷桶':'Self-managed: S3 payload bucket',
+  'selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount —— 累计这么多条消息后触发一次处理；留空=不启用该触发':'selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount — triggers processing after this many messages; empty = disabled',
+  'triggerConditions.tokenBasedTrigger.tokenCount —— 累计这么多 token 后触发；留空=不启用':'triggerConditions.tokenBasedTrigger.tokenCount — triggers after this many tokens; empty = disabled',
+  'triggerConditions.timeBasedTrigger.idleSessionTimeout —— 会话空闲这么多秒后触发；留空=不启用':'triggerConditions.timeBasedTrigger.idleSessionTimeout — triggers after the session is idle this many seconds; empty = disabled',
+  'selfManagedConfiguration.historicalContextWindowSize —— 处理时纳入的历史消息条数（0-50）':'selfManagedConfiguration.historicalContextWindowSize — historical messages included when processing (0-50)',
+  'invocationConfiguration.topicArn —— AgentCore 通过该 SNS 主题通知你有新批次待处理；形如 arn:aws:sns:<region>:<ACCOUNT_ID>:agentcore-memory-jobs（会话内需保序可用 FIFO）':'invocationConfiguration.topicArn — AgentCore notifies you via this SNS topic when a new batch is ready; e.g. arn:aws:sns:<region>:<ACCOUNT_ID>:agentcore-memory-jobs (use FIFO if per-session ordering matters)',
+  'invocationConfiguration.payloadDeliveryBucketName —— AgentCore 把批量事件载荷投递到该 S3 桶，由你的管道读取处理':'invocationConfiguration.payloadDeliveryBucketName — AgentCore delivers batched event payloads to this S3 bucket for your pipeline to process',
+  '对应 API 的 semantic/summary/userPreference/episodic/customMemoryStrategy；EPISODIC 记录事件序列与因果（多轮任务复盘）；CUSTOM = 自管理策略（selfManagedConfiguration）：你自己的管道抽取/整理记忆，AgentCore 只存储与检索':'Maps to API semantic/summary/userPreference/episodic/customMemoryStrategy; EPISODIC records event sequences and causality (multi-turn review); CUSTOM = self-managed strategy (selfManagedConfiguration): your own pipeline extracts/consolidates memories, AgentCore only stores and retrieves',
+  // item 6: gateway interceptors
+  'Lambda 拦截器':'Lambda interceptor','拦截器 Lambda ARN':'Interceptor Lambda ARN','拦截点':'Interception points','传入请求头':'Pass request headers',
+  'Gateway 拦截器：每次工具调用时触发你的 Lambda。REQUEST 拦截器在调用下游工具前运行（校验/改写/自定义鉴权），RESPONSE 拦截器在返回结果前运行（过滤/改写响应）':'Gateway interceptors: invoke your Lambda on each tool call. A REQUEST interceptor runs before the downstream tool (validate/transform/custom auth); a RESPONSE interceptor runs before returning results (filter/transform response)',
+  'interceptorConfigurations[].interceptor.lambda.arn；Gateway 服务角色需对该函数有 lambda:InvokeFunction':'interceptorConfigurations[].interceptor.lambda.arn; the Gateway service role needs lambda:InvokeFunction on this function',
+  'interceptionPoints：REQUEST=调用下游前；RESPONSE=返回结果前；可多选':'interceptionPoints: REQUEST = before the downstream call; RESPONSE = before returning results; multi-select',
+  'inputConfiguration.passRequestHeaders：true 时把请求头（可能含鉴权令牌等敏感信息）传给拦截器 Lambda；默认 false':'inputConfiguration.passRequestHeaders: when true, request headers (possibly containing auth tokens) are passed to the interceptor Lambda; default false',
+  // item 9: payment
+  'Payment Manager 名称':'Payment Manager name','数据面授权':'Data-plane authorization','钱包提供方':'Wallet provider','连接器名称':'Connector name','凭证提供方式':'Credential provisioning','凭证提供方 ARN':'Credential provider ARN','单会话预算上限':'Per-session spend limit','币种':'Currency','支付协议':'Payment protocol',
+  'CreatePaymentManager 的 name；账户内协调代理支付的顶层资源（预览功能）':'name for CreatePaymentManager; top-level resource coordinating agent payments in the account (preview)',
+  'PaymentManager 数据面操作的授权方式：AWS_IAM（SigV4）或 CUSTOM_JWT':'Authorization for PaymentManager data-plane operations: AWS_IAM (SigV4) or CUSTOM_JWT',
+  'CreatePaymentConnector 的连接器类型：CoinbaseCDP（支持 Quick create OAuth）或 StripePrivy（仅手动凭证）':'Connector type for CreatePaymentConnector: CoinbaseCDP (supports Quick create OAuth) or StripePrivy (manual credentials only)',
+  'CreatePaymentConnector 的 name':'name for CreatePaymentConnector',
+  'QUICK_CREATE 仅 Coinbase（一次性 OAuth 授权）；MANUAL 自带 provider API 凭证（Stripe/Privy 仅支持 MANUAL）':'QUICK_CREATE is Coinbase only (one-time OAuth); MANUAL brings your own provider API credentials (Stripe/Privy supports MANUAL only)',
+  'MANUAL 时填 PaymentCredentialProvider ARN（凭证存于 AgentCore Identity / Secrets Manager）；QUICK_CREATE 留空':'For MANUAL, the PaymentCredentialProvider ARN (credentials stored in AgentCore Identity / Secrets Manager); leave empty for QUICK_CREATE',
+  'PaymentSession 的 maxSpendAmount；会话到期或达上限后拒绝后续支付':'maxSpendAmount for the PaymentSession; further payments are denied once the session expires or the limit is reached',
+  'PaymentSession 的 currency':'currency for the PaymentSession',
+  'Agent 遇到付费资源(HTTP 402)时 ProcessPayment 走的协议：x402 或 Machine Payments Protocol':'Protocol ProcessPayment uses when the agent hits a paid resource (HTTP 402): x402 or Machine Payments Protocol',
+  'Agent 自主微支付（预览）':'Autonomous agent micropayments (preview)',
+  'CUSTOM 自管理策略需至少一个触发条件（消息数/token/空闲秒数）':'CUSTOM self-managed strategy needs at least one trigger (message count / token / idle seconds)',
   '启用优化':'Enable optimization','目标评估器':'Target evaluator','AI 推荐 (系统提示/工具描述)':'AI recommendations (system prompt / tool descriptions)','配置包 (版本化快照)':'Config bundle (versioned snapshot)',
   '策略引擎名称':'Policy engine name','关联 Gateway':'Attach Gateway','执行模式':'Enforcement mode','策略名称':'Policy name','策略编写方式':'Authoring mode','Cedar 策略定义':'Cedar policy definition','自然语言描述':'Natural-language description','校验模式':'Validation mode','治理策略':'Governance policy',
   'Agent 名称':'Agent name','Agent 框架':'Agent framework','模型 ID':'Model ID','模型提供方':'Model provider','系统提示 (System Prompt)':'System prompt','温度':'Temperature','最大输出 Token':'Max output tokens',
@@ -745,9 +785,15 @@ const COMPONENTS={
   memory:{label:'Memory',ic:'🧠',ac:'var(--mem)',fields:[
     {k:'mem_name',l:'记忆名称',t:'text',d:'my_memory'},
     {k:'mode',l:'记忆模式',t:'checks',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM',hint:'STM=只存事件流（API 无需策略）；含 LTM 时按上面选中的策略调 update-memory 追加长期记忆策略'},
-    {k:'strategy',l:'长期记忆策略 (可多选)',t:'checks',o:['SEMANTIC','SUMMARY','USER_PREFERENCE','EPISODIC','CUSTOM'],d:'SEMANTIC',hint:'对应 API 的 semantic/summary/userPreference/episodic/customMemoryStrategy；EPISODIC 记录事件序列与因果（多轮任务复盘）；CUSTOM 支持覆写内置提示，或自管理策略（selfManagedConfiguration：触发条件 + SNS/S3，由你自己的管道抽取）'},
+    {k:'strategy',l:'长期记忆策略 (可多选)',t:'checks',o:['SEMANTIC','SUMMARY','USER_PREFERENCE','EPISODIC','CUSTOM'],d:'SEMANTIC',hint:'对应 API 的 semantic/summary/userPreference/episodic/customMemoryStrategy；EPISODIC 记录事件序列与因果（多轮任务复盘）；CUSTOM = 自管理策略（selfManagedConfiguration）：你自己的管道抽取/整理记忆，AgentCore 只存储与检索'},
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
-    {k:'expiry',l:'事件保留天数',t:'text',d:'90'}]},
+    {k:'expiry',l:'事件保留天数',t:'text',d:'90'},
+    {k:'sm_trigger_msg',l:'自管理触发：消息条数',t:'text',d:'6',hint:'selfManagedConfiguration.triggerConditions.messageBasedTrigger.messageCount —— 累计这么多条消息后触发一次处理；留空=不启用该触发'},
+    {k:'sm_trigger_token',l:'自管理触发：token 数',t:'text',d:'1000',hint:'triggerConditions.tokenBasedTrigger.tokenCount —— 累计这么多 token 后触发；留空=不启用'},
+    {k:'sm_trigger_idle',l:'自管理触发：空闲秒数',t:'text',d:'30',hint:'triggerConditions.timeBasedTrigger.idleSessionTimeout —— 会话空闲这么多秒后触发；留空=不启用'},
+    {k:'sm_ctx_window',l:'自管理：历史上下文窗口',t:'text',d:'2',hint:'selfManagedConfiguration.historicalContextWindowSize —— 处理时纳入的历史消息条数（0-50）'},
+    {k:'sm_topic_arn',l:'自管理：SNS 主题 ARN',t:'text',d:'',hint:'invocationConfiguration.topicArn —— AgentCore 通过该 SNS 主题通知你有新批次待处理；形如 arn:aws:sns:<region>:<ACCOUNT_ID>:agentcore-memory-jobs（会话内需保序可用 FIFO）'},
+    {k:'sm_bucket',l:'自管理：S3 载荷桶',t:'text',d:'',hint:'invocationConfiguration.payloadDeliveryBucketName —— AgentCore 把批量事件载荷投递到该 S3 桶，由你的管道读取处理'}]},
   gateway:{label:'Gateway',ic:'🔌',ac:'var(--gw)',fields:[
     {k:'gw_name',l:'Gateway 名称',t:'text',d:'my_gateway',hint:'名称创建后不可改；认证/语义搜索可原地更新（秒级，保留 ARN）'},
     {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'JWT: 用 OAuth/JWT 授权服务器控制访问'},
@@ -756,6 +802,10 @@ const COMPONENTS={
     {k:'allowed_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 使用，逗号分隔'},
     {k:'protocol',l:'协议',t:'select',o:['MCP'],d:'MCP'},
     {k:'semantic',l:'语义搜索',t:'select',o:['true','false'],d:'true'},
+    {k:'interceptor',l:'Lambda 拦截器',t:'select',o:['false','true'],d:'false',hint:'Gateway 拦截器：每次工具调用时触发你的 Lambda。REQUEST 拦截器在调用下游工具前运行（校验/改写/自定义鉴权），RESPONSE 拦截器在返回结果前运行（过滤/改写响应）'},
+    {k:'interceptor_arn',l:'拦截器 Lambda ARN',t:'text',d:'',hint:'interceptorConfigurations[].interceptor.lambda.arn；Gateway 服务角色需对该函数有 lambda:InvokeFunction'},
+    {k:'interceptor_points',l:'拦截点',t:'checks',o:['REQUEST','RESPONSE'],d:'REQUEST',hint:'interceptionPoints：REQUEST=调用下游前；RESPONSE=返回结果前；可多选'},
+    {k:'pass_headers',l:'传入请求头',t:'select',o:['false','true'],d:'false',hint:'inputConfiguration.passRequestHeaders：true 时把请求头（可能含鉴权令牌等敏感信息）传给拦截器 Lambda；默认 false'},
     {k:'description',l:'描述',t:'text',d:'工具网关'}]},
   mcp:{label:'MCP Tool',ic:'🧰',ac:'var(--mcp)',multi:true,parent:'gateway',fields:[
     {k:'name',l:'工具名称',t:'text',d:'web_search'},
@@ -808,9 +858,17 @@ const COMPONENTS={
   evaluation:{label:'Evaluations',ic:'📈',ac:'var(--eval)',parent:'observability',fields:[
     {k:'enabled',l:'启用评估',t:'select',o:['true','false'],d:'true'},
     {k:'eval_type',l:'指标族（内置 evaluator）',t:'select',o:['quality','tool_use','trajectory','safety','all'],d:'quality',hint:'quality=Correctness/Helpfulness/ResponseRelevance/Coherence；tool_use=ToolSelectionAccuracy/ToolParameterAccuracy/GoalSuccessRate；trajectory=Trajectory*Match；safety=Harmfulness/Stereotyping/Refusal'},
-    {k:'extra_evaluators',l:'追加 evaluator ID（逗号分隔）',t:'text',d:'',hint:'内置 ID（如 Builtin.Faithfulness、Builtin.InstructionFollowing），或自定义 evaluator ID（LLM 裁判 / Lambda 代码评估器，先用 agentcore eval evaluator create 建好）'},
+    {k:'extra_evaluators',l:'追加 evaluator ID（逗号分隔）',t:'text',d:'',hint:'内置 ID（如 Builtin.Faithfulness、Builtin.InstructionFollowing），或已建好的自定义 evaluator ID'},
+    {k:'custom_evaluator',l:'自定义 evaluator 类型',t:'select',o:['none','llm_judge','code_lambda'],d:'none',hint:'随发布调 create-evaluator 建一个自定义 evaluator：llm_judge=LLM 裁判（模型+指令+评分标尺）；code_lambda=代码评估器（你的 Lambda 函数）；none=只用内置/追加 ID'},
+    {k:'ce_name',l:'自定义 evaluator 名称',t:'text',d:'my_evaluator',hint:'create-evaluator 的 evaluatorName，账户内唯一'},
+    {k:'ce_level',l:'评估粒度 (level)',t:'select',o:['TRACE','TOOL_CALL','SESSION'],d:'TRACE',hint:'TOOL_CALL=单次工具调用；TRACE=单轮请求-响应；SESSION=整段会话'},
+    {k:'ce_judge_model',l:'裁判模型 ID',t:'select',o:MODEL_OPTS,d:'anthropic.claude-sonnet-5-5',hint:'llm_judge 的 bedrockEvaluatorModelConfig.modelId'},
+    {k:'ce_instructions',l:'裁判指令 (instructions)',t:'textarea',d:'评估 Agent 回答是否正确、完整、与问题相关。',hint:'llm_judge 的 llmAsAJudge.instructions（评估标准）'},
+    {k:'ce_scale',l:'评分标尺 (rating scale)',t:'select',o:['numerical_1_5','categorical_pass_fail'],d:'numerical_1_5',hint:'llm_judge 的 ratingScale：数值 1-5，或 分类 pass/fail'},
+    {k:'ce_lambda_arn',l:'代码评估器 Lambda ARN',t:'text',d:'',hint:'code_lambda 的 codeBased.lambdaConfig.lambdaArn，形如 arn:aws:lambda:<region>:<ACCOUNT_ID>:function:my_eval'},
     {k:'sampling',l:'评估采样率',t:'select',o:['1.0','0.5','0.1','0.05'],d:'1.0',hint:'转成 online-evaluation 的 --sampling-rate 百分比（1.0 → 100）'},
-    {k:'dataset',l:'评估数据集 (可选)',t:'text',d:'',hint:'S3 URI；留空则对线上流量抽样评估'}]},
+    {k:'run_mode',l:'评估模式',t:'select',o:['online','on_demand'],d:'online',hint:'online=持续对线上流量抽样评估；on_demand=按需对指定 trace/session 跑一次（CI/CD、回归）'},
+    {k:'dataset',l:'评估数据集 (可选)',t:'text',d:'',hint:'S3 URI；on_demand 模式下作为数据集批量评估的输入，留空则对线上流量抽样评估'}]},
   optimisation:{label:'Optimization',ic:'🎯',ac:'var(--opt)',parents:['evaluation'],fields:[
     {k:'enabled',l:'启用优化',t:'select',o:['true','false'],d:'true'},
     {k:'target_evaluator',l:'目标评估器',t:'text',d:'',hint:'优化所依据的 Evaluator（基于其失败模式生成推荐）'},
@@ -826,6 +884,17 @@ const COMPONENTS={
     {k:'nl_desc',l:'自然语言描述',t:'textarea',d:'允许所有已认证用户调用 web_search 工具'},
     {k:'validation',l:'校验模式',t:'select',o:['IGNORE_ALL_FINDINGS','FAIL_ON_ANY_FINDINGS'],d:'IGNORE_ALL_FINDINGS'},
     {k:'description',l:'描述',t:'text',d:'治理策略'}]},
+  payment:{label:'Payment',ic:'💳',ac:'var(--pay)',parent:'runtime',preview:true,fields:[
+    {k:'pm_name',l:'Payment Manager 名称',t:'text',d:'my_payments',hint:'CreatePaymentManager 的 name；账户内协调代理支付的顶层资源（预览功能）'},
+    {k:'authorizer',l:'数据面授权',t:'select',o:['AWS_IAM','CUSTOM_JWT'],d:'AWS_IAM',hint:'PaymentManager 数据面操作的授权方式：AWS_IAM（SigV4）或 CUSTOM_JWT'},
+    {k:'provider',l:'钱包提供方',t:'select',o:['CoinbaseCDP','StripePrivy'],d:'CoinbaseCDP',hint:'CreatePaymentConnector 的连接器类型：CoinbaseCDP（支持 Quick create OAuth）或 StripePrivy（仅手动凭证）'},
+    {k:'connector_name',l:'连接器名称',t:'text',d:'my_connector',hint:'CreatePaymentConnector 的 name'},
+    {k:'provision_mode',l:'凭证提供方式',t:'select',o:['QUICK_CREATE','MANUAL'],d:'QUICK_CREATE',hint:'QUICK_CREATE 仅 Coinbase（一次性 OAuth 授权）；MANUAL 自带 provider API 凭证（Stripe/Privy 仅支持 MANUAL）'},
+    {k:'credential_arn',l:'凭证提供方 ARN',t:'text',d:'',hint:'MANUAL 时填 PaymentCredentialProvider ARN（凭证存于 AgentCore Identity / Secrets Manager）；QUICK_CREATE 留空'},
+    {k:'max_spend',l:'单会话预算上限',t:'text',d:'10',hint:'PaymentSession 的 maxSpendAmount；会话到期或达上限后拒绝后续支付'},
+    {k:'currency',l:'币种',t:'select',o:['USDC','USD'],d:'USDC',hint:'PaymentSession 的 currency'},
+    {k:'protocol',l:'支付协议',t:'select',o:['x402','MPP'],d:'x402',hint:'Agent 遇到付费资源(HTTP 402)时 ProcessPayment 走的协议：x402 或 Machine Payments Protocol'},
+    {k:'description',l:'描述',t:'text',d:'Agent 自主微支付（预览）'}]},
 };
 let nodes=[],sel=null,nid=0,tab='entry',fresh=new Set(),published=false,view='play',pgSrc='local',deployed=false;
 let sessions={},curName=null,lastCloudName=null;  // 每个场景/agent 独立 session：published/deployed/源模式/对话历史；lastCloudName=上次云端部署的名字（改名检测）
@@ -835,7 +904,7 @@ let pgStats={turns:0,tokens:{in:0,out:0},tools:{},latency:[]};  // 会话级统�
 
 const pal=document.getElementById('palette');
 function buildPalette(){pal.innerHTML='';
-[['核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy']],['内置工具',['codeinterp','browser']],['Gateway 工具目标',['mcp','skill','kb']]].forEach(([title,types])=>{
+[['核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy','payment']],['内置工具',['codeinterp','browser']],['Gateway 工具目标',['mcp','skill','kb']]].forEach(([title,types])=>{
   const h=document.createElement('div');h.className='pal-sub';h.textContent=tr(title);pal.appendChild(h);
   types.forEach(type=>{const c=COMPONENTS[type];const el=document.createElement('div');
     el.className='pal-item';el.draggable=true;el.style.setProperty('--ac',c.ac);
@@ -931,11 +1000,25 @@ function isIncomplete(n){
       if(!c.strategy||!c.strategy.trim())return '需选择至少一种记忆策略';
       if(!isNum(c.top_k,1,100))return 'top-k 需为 1-100 整数';
       if(!isNum(c.expiry,1,365))return '保留天数需为 1-365';
+      if((c.strategy||'').split(',').includes('CUSTOM')){
+        const anyTrig=[c.sm_trigger_msg,c.sm_trigger_token,c.sm_trigger_idle].some(x=>(x||'').trim());
+        if(!anyTrig)return 'CUSTOM 自管理策略需至少一个触发条件（消息数/token/空闲秒数）';
+        if((c.sm_trigger_msg||'').trim()&&!isNum(c.sm_trigger_msg,1,1000))return '自管理触发消息数需为正整数';
+        if((c.sm_trigger_token||'').trim()&&!isNum(c.sm_trigger_token,1,1000000))return '自管理触发 token 数需为正整数';
+        if((c.sm_trigger_idle||'').trim()&&!isNum(c.sm_trigger_idle,1,86400))return '自管理触发空闲秒数需为正整数';
+        if(!isNum(c.sm_ctx_window,0,50))return '自管理历史上下文窗口需为 0-50';
+        if(!(c.sm_topic_arn||'').trim()||!/^arn:aws[a-z-]*:sns:/.test(c.sm_topic_arn.trim()))return 'CUSTOM 自管理策略需填写有效的 SNS 主题 ARN';
+        if(!(c.sm_bucket||'').trim())return 'CUSTOM 自管理策略需填写 S3 载荷桶名';
+      }
       break;
     case'gateway':
       if(!c.gw_name||!c.gw_name.trim())return '需填写 Gateway 名称';
       if(/[^a-zA-Z0-9_-]/.test(c.gw_name))return 'Gateway 名称仅允许字母/数字/_/-';
       if(c.inbound_auth==='JWT'&&(!c.discovery_url||!c.discovery_url.trim()))return 'JWT 认证需填写 OIDC Discovery URL';
+      if(c.interceptor==='true'){
+        if(!(c.interceptor_arn||'').trim()||!/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:\S+$/.test(c.interceptor_arn.trim()))return '拦截器需填写有效的 Lambda ARN';
+        if(!(c.interceptor_points||'').trim())return '拦截器需选择至少一个拦截点（REQUEST/RESPONSE）';
+      }
       break;
     case'mcp':
       if(!c.name||!c.name.trim())return '需填写工具名称';
@@ -980,6 +1063,23 @@ function isIncomplete(n){
     case'observability':
       if(!isNum(c.sampling==='1.0'?1:c.sampling,0,1)&&c.sampling!=='1.0')return '采样率需 0-1';
       break;
+    case'evaluation':
+      if(c.enabled==='false')break;
+      if(c.custom_evaluator&&c.custom_evaluator!=='none'){
+        if(!(c.ce_name||'').trim())return '自定义 evaluator 需填写名称';
+        if(/[^a-zA-Z0-9_-]/.test(c.ce_name))return 'evaluator 名称仅允许字母/数字/_/-';
+        if(c.custom_evaluator==='llm_judge'&&!(c.ce_instructions||'').trim())return 'LLM 裁判需填写评估指令';
+        if(c.custom_evaluator==='code_lambda'&&(!(c.ce_lambda_arn||'').trim()||!/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:\S+$/.test(c.ce_lambda_arn.trim())))return '代码评估器需填写有效的 Lambda ARN';
+      }
+      break;
+    case'payment':
+      if(!(c.pm_name||'').trim())return '需填写 Payment Manager 名称';
+      if(/[^a-zA-Z0-9_-]/.test(c.pm_name))return 'Payment Manager 名称仅允许字母/数字/_/-';
+      if(!(c.connector_name||'').trim())return '需填写连接器名称';
+      if(c.provider==='StripePrivy'&&c.provision_mode!=='MANUAL')return 'Stripe(Privy) 仅支持 MANUAL 凭证方式';
+      if(c.provision_mode==='MANUAL'&&(!(c.credential_arn||'').trim()||!/^arn:aws/.test(c.credential_arn.trim())))return 'MANUAL 方式需填写凭证提供方 ARN';
+      if(!isNum(c.max_spend,1,1000000))return '单会话预算上限需为正数';
+      break;
   }return null}
 
 function newAgent(){
@@ -1006,8 +1106,8 @@ function summary(n){const c=n.cfg;switch(n.type){
   case'runtime':return `<span class="req">${c.name}</span> · ${c.framework}<br>${(c.model_id||'').split('.').pop().slice(0,18)}`;
   case'harness':return `<span class="req">${c.name}</span> · harness<br>${(c.model_id||'').split('.').pop().slice(0,18)}`;
   case'subagent':return `<span class="req">${c.name}</span><br><span style="opacity:.55">${(c.arn||'').split('/').pop().slice(0,22)}</span>`;
-  case'memory':return `mode: ${c.mode}<br>strategy: ${c.strategy}`;
-  case'gateway':return c.gw_name;
+  case'memory':return `mode: ${c.mode}<br>strategy: ${c.strategy}`+((c.strategy||'').split(',').includes('CUSTOM')?`<br><span style="opacity:.55">self-managed</span>`:'');
+  case'gateway':return c.gw_name+(c.interceptor==='true'?`<br><span style="opacity:.55">interceptor ${c.interceptor_points||'—'}</span>`:'');
   case'mcp':return `${c.name}<br>${c.type}`;
   case'skill':return c.name;
   case'identity':return `out: ${c.outbound_auth}`;
@@ -1016,8 +1116,9 @@ function summary(n){const c=n.cfg;switch(n.type){
   case'browser':return `net: ${c.network}`;
   case'policy':return `${c.engine} · ${c.mode}`;
   case'kb':return `${c.name}<br><span style="opacity:.55">${(c.kb_id||'未填 KB ID')} · ${c.region||''}</span>`;
-  case'evaluation':return `eval: ${c.eval_type||'—'}<br><span style="opacity:.55">sampling ${c.sampling||'—'}</span>`;
+  case'evaluation':return `eval: ${c.eval_type||'—'}<br><span style="opacity:.55">sampling ${c.sampling||'—'}${c.custom_evaluator&&c.custom_evaluator!=='none'?' · '+(c.custom_evaluator==='llm_judge'?'LLM judge':'code eval'):''}</span>`;
   case'optimisation':return `opt: ${c.enabled||'—'}`;
+  case'payment':return `${c.pm_name||'payment'}<br><span style="opacity:.55">${c.provider||''} · ${c.protocol||''}</span>`;
   default:return COMPONENTS[n.type]?tr(COMPONENTS[n.type].label):n.type}}
 
 function drawEdges(rt){const svg=document.getElementById('edges');[...svg.querySelectorAll('path')].forEach(p=>p.remove());
@@ -1091,6 +1192,27 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
     if(n.type==='policy'){
       if(f.k==='cedar'&&n.cfg.authoring!=='cedar')return '';
       if(f.k==='nl_desc'&&n.cfg.authoring!=='natural')return '';
+    }
+    // Evaluations 组件：自定义 evaluator 字段按类型条件显示
+    if(n.type==='evaluation'){
+      const ce=n.cfg.custom_evaluator||'none';
+      if((f.k==='ce_name'||f.k==='ce_level')&&ce==='none')return '';            // 任何自定义 evaluator 都需要名称/粒度
+      if((f.k==='ce_judge_model'||f.k==='ce_instructions'||f.k==='ce_scale')&&ce!=='llm_judge')return '';  // LLM 裁判专属
+      if(f.k==='ce_lambda_arn'&&ce!=='code_lambda')return '';                    // 代码评估器专属
+      if(f.k==='dataset'&&n.cfg.run_mode!=='on_demand')return '';                // 数据集仅按需评估
+    }
+    // Memory 组件：自管理策略字段仅在选中 CUSTOM 策略时显示
+    if(n.type==='memory'){
+      const hasCustom=(n.cfg.strategy||'').split(',').includes('CUSTOM');
+      if((f.k==='sm_trigger_msg'||f.k==='sm_trigger_token'||f.k==='sm_trigger_idle'||f.k==='sm_ctx_window'||f.k==='sm_topic_arn'||f.k==='sm_bucket')&&!hasCustom)return '';
+    }
+    // Gateway 组件：interceptor 字段仅在启用时显示
+    if(n.type==='gateway'){
+      if((f.k==='interceptor_arn'||f.k==='interceptor_points'||f.k==='pass_headers')&&n.cfg.interceptor!=='true')return '';
+    }
+    // Payment 组件：凭证 ARN 仅在 MANUAL 方式显示
+    if(n.type==='payment'){
+      if(f.k==='credential_arn'&&n.cfg.provision_mode!=='MANUAL')return '';
     }
     let fo=f.o;
     if(n.type==='runtime'){
@@ -1262,7 +1384,7 @@ function renderRiskPanel(){const p=document.getElementById('riskPanel');if(!p)re
 // ---- Registry ----
 function renderRegistry(){
   const list=document.getElementById('regList');document.getElementById('regCount').textContent=nodes.length;
-  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
+  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy','payment'];
   const st=published?'<span class="st act">Active</span>':'<span class="st reg">Registered</span>';
   let html='';
   const sec=(title,types,ind)=>{const ns=nodes.filter(n=>types.includes(n.type)).sort((a,b)=>order.indexOf(a.type)-order.indexOf(b.type));
@@ -1270,7 +1392,7 @@ function renderRegistry(){
     return `<div class="reg-grp"${gi}>${tr(title)}</div>`+ns.map(n=>{const c=COMPONENTS[n.type];
       const nm=n.cfg.name||n.cfg.gw_name||n.cfg.engine||tr(c.label);
       return `<div class="reg-row" style="--ac:${c.ac}${ind?';margin-left:16px':''}"><span class="chip">${c.ic}</span><div><div class="nm">${nm}</div><div class="ty">${tr(c.label)}</div></div>${st}</div>`}).join('')};
-  html=sec('核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy'])+sec('内置工具',['codeinterp','browser'])+sec('↳ Gateway 工具目标',['mcp','skill','kb'],true);
+  html=sec('核心组件',['runtime','harness','memory','gateway','identity','observability','evaluation','optimisation','policy','payment'])+sec('内置工具',['codeinterp','browser'])+sec('↳ Gateway 工具目标',['mcp','skill','kb'],true);
   list.innerHTML=html||('<div class="empty">'+tr('尚无注册项<br>拖入组件后将在此显示')+'</div>')}
 
 // ---- 产物生成 ----
@@ -1294,6 +1416,7 @@ function gen(){
   const kbs=nodes.filter(n=>n.type==='kb'&&ok(n));
   const ci=nodes.find(n=>n.type==='codeinterp'&&ok(n)),br=nodes.find(n=>n.type==='browser'&&ok(n));
   const ev=nodes.find(n=>n.type==='evaluation'&&ok(n)),opz=nodes.find(n=>n.type==='optimisation'&&ok(n));
+  const pay=nodes.find(n=>n.type==='payment'&&ok(n));
   const wsTools=mcps.filter(m=>m.cfg.type==='web_search');const hasWS=wsTools.length>0;
 
   // === Harness 模式 ===
@@ -1612,8 +1735,24 @@ if __name__ == "__main__":
   let opt=[];
   const memStratMap={SEMANTIC:'semanticMemoryStrategy',SUMMARY:'summaryMemoryStrategy',USER_PREFERENCE:'userPreferenceMemoryStrategy',EPISODIC:'episodicMemoryStrategy',CUSTOM:'customMemoryStrategy'};
   const memWantsLtm=mem?/LTM/.test(mem.cfg.mode||''):false;
-  const memStrats=(mem&&memWantsLtm)?(mem.cfg.strategy||'').split(',').filter(Boolean)
-    .map(k=>memStratMap[k]).filter(Boolean):[];
+  const memStratKeys=(mem&&memWantsLtm)?(mem.cfg.strategy||'').split(',').filter(Boolean):[];
+  const memStrats=memStratKeys.map(k=>memStratMap[k]).filter(Boolean);
+  // 为每个策略 key 构造 add-strategy 入参；CUSTOM → 自管理策略（selfManagedConfiguration）
+  function memStratEntry(k){
+    const apiKey=memStratMap[k];
+    if(k==='CUSTOM'){
+      const mc=mem.cfg;const trig=[];
+      if((mc.sm_trigger_msg||'').trim())trig.push({messageBasedTrigger:{messageCount:parseInt(mc.sm_trigger_msg)}});
+      if((mc.sm_trigger_token||'').trim())trig.push({tokenBasedTrigger:{tokenCount:parseInt(mc.sm_trigger_token)}});
+      if((mc.sm_trigger_idle||'').trim())trig.push({timeBasedTrigger:{idleSessionTimeout:parseInt(mc.sm_trigger_idle)}});
+      return {customMemoryStrategy:{name:'SelfManaged',configuration:{selfManagedConfiguration:{
+        triggerConditions:trig,
+        historicalContextWindowSize:parseInt(mc.sm_ctx_window||'2')||2,
+        invocationConfiguration:{payloadDeliveryBucketName:(mc.sm_bucket||'').trim(),topicArn:(mc.sm_topic_arn||'').trim()}
+      }}}};
+    }
+    return {[apiKey]:{name:apiKey.replace('MemoryStrategy','')}};
+  }
   if(mem)opt.push('echo "###STEP### memory"',
     `# Memory: configure 阶段随 runtime 创建（事件流=短期记忆）；保留期与长期记忆策略经 update-memory 原地追加`,
     `MEM_ID=$(aws bedrock-agentcore-control list-memories --region ${region} --query "memories[?starts_with(id, '${c.name}_mem-')].id | [0]" --output text 2>/dev/null)`,
@@ -1624,7 +1763,7 @@ if __name__ == "__main__":
       `  MEM_HAS=$(aws bedrock-agentcore-control get-memory --memory-id "$MEM_ID" --region ${region} --query "memory.strategies[].type" --output text 2>/dev/null)`,
       `  echo ">>> 现有长期记忆策略: \${MEM_HAS:-（无）}"`,
       `  cat > /tmp/mem_strat.json <<'MEOF'`,
-      JSON.stringify({addMemoryStrategies:memStrats.map(t=>({[t]:{name:t.replace('MemoryStrategy','')}}))},null,2),
+      JSON.stringify({addMemoryStrategies:memStratKeys.map(k=>memStratEntry(k))},null,2),
       `MEOF`,
       `  aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --memory-strategies file:///tmp/mem_strat.json --region ${region} >/dev/null 2>&1 \\`,
       `    && echo "✅ 已追加长期记忆策略: ${memStrats.join(', ')}" \\`,
@@ -1667,17 +1806,59 @@ if __name__ == "__main__":
     const uniq=[...new Set(picked)];
     const rate=Math.max(0.01,Math.min(100,(parseFloat(ev.cfg.sampling||'1.0')||1)*100));
     const ecName=(c.name+'_online_eval').slice(0,60);
-    opt.push('echo "###STEP### evaluations"',
-      `# 持续在线评估：${uniq.length} 个 evaluator，采样率 ${rate}%（agentcore eval online create 会自动建执行角色）`,
-      `EC_EXIST=$(aws bedrock-agentcore-control list-online-evaluation-configs --region ${region} --query "items[?name=='${ecName}'].onlineEvaluationConfigId | [0]" --output text 2>/dev/null)`,
-      `if [ -n "$EC_EXIST" ] && [ "$EC_EXIST" != "None" ]; then`,
-      `  echo ">>> 在线评估配置 ${ecName} 已存在，跳过创建（改 evaluator 需 update-online-evaluation-config）"`,
-      `else`,
-      `  PYTHONIOENCODING=utf-8 agentcore eval online create -n ${ecName} -a ${c.name} --endpoint ${ev.cfg.endpoint||'DEFAULT'} -s ${rate} `+
-        uniq.map(x=>`-e ${x}`).join(' ')+` ${(ev.cfg.enabled==='false')?'--disabled ':''}>/dev/null 2>&1 \\`,
-      `    && echo "✅ 在线评估已开启：${uniq.join(', ')}（采样 ${rate}%）" \\`,
-      `    || echo "⚠ 在线评估配置失败（Runtime 需先部署完成；或检查 evaluator ID）"`,
-      `fi`);
+    const ceType=ev.cfg.custom_evaluator||'none';
+    opt.push('echo "###STEP### evaluations"');
+    // 自定义 evaluator：create-evaluator（LLM 裁判 或 代码 Lambda），产出 evaluatorId 供在线/按需评估引用
+    if(ceType!=='none'){
+      const ceName=(ev.cfg.ce_name||'my_evaluator').slice(0,60);
+      let evCfg;
+      if(ceType==='llm_judge'){
+        const scale=ev.cfg.ce_scale==='categorical_pass_fail'
+          ? {categorical:[{label:'pass',definition:'回答正确、完整且与问题相关'},{label:'fail',definition:'回答有误、不完整或跑题'}]}
+          : {numerical:[{label:'5',definition:'完全正确且完整',value:5},{label:'3',definition:'部分正确',value:3},{label:'1',definition:'错误或无关',value:1}]};
+        evCfg={llmAsAJudge:{instructions:ev.cfg.ce_instructions||'评估 Agent 回答质量。',
+          modelConfig:{bedrockEvaluatorModelConfig:{modelId:ev.cfg.ce_judge_model||'anthropic.claude-sonnet-5-5'}},
+          ratingScale:scale}};
+      }else{
+        evCfg={codeBased:{lambdaConfig:{lambdaArn:(ev.cfg.ce_lambda_arn||'').trim()}}};
+      }
+      const ceInput={evaluatorName:ceName,level:ev.cfg.ce_level||'TRACE',
+        description:`AgentCore Studio custom evaluator (${ceType})`,evaluatorConfig:evCfg};
+      opt.push(
+        `# 自定义 evaluator（${ceType==='llm_judge'?'LLM-as-a-Judge':'代码 Lambda'}）→ create-evaluator（幂等：同名已存在则复用其 ID）`,
+        `CE_ID=$(aws bedrock-agentcore-control list-evaluators --region ${region} --query "items[?evaluatorName=='${ceName}'].evaluatorId | [0]" --output text 2>/dev/null)`,
+        `if [ -z "$CE_ID" ] || [ "$CE_ID" = "None" ]; then`,
+        `  cat > /tmp/${c.name}_evaluator.json <<'CEEOF'`,
+        JSON.stringify(ceInput,null,2),
+        `CEEOF`,
+        `  CE_ID=$(aws bedrock-agentcore-control create-evaluator --cli-input-json file:///tmp/${c.name}_evaluator.json --region ${region} --query evaluatorId --output text 2>/dev/null) \\`,
+        `    && echo "✅ 已创建自定义 evaluator ${ceName}（$CE_ID）" \\`,
+        `    || echo "⚠ 自定义 evaluator 创建失败（检查 ${ceType==='code_lambda'?'Lambda ARN 与 AgentCore 调用权限':'模型 ID / 评分标尺'}）"`,
+        `else echo ">>> 自定义 evaluator ${ceName} 已存在（$CE_ID），复用"; fi`);
+    }
+    if(ev.cfg.run_mode==='on_demand'){
+      // 按需评估：CI/CD / 回归，对指定 trace/session 或数据集跑一次（不建持续配置）
+      opt.push(
+        `# 按需评估（on-demand）：用 agentcore eval run 对指定 trace/session${(ev.cfg.dataset||'').trim()?'/数据集':''} 评一次，用于 CI/CD 门禁与回归`,
+        `# 评估器：${uniq.join(', ')}${ceType!=='none'?' + 自定义($CE_ID)':''}`,
+        (ev.cfg.dataset||'').trim()
+          ? `PYTHONIOENCODING=utf-8 agentcore eval run -a ${c.name} --dataset ${ev.cfg.dataset.trim()} `+uniq.map(x=>`-e ${x}`).join(' ')+`${ceType!=='none'?' -e "$CE_ID"':''} >/dev/null 2>&1 \\`
+          : `PYTHONIOENCODING=utf-8 agentcore eval run -a ${c.name} --latest `+uniq.map(x=>`-e ${x}`).join(' ')+`${ceType!=='none'?' -e "$CE_ID"':''} >/dev/null 2>&1 \\`,
+        `  && echo "✅ 按需评估已提交（${(ev.cfg.dataset||'').trim()?'数据集 '+ev.cfg.dataset.trim():'最近 trace'}）" \\`,
+        `  || echo "⚠ 按需评估失败（Runtime 需先有 trace；或检查 evaluator ID）"`);
+    }else{
+      opt.push(
+        `# 持续在线评估：${uniq.length} 个内置${ceType!=='none'?' + 1 个自定义':''} evaluator，采样率 ${rate}%（agentcore eval online create 会自动建执行角色）`,
+        `EC_EXIST=$(aws bedrock-agentcore-control list-online-evaluation-configs --region ${region} --query "items[?name=='${ecName}'].onlineEvaluationConfigId | [0]" --output text 2>/dev/null)`,
+        `if [ -n "$EC_EXIST" ] && [ "$EC_EXIST" != "None" ]; then`,
+        `  echo ">>> 在线评估配置 ${ecName} 已存在，跳过创建（改 evaluator 需 update-online-evaluation-config）"`,
+        `else`,
+        `  PYTHONIOENCODING=utf-8 agentcore eval online create -n ${ecName} -a ${c.name} --endpoint ${ev.cfg.endpoint||'DEFAULT'} -s ${rate} `+
+          uniq.map(x=>`-e ${x}`).join(' ')+`${ceType!=='none'?' -e "$CE_ID"':''} >/dev/null 2>&1 \\`,
+        `    && echo "✅ 在线评估已开启：${uniq.join(', ')}${ceType!=='none'?' + 自定义($CE_ID)':''}（采样 ${rate}%）" \\`,
+        `    || echo "⚠ 在线评估配置失败（Runtime 需先部署完成；或检查 evaluator ID）"`,
+        `fi`);
+    }
   }
   // Optimization：配置包（不可变版本快照）——改 System Prompt 不重新部署，切版本即生效
   if(opz&&opz.cfg.enabled!=='false'&&opz.cfg.config_bundles!=='false'){
@@ -1699,6 +1880,38 @@ if __name__ == "__main__":
       `    && echo "✅ 配置包 ${c.name}_cfg 已生成新版本（System Prompt / 模型 / 采样参数快照）" \\`,
       `    || echo "⚠ 配置包创建失败（同名 bundle 会新增版本；检查 bedrock-agentcore:CreateConfigurationBundle 权限）"`,
       `else echo "⚠ 未取到 Runtime ARN，跳过配置包"; fi`);
+  }
+  // Payment（预览）：PaymentManager + PaymentConnector（Agent 自主微支付，x402 / MPP）
+  if(pay){const pc=pay.cfg;const pmName=(pc.pm_name||'my_payments').slice(0,60);const connName=(pc.connector_name||'my_connector').slice(0,60);
+    const connInput={paymentManagerIdentifier:'PM_PLACEHOLDER',name:connName,connectorConfiguration:{connectorType:pc.provider||'CoinbaseCDP'},provisionMode:pc.provision_mode||'QUICK_CREATE',
+      ...(pc.provision_mode==='MANUAL'&&(pc.credential_arn||'').trim()?{credentialProviderConfigurations:[{credentialProviderArn:pc.credential_arn.trim()}]}:{})};
+    opt.push('echo "###STEP### payment"',
+      `# AgentCore Payments（预览）：顶层 PaymentManager 协调支付；PaymentConnector 接 ${pc.provider}；运行时按会话建 PaymentSession（上限 ${pc.max_spend} ${pc.currency}，协议 ${pc.protocol}）`,
+      `# 复用 Runtime 执行角色作为 PaymentManager 的 role-arn（生产可另建专用角色）`,
+      `_PAY_ROLE=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].roleArn | [0]" --output text 2>/dev/null)`,
+      `PM_ID=$(aws bedrock-agentcore-control list-payment-managers --region ${region} --query "items[?name=='${pmName}'].paymentManagerId | [0]" --output text 2>/dev/null)`,
+      `if [ -z "$PM_ID" ] || [ "$PM_ID" = "None" ]; then`,
+      `  if [ -z "$_PAY_ROLE" ] || [ "$_PAY_ROLE" = "None" ]; then echo "⚠ 未取到 Runtime 执行角色，跳过 PaymentManager（Runtime 需先部署完成）";`,
+      `  else`,
+      `  PM_ID=$(aws bedrock-agentcore-control create-payment-manager --name ${pmName} --authorizer-type ${pc.authorizer||'AWS_IAM'} --role-arn "$_PAY_ROLE" --region ${region} --query paymentManagerId --output text 2>/dev/null) \\`,
+      `    && echo "✅ PaymentManager ${pmName} 已创建（$PM_ID）" \\`,
+      `    || echo "⚠ PaymentManager 创建失败（AgentCore Payments 为预览功能，需在支持区域开通；检查 bedrock-agentcore:CreatePaymentManager 权限与 PassRole）"`,
+      `  fi`,
+      `else echo ">>> PaymentManager ${pmName} 已存在（$PM_ID），复用"; fi`,
+      `if [ -n "$PM_ID" ] && [ "$PM_ID" != "None" ]; then`,
+      `  python3 - "$PM_ID" > /tmp/${c.name}_payconn.json <<'PCEOF'`,
+      `import json,sys`,
+      `d=json.loads(${JSON.stringify(JSON.stringify(connInput))})`,
+      `d["paymentManagerIdentifier"]=sys.argv[1]`,
+      `json.dump(d,sys.stdout)`,
+      `PCEOF`,
+      `  CONN_EXIST=$(aws bedrock-agentcore-control list-payment-connectors --payment-manager-identifier "$PM_ID" --region ${region} --query "items[?name=='${connName}'].paymentConnectorId | [0]" --output text 2>/dev/null)`,
+      `  if [ -z "$CONN_EXIST" ] || [ "$CONN_EXIST" = "None" ]; then`,
+      `    aws bedrock-agentcore-control create-payment-connector --cli-input-json file:///tmp/${c.name}_payconn.json --region ${region} >/dev/null 2>&1 \\`,
+      `      && echo "✅ PaymentConnector ${connName}（${pc.provider}，${pc.provision_mode}）已创建${pc.provision_mode==='QUICK_CREATE'?'；若 Coinbase Quick create 返回 authorizationUrl，需在 10 分钟内完成 OAuth 授权':''}" \\`,
+      `      || echo "⚠ PaymentConnector 创建失败（检查钱包凭证/区域；Stripe 仅支持 MANUAL）"`,
+      `  else echo ">>> PaymentConnector ${connName} 已存在，跳过"; fi`,
+      `fi`);
   }
   const identActive=ident&&ident.cfg.outbound_auth!=='none';  // Identity 仅出站凭证；入站鉴权已移至 Runtime/Gateway 各自的 --authorizer-config
   if(identActive){
@@ -1766,7 +1979,28 @@ if __name__ == "__main__":
     'fi',
     'fi',
     'echo "Gateway ARN: $GW_ARN"','echo "Gateway URL: $GW_URL"','echo "Role ARN: $ROLE_ARN"',
-    'GW_ID=$(echo "$GW_ARN" | sed "s#.*gateway/##")');
+    'GW_ID=$(echo "$GW_ARN" | sed "s#.*gateway/##")',
+    ...(gw.cfg.interceptor==='true'&&(gw.cfg.interceptor_arn||'').trim()?(()=>{
+      const pts=(gw.cfg.interceptor_points||'REQUEST').split(',').filter(Boolean);
+      const icfg=[{interceptor:{lambda:{arn:gw.cfg.interceptor_arn.trim()}},interceptionPoints:pts,inputConfiguration:{passRequestHeaders:gw.cfg.pass_headers==='true'}}];
+      return [
+      `# Gateway 拦截器（Lambda ${pts.join('/')}）：update-gateway 注入 interceptorConfigurations（保留现有 auth/协议配置）`,
+      `# Gateway 服务角色需对拦截器函数有 lambda:InvokeFunction`,
+      `if [ -n "$GW_ID" ] && [ "$GW_ID" != "None" ]; then`,
+      `  aws bedrock-agentcore-control get-gateway --gateway-identifier "$GW_ID" --region ${region} --output json > /tmp/gw_ic_cur.json 2>/dev/null`,
+      `  python3 - > /tmp/gw_ic_upd.json <<'ICEOF'`,
+      `import json`,
+      `g=json.load(open('/tmp/gw_ic_cur.json'))`,
+      `out={"gatewayIdentifier":g["gatewayId"],"name":g["name"],"roleArn":g["roleArn"],"protocolType":g["protocolType"],"authorizerType":g["authorizerType"]}`,
+      `if g.get("authorizerConfiguration"): out["authorizerConfiguration"]=g["authorizerConfiguration"]`,
+      `if g.get("protocolConfiguration"): out["protocolConfiguration"]=g["protocolConfiguration"]`,
+      `out["interceptorConfigurations"]=json.loads(${JSON.stringify(JSON.stringify(icfg))})`,
+      `json.dump(out,open('/tmp/gw_ic_upd.json','w'))`,
+      `ICEOF`,
+      `  aws bedrock-agentcore-control update-gateway --cli-input-json file:///tmp/gw_ic_upd.json --region ${region} >/dev/null 2>&1 \\`,
+      `    && echo "✅ Gateway 拦截器已配置：${pts.join('/')}（${gw.cfg.interceptor_arn.trim()}）" \\`,
+      `    || echo "⚠ Gateway 拦截器配置失败（确认 Gateway 服务角色对该 Lambda 有 lambda:InvokeFunction）"`,
+      `fi`];})():[]));
     mcps.forEach(m=>{if(isIncomplete({type:'mcp',cfg:m.cfg})){opt.push('',`echo "⚠ 跳过未完整配置的 MCP Tool: ${m.cfg.name}"`);return}
       opt.push('',`echo "###STEP### tool:${m.cfg.name}"`,
         `T_ID=$(aws bedrock-agentcore-control list-gateway-targets --gateway-identifier "$GW_ID" --region ${region} --query "items[?name=='${m.cfg.name}'].targetId | [0]" --output text 2>/dev/null)`,
@@ -1929,13 +2163,19 @@ if __name__ == "__main__":
   const _connSecretArns=mcps.filter(m=>m.cfg.type==='rest'&&m.cfg.connector).map(m=>(((m.cfg.connector.connection||{}).auth||{}).secret_ref)||'').filter(a=>a.startsWith('arn:aws:secretsmanager:'));
   const stmts=[{Sid:'BedrockInvoke',Effect:'Allow',Action:['bedrock:InvokeModel','bedrock:InvokeModelWithResponseStream'],Resource:'*'},
     {Sid:'SecretsManager',Effect:'Allow',Action:['secretsmanager:GetSecretValue'],Resource:[`arn:aws:secretsmanager:${region}:${acct}:secret:${c.name}/*`,...new Set(_connSecretArns)]}];
-  if(ev&&ev.cfg.enabled!=='false')stmts.push({Sid:'Evaluations',Effect:'Allow',Action:['bedrock-agentcore:CreateOnlineEvaluationConfig','bedrock-agentcore:UpdateOnlineEvaluationConfig','bedrock-agentcore:ListOnlineEvaluationConfigs','bedrock-agentcore:ListEvaluators','bedrock-agentcore:GetEvaluator'],Resource:'*'});
+  if(ev&&ev.cfg.enabled!=='false'){const evAct=['bedrock-agentcore:CreateOnlineEvaluationConfig','bedrock-agentcore:UpdateOnlineEvaluationConfig','bedrock-agentcore:ListOnlineEvaluationConfigs','bedrock-agentcore:ListEvaluators','bedrock-agentcore:GetEvaluator'];
+    if(ev.cfg.custom_evaluator&&ev.cfg.custom_evaluator!=='none')evAct.push('bedrock-agentcore:CreateEvaluator','bedrock-agentcore:UpdateEvaluator');
+    stmts.push({Sid:'Evaluations',Effect:'Allow',Action:evAct,Resource:'*'});
+    if(ev.cfg.custom_evaluator==='code_lambda'&&(ev.cfg.ce_lambda_arn||'').trim())stmts.push({Sid:'EvaluatorLambda',Effect:'Allow',Action:['lambda:InvokeFunction'],Resource:ev.cfg.ce_lambda_arn.trim()});}
+  if(mem&&(mem.cfg.strategy||'').split(',').includes('CUSTOM')){const smStmt={Sid:'MemorySelfManaged',Effect:'Allow',Action:['sns:Publish'],Resource:(mem.cfg.sm_topic_arn||'').trim()||'*'};stmts.push(smStmt);
+    if((mem.cfg.sm_bucket||'').trim())stmts.push({Sid:'MemorySelfManagedS3',Effect:'Allow',Action:['s3:PutObject','s3:GetObject','s3:ListBucket'],Resource:[`arn:aws:s3:::${mem.cfg.sm_bucket.trim()}`,`arn:aws:s3:::${mem.cfg.sm_bucket.trim()}/*`]});}
   if(opz&&opz.cfg.enabled!=='false'&&opz.cfg.config_bundles!=='false')stmts.push({Sid:'ConfigBundles',Effect:'Allow',Action:['bedrock-agentcore:CreateConfigurationBundle','bedrock-agentcore:GetConfigurationBundle','bedrock-agentcore:ListConfigurationBundles'],Resource:'*'});
   if(obs&&obs.cfg.enabled!=='false'&&obs.cfg.dashboard!=='false')stmts.push({Sid:'Dashboard',Effect:'Allow',Action:['cloudwatch:PutDashboard','cloudwatch:GetDashboard'],Resource:'*'});
   if(obs&&obs.cfg.enabled!=='false')stmts.push({Sid:'Observability',Effect:'Allow',Action:['logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents','xray:PutTraceSegments'],Resource:'*'});
   if(gw)stmts.push({Sid:'Gateway',Effect:'Allow',Action:['bedrock-agentcore:InvokeGateway','lambda:InvokeFunction'],Resource:'*'});
   if((c.workers||[]).some(w=>w&&w.arn))stmts.push({Sid:'InvokeSubAgents',Effect:'Allow',Action:['bedrock-agentcore:InvokeAgentRuntime'],Resource:'*'});
   if((c.scheduler_cron||'').trim())stmts.push({Sid:'Scheduler',Effect:'Allow',Action:['scheduler:CreateSchedule','scheduler:UpdateSchedule','scheduler:GetSchedule','iam:CreateRole','iam:PutRolePolicy','iam:PassRole'],Resource:'*'});
+  if(pay)stmts.push({Sid:'Payments',Effect:'Allow',Action:['bedrock-agentcore:CreatePaymentManager','bedrock-agentcore:GetPaymentManager','bedrock-agentcore:CreatePaymentConnector','bedrock-agentcore:CreatePaymentSession','bedrock-agentcore:CreatePaymentInstrument','bedrock-agentcore:ProcessPayment'],Resource:'*'});
   const policy=JSON.stringify({Version:'2012-10-17',Statement:stmts},null,4);
   let req=['bedrock-agentcore>=0.1.0','bedrock-agentcore-starter-toolkit>=0.1.0'];
   if(c.framework==='strands')req.push('strands-agents>=0.1.0');if(c.framework==='claude_sdk')req.push('anthropic>=0.39.0');if(c.framework==='langchain')req.push('langchain>=0.3.0','langchain-aws>=0.2.0');
@@ -2140,11 +2380,39 @@ function graphRisks(){
     R.push({id:'net:'+n.id,node:n.id,sev:'mid',
       msg:(isBr?'🌐 Browser':'💻 Code Interpreter')+' 网络为 PUBLIC（可出公网，注意数据外泄；'+alt+'）',
       fixLabel:'改为 '+safe,fix:()=>{n.cfg.network=safe}})});
+  // Gateway 拦截器：启用但 Lambda ARN 为空/非法 → 部署会失败
+  nodes.filter(n=>n.type==='gateway'&&n.cfg.interceptor==='true').forEach(n=>{
+    const arn=(n.cfg.interceptor_arn||'').trim();
+    if(!arn||!/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:\S+$/.test(arn))
+      R.push({id:'icarn:'+n.id,node:n.id,sev:'high',
+        msg:'🔌 Gateway「'+(n.cfg.gw_name||'gateway')+'」启用了拦截器但 Lambda ARN 为空或非法（形如 arn:aws:lambda:<region>:<account>:function:<name>），update-gateway 会报 ValidationException'});
+    else{
+      const arnReg=arn.split(':')[3];
+      if(_region&&arnReg&&arnReg!==_region)R.push({id:'icreg:'+n.id,node:n.id,sev:'mid',
+        msg:'🔌 拦截器 Lambda 区域 '+arnReg+' 与 Agent 区域 '+_region+' 不一致（Gateway 调用跨区 Lambda，注意延迟/权限）'});
+    }
+    if(n.cfg.pass_headers==='true')R.push({id:'icph:'+n.id,node:n.id,sev:'low',
+      msg:'🔌 拦截器开启了 passRequestHeaders：请求头（可能含鉴权令牌）会传给 Lambda，勿在拦截器里记录敏感信息'});
+  });
+  // Memory CUSTOM 自管理：SNS / S3 跨区提示
+  nodes.filter(n=>n.type==='memory'&&(n.cfg.strategy||'').split(',').includes('CUSTOM')).forEach(n=>{
+    const topicReg=((n.cfg.sm_topic_arn||'').split(':')[3])||'';
+    if(_region&&topicReg&&topicReg!==_region)R.push({id:'smreg:'+n.id,node:n.id,sev:'mid',
+      msg:'🧠 自管理策略 SNS 主题区域 '+topicReg+' 与 Agent 区域 '+_region+' 不一致（跨区通知，注意权限/延迟）'});
+  });
+  // Payment 为预览功能
+  nodes.filter(n=>n.type==='payment').forEach(n=>{
+    R.push({id:'pay:'+n.id,node:n.id,sev:'low',
+      msg:'💳 AgentCore Payments 为预览（Preview）功能：需在支持区域开通，钱包凭证经 AgentCore Identity 管理；Stripe(Privy) 仅支持 MANUAL 凭证方式'});
+    if(n.cfg.provider==='StripePrivy'&&n.cfg.provision_mode!=='MANUAL')R.push({id:'payprov:'+n.id,node:n.id,sev:'high',
+      msg:'💳 Payment「'+(n.cfg.pm_name||'payment')+'」选了 Stripe(Privy) 但凭证方式不是 MANUAL（Stripe 不支持 Quick create）',
+      fixLabel:'改为 MANUAL',fix:()=>{n.cfg.provision_mode='MANUAL'}});
+  });
   return R}
 function publish(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
   curName=rt.cfg.name;  // session 按实际发布的 agent 名对齐（处理改名）
-  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy'];
+  const order=['runtime','harness','memory','gateway','mcp','skill','codeinterp','browser','identity','observability','policy','payment'];
   const rtInc=isIncomplete(rt);
   // 未配置完整的组件（Runtime 除外）→ 将被跳过、不发布
   const skip=nodes.filter(n=>isIncomplete(n)&&n.type!=='runtime').map(n=>{const c=COMPONENTS[n.type];const nm=n.cfg.name||n.cfg.gw_name||n.cfg.engine||c.label;return `${c.ic} ${c.label}「${nm}」：${isIncomplete(n)}`});
@@ -2828,7 +3096,7 @@ const SCENARIOS={
   minimal:{label:'极简对话 Agent',desc:'Runtime + Memory + Browser + Gateway(Web Search)，可对话+联网搜索+网页访问',nodes:[['runtime',40,250,{name:'chat_agent',region:'us-west-2',system_prompt:'你是一个友好的对话助手。需要打开某个具体网页时调用 browser 工具（本地即可用）。web_search 属于 Gateway 托管 connector，只有部署到云端后才可调用；本地对话时如果需要联网搜索，请直接说明该能力需切换到「AWS 云端」来源。'}],['memory',300,60],['browser',300,210,{network:'VPC'}],['gateway',300,360,{gw_name:'chat_gw'}],['mcp',560,480,{name:'web_search',type:'web_search',description:'AgentCore 托管联网搜索，返回正文摘要与来源链接'}]]},
   support:{label:'客服 Agent（带工具）',desc:'Runtime + Memory + Identity + Gateway + 真实工具 order_lookup',nodes:[['runtime',40,250,{name:'support_agent',region:'us-east-1',system_prompt:'你是一个专业的客服助手。当用户询问订单时，调用 order_lookup 工具（参数 order_id）查询，并用简洁中文汇报订单状态、物流与预计送达时间。'}],['memory',320,40],['identity',320,150],['gateway',320,320,{gw_name:'support_gw'}],['mcp',610,300,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-east-1:123456789012:function:order_lookup',description:'按订单号查询订单状态/物流/金额（示例 ARN，账号 123456789012 为占位，换成你的函数）'}]]},
   analyst:{label:'数据分析 Agent',desc:'Runtime + Code Interpreter + Memory + Observability + Gateway + Skill',nodes:[['runtime',40,210,{name:'analyst_agent',system_prompt:'你是一个数据分析助手，可运行 Python 代码处理数据，并可调用 descriptive_stats 技能做描述性统计。'}],['memory',340,110],['codeinterp',340,250,{network:'SANDBOX'}],['observability',340,390],['gateway',620,110,{gw_name:'analyst_gw'}],['skill',620,270,{name:'descriptive_stats',desc:'计算一组数值的均值/中位数/标准差/最值',category:'analysis',source_type:'inline',code:'import statistics as _st\n\ndef run(numbers):\n    """对一组数值计算描述性统计。numbers 可为列表或逗号分隔字符串。返回 count/mean/median/min/max/stdev/variance。"""\n    if isinstance(numbers, str):\n        numbers = [float(x) for x in numbers.replace("，", ",").split(",") if x.strip()]\n    nums = [float(x) for x in numbers]\n    if not nums:\n        return {"error": "未提供有效数值"}\n    out = {"count": len(nums), "mean": round(_st.mean(nums), 4), "median": round(_st.median(nums), 4), "min": min(nums), "max": max(nums)}\n    if len(nums) > 1:\n        out["stdev"] = round(_st.stdev(nums), 4)\n        out["variance"] = round(_st.variance(nums), 4)\n    return out\n'}]]},
-  full:{label:'全家桶（全部组件）',desc:'13 个组件全部展示',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-west-2:123456789012:function:order_lookup',description:'示例 Lambda 工具（替换为你的函数 ARN）'}],['skill',640,600],['kb',640,720,{name:'internal_kb',kb_id:'<KB_ID>',region:'us-west-2',description:'示例知识库（替换为你的 KB ID）'}],['optimisation',940,200]]},
+  full:{label:'全家桶（全部组件）',desc:'核心组件集中展示（Payment 为预览组件，可自行从左侧拖入）',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-west-2:123456789012:function:order_lookup',description:'示例 Lambda 工具（替换为你的函数 ARN）'}],['skill',640,600],['kb',640,720,{name:'internal_kb',kb_id:'<KB_ID>',region:'us-west-2',description:'示例知识库（替换为你的 KB ID）'}],['optimisation',940,200]]},
   pitfall:{label:'⚠ 典型踩坑（pre-flight 演示）',desc:'四个常见配置坑：Runtime V2 选了不支持的区域（部署前直接拦下）、知识库跨区、Policy ENFORCE 无 permit、Code Interpreter 出公网（后三个能部署但运行会出错）',nodes:[['runtime',60,300,{name:'pitfall_agent',region:'eu-central-1',platform_version:'V2',system_prompt:'你是一个演示 Agent。查内部资料用知识库工具，算数用 code_interpreter。'}],['gateway',360,300,{}],['kb',660,400,{name:'internal_faq',kb_id:'KB0000DEMO',region:'us-east-1',description:'内部 FAQ 知识库'}],['policy',360,540,{engine:'demo_engine',pname:'deny_all_demo',mode:'ENFORCE',authoring:'cedar',cedar:'// 只写了 forbid，没有任何 permit\nforbid(\n  principal,\n  action,\n  resource\n);'}],['codeinterp',60,560,{network:'PUBLIC'}]]},
   okf:{label:'📚 OKF 知识包 Agent',desc:'Runtime + Memory + Gateway + Skill(okf_lookup 读真实 markdown 概念目录) + KB(RAG 对照)。OKF=已整理、带交叉链接的 markdown 概念包，agent 直接读并跟随链接；与向量 RAG 并排对比',nodes:[['runtime',40,240,{name:'okf_agent',region:'us-west-2',system_prompt:'你是一个内部知识助手，有两种知识来源，请按用途区分：\n1) okf_lookup —— 查询「已整理、带交叉链接的 markdown 概念包（OKF）」。当用户问表结构、字段含义、指标口径、数据集、runbook 等有明确「概念」的问题时优先用它。它会返回命中的概念，并列出该概念交叉链接到的相关概念（linked），请顺着 linked 补全上下文（例如查某指标会带出它依赖的表）。\n2) vector_kb —— 向量 RAG 检索。仅当需要在大段非结构化长文档里做模糊语义搜索、OKF 里没有对应概念时才用。\n先判断问题属于哪类，再选工具。回答用简洁中文，并注明信息来自哪个概念文件。'}],['memory',320,60],['gateway',320,300,{gw_name:'okf_gw'}],['skill',620,160,{name:'okf_lookup',desc:'查询 OKF 知识包：按概念检索并跟随交叉链接返回相关表/指标/数据集定义（传入自然语言查询）',category:'retrieval',source_type:'inline',code:OKF_LOADER_CODE}],['kb',620,420,{name:'vector_kb',kb_id:'<KB_ID>',region:'us-west-2',description:'向量 RAG 检索（与 OKF 对照，需替换为真实 Bedrock KB ID）'}]]},
 };
