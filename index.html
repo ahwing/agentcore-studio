@@ -624,7 +624,7 @@ const EN={
   '指令 (Instructions)':'Instructions','Agent 循环上限':'Agent loop limit','最大迭代轮数':'Max iterations','每轮最大 Token':'Max tokens per turn','上下文截断策略':'Context truncation','单次超时(秒)':'Per-call timeout (s)','会话存储挂载路径':'Session storage mount path','自带容器 (URI/Dockerfile)':'Bring-your-own container (URI/Dockerfile)',
   '工具网关':'Tool gateway',
   // hints
-  '仅下划线，不能用连字符':'Underscores only; no hyphens','谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 configure --authorizer-config 声明':'Who can invoke this Agent: IAM (SigV4, default) or JWT (OAuth/OIDC); JWT is declared via configure --authorizer-config',
+  '仅下划线，不能用连字符':'Underscores only; no hyphens','谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 add runtime --authorizer-configuration 声明':'Who can invoke this Agent: IAM (SigV4, default) or JWT (OAuth/OIDC); JWT is declared via add runtime --authorizer-configuration',
   'JWT 入站，形如 https://.../.well-known/openid-configuration':'JWT inbound, e.g. https://.../.well-known/openid-configuration','JWT 入站，逗号分隔，校验 aud':'JWT inbound, comma-separated, validates aud','JWT 入站，逗号分隔，校验 client_id':'JWT inbound, comma-separated, validates client_id',
   'direct_code_deploy: 代码包(S3); container: 容器镜像(ECR)':'direct_code_deploy: code package (S3); container: image (ECR)','container 模式：自带镜像，留空则工具链自动构建并推送 ECR':'container mode: bring your own image; leave empty to auto-build and push to ECR','direct_code_deploy 模式：指定 S3 桶；留空则工具链自动托管':'direct_code_deploy: specify an S3 bucket; leave empty to auto-manage',
   '非 Bedrock 模型必填（AgentCore Identity Token Vault ARN）':'Required for non-Bedrock models (AgentCore Identity Token Vault ARN)','名称创建后不可改；认证/语义搜索可原地更新（秒级，保留 ARN）':'Name is immutable after creation; auth/semantic-search can be updated in place (seconds, ARN kept)',
@@ -685,6 +685,9 @@ const RT_REGIONS=['us-west-2','us-east-1','us-east-2','eu-west-1','eu-central-1'
 // web_search 托管 connector 支持的区域
 const WS_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1','ap-southeast-2','us-gov-west-1'];
 const V2_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1'];
+// AgentCore CLI v1 (GA), pinned to an exact version. Runtime & Harness modes share one invocation (npx, no bare `agentcore` binary).
+const AC_CLI_VERSION='1.0.0';
+const AC_CLI='npx -y @aws/agentcore@'+AC_CLI_VERSION;
 // 生命周期上限：microVM 8 小时，instances 14 天
 function rtMaxLife(c){return c&&c.compute_type==='instances'?1209600:28800}
 // 环境变量总大小上限（字节）：V1 4KB；V2 代码包 1.5KB / 容器 2.5KB
@@ -708,7 +711,7 @@ const COMPONENTS={
     {k:'runtime',l:'运行时',t:'select',o:['PYTHON_3_10','PYTHON_3_11','PYTHON_3_12','PYTHON_3_13','PYTHON_3_14','NODE_22'],d:'PYTHON_3_11'},
     {k:'region',l:'AWS 区域',t:'select',o:RT_REGIONS,d:'us-west-2',hint:'V2 仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1'},
     {k:'protocol',l:'协议',t:'select',o:['HTTP','MCP','A2A'],d:'HTTP'},
-    {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 configure --authorizer-config 声明'},
+    {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 add runtime --authorizer-configuration 声明'},
     {k:'in_discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 入站，形如 https://.../.well-known/openid-configuration'},
     {k:'in_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 aud'},
     {k:'in_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 client_id'},
@@ -1296,36 +1299,42 @@ function gen(){
   // === Harness 模式 ===
   if(rt.type==='harness'){
     const pn=((c.name||'agent').replace(/[^a-zA-Z0-9]/g,'')||'agent').slice(0,23);  // 项目=harness 名：字母数字，<=23
-    const toolsList=[];
-    if(ci)toolsList.push('agentcore_code_interpreter');
-    if(br)toolsList.push('agentcore_browser');
     const urlMcp=mcps.find(m=>/^https?:\/\//.test(m.cfg.endpoint||''));  // 取第一个 URL 型 MCP
-    if(urlMcp)toolsList.push('remote_mcp');
     const hSp=(c.system_prompt||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,' ');
-    let hflags=`--name ${pn} --model-provider ${c.model_provider||'bedrock'} --model-id ${c.model_id} --system-prompt "${hSp}"`;
-    if((c.api_key_arn||'').trim())hflags+=` --api-key-arn ${c.api_key_arn.trim()}`;
-    if(c.memory==='none')hflags+=' --no-memory';
+    // v1: --model takes a JSON object (model.bedrockModelConfig / provider+apiKeyArn), not flat --model-provider/--model-id
+    const _prov=(c.model_provider||'bedrock');
+    const _modelObj=_prov==='bedrock'
+      ?{bedrockModelConfig:{modelId:c.model_id}}
+      :Object.assign({provider:_prov,modelId:c.model_id},(c.api_key_arn||'').trim()?{apiKeyArn:c.api_key_arn.trim()}:{});
+    let hflags=`--name ${pn} --model '${JSON.stringify(_modelObj)}' --system-prompt "${hSp}"`;
+    if(c.memory==='none')hflags+=` --memory '{"mode":"disabled"}'`;
     if(c.max_iterations)hflags+=` --max-iterations ${parseInt(c.max_iterations)||10}`;
-    if(c.timeout)hflags+=` --timeout ${parseInt(c.timeout)||300}`;
-    if(c.truncation)hflags+=` --truncation-strategy ${c.truncation}`;
-    if((c.container||'').trim())hflags+=` --container ${c.container.trim()}`;
-    if((c.session_storage||'').trim())hflags+=` --session-storage ${c.session_storage.trim()}`;
+    if(c.timeout)hflags+=` --timeout-seconds ${parseInt(c.timeout)||300}`;   // v1: --timeout -> --timeout-seconds
+    if(c.truncation)hflags+=` --truncation '${JSON.stringify({strategy:c.truncation})}'`;  // v1: --truncation-strategy -> --truncation (JSON)
+    if((c.container||'').trim())hflags+=` --container-uri ${c.container.trim()}`;           // v1: --container -> --container-uri
+    if((c.session_storage||'').trim())hflags+=` --session-storage-path ${c.session_storage.trim()}`; // v1: --session-storage -> --session-storage-path
     if(c.network_mode==='VPC')hflags+=' --network-mode VPC';
     if(c.max_tokens)hflags+=` --max-tokens ${parseInt(c.max_tokens)||1024}`;
-    if(toolsList.length)hflags+=` --tools ${toolsList.join(',')}`;
-    if(urlMcp)hflags+=` --mcp-name ${(urlMcp.cfg.name||'mcp').replace(/[^a-zA-Z0-9_]/g,'_')} --mcp-url ${urlMcp.cfg.endpoint}`;
+    // v1: --tools / --skills take JSON; MCP tool goes into the tools JSON as a remote_mcp entry
+    const toolsJson=[];
+    if(ci)toolsJson.push({name:'code_interpreter',type:'agentcore_code_interpreter'});
+    if(br)toolsJson.push({name:'browser',type:'agentcore_browser'});
+    if(urlMcp)toolsJson.push({name:(urlMcp.cfg.name||'mcp').replace(/[^a-zA-Z0-9_]/g,'_'),type:'remote_mcp',config:{remoteMcp:{url:urlMcp.cfg.endpoint}}});
+    if(toolsJson.length)hflags+=` --tools '${JSON.stringify(toolsJson)}'`;
     const warns=[];
-    if(gw)warns.push('echo "⚠ Gateway 在 harness 模式需先部署再按 ARN 两段式接入（v1 未自动接，可手动 agentcore add tool --harness '+pn+' --type agentcore_gateway --gateway <名>）"');
+    if(gw)warns.push('echo "⚠ Gateway 在 harness 模式需先部署再按 ARN 两段式接入（v1 未自动接；编辑 app/'+pn+'/harness.yaml 的 tools 加 agentcore_gateway 条目）"');
     if(kbs.length)warns.push('echo "⚠ Knowledge Base 在 harness 模式需经 Gateway 暴露（v1 未自动接）"');
     if(skills.length)warns.push('echo "⚠ inline Python Skill 不适用于 harness（其技能为 AWS Skills 目录）；自定义工具请封成 MCP/Gateway"');
     if(mcps.some(m=>/^arn:aws[a-z-]*:lambda:/.test(m.cfg.endpoint||'')))warns.push('echo "⚠ Lambda 型 MCP 在 harness 模式需经 Gateway 接入（v1 未自动接）"');
     let s=['#!/usr/bin/env bash','# AgentCore Harness 部署脚本 — 由 AgentCore Studio 生成',
-      '# Harness：声明式托管，AgentCore 跑 Agent 循环（需 Node 20 + @aws/agentcore preview CLI）',
+      '# Harness：声明式托管，AgentCore 跑 Agent 循环（需 Node 20+ 与 @aws/agentcore v'+AC_CLI_VERSION+' GA CLI）',
       `# 项目/harness 名 ${pn}（原名 ${c.name}）`,'set -e','',
-      '# harness 用 npm 版 CLI（preview）；npx 显式调用，避免与 Python 版 agentcore 命名冲突',
-      'AC="npx @aws/agentcore@preview"','',
+      '# Runtime 与 Harness 共用同一枚固定版 CLI（npx 显式调用，无需本机安装裸 agentcore 二进制）',
+      `AC="${AC_CLI}"`,'',
+      '# 前置检查：node/npx 必须可用',
+      'command -v npx >/dev/null 2>&1 || { echo "❌ 未找到 npx，请安装 Node.js 20+（含 npx）后重试"; exit 1; }','',
       `echo ">>> 创建空项目 ${pn}"`,`rm -rf ${pn}`,
-      `$AC create --project-name ${pn} --no-agent --defaults --json`,
+      `$AC create --name ${pn} --template empty --skip-git --json`,   // v1: create --name --template (no --project-name/--no-agent/--defaults)
       `cd ${pn}`,'',
       '# 写部署目标（account + region），否则 deploy 报 Target not found',
       'ACCT=$(aws sts get-caller-identity --query Account --output text)',
@@ -1334,7 +1343,7 @@ function gen(){
       `echo ">>> 添加 Harness（model/prompt/工具/记忆）"`,
       `$AC add harness ${hflags}`,'',
       `echo ">>> 部署到 AWS（CDK，首次较慢，会 bootstrap）"`,
-      `AWS_REGION=${region} $AC deploy --target default --yes`,'',
+      `AWS_REGION=${region} $AC deploy --target default`,'',   // v1: deploy 不再需要 -y；--yes 语义已变（仅用于空项目拆栈确认）
       `echo ">>> 验证调用"`,
       `$AC invoke --harness ${pn} --prompt "Hello" || true`,
       '# 方案②：画布 spec 存档到 state 桶，供「导入」读回重建可编辑视图',
@@ -1388,15 +1397,15 @@ function gen(){
     const entry=`# ABOUTME: AgentCore Harness 调用脚本 (${c.name}) — 由 AgentCore Studio 生成
 # Harness 模式无需编排代码，Agent 循环由 AgentCore 托管
 # 部署: agentcore deploy
-# 调用: agentcore invoke --harness ${c.name} "your prompt"
+# 调用: agentcore invoke --harness ${c.name} --prompt "your prompt"
 #
 # Python SDK 调用示例:
 import boto3, uuid, sys
 
 REGION = "${region}"
 MODEL_ID = "${c.model_id}"
-# 部署后从 agentcore fetch 获取 ARN
-HARNESS_ARN = "<部署后填入 agentcore fetch 输出的 harness ARN>"
+# 部署后从 agentcore status 获取 ARN
+HARNESS_ARN = "<部署后填入 agentcore status 输出的 harness ARN>"
 
 def invoke(prompt: str, session_id: str = None):
     """调用 Harness Agent (流式)"""
@@ -1422,7 +1431,7 @@ if __name__ == "__main__":
     print(invoke(prompt))
 `;
     const registry={agent:c.name,deploy_mode:'harness',model:c.model_id,region,
-      tools:toolsList,
+      tools:toolsJson.map(t=>t.type),
       components:nodes.filter(n=>!COMPONENTS[n.type].multi&&!['codeinterp','browser'].includes(n.type)).map(n=>({type:n.type,name:n.cfg.name||n.cfg.gw_name||n.cfg.engine||COMPONENTS[n.type].label}))};
     const hStmts=[
       {Sid:'Harness',Effect:'Allow',Action:['bedrock-agentcore:*','bedrock:InvokeModel','bedrock:InvokeModelWithResponseStream'],Resource:'*'},
@@ -1433,16 +1442,41 @@ if __name__ == "__main__":
 
   // === Runtime 模式（原有逻辑）===
   const entry=genEntry(c,skills,mcps,ci,br,kbs);
-  let cfg=`PYTHONIOENCODING=utf-8 agentcore configure -e ${c.entry||'agentcore_entry.py'} -n ${c.name} \\\n  --deployment-type ${c.deploy_type} --runtime ${c.runtime} -r ${region} --protocol ${c.protocol} --idle-timeout ${c.idle_timeout} --max-lifetime ${c.max_lifetime}`;
-  if(c.deploy_type==='container'&&(c.container_uri||'').trim())cfg+=` --ecr ${c.container_uri.trim()}`;
-  if(c.deploy_type==='direct_code_deploy'&&(c.code_s3||'').trim())cfg+=` --s3 ${c.code_s3.trim()}`;
-  // 入站认证：JWT → 声明式 --authorizer-config（IAM=默认 SigV4，无需 flag）。入站归 Runtime 自身，不再由 Identity 节点承载
+  // v1: 无 `agentcore configure`。BYO 代码工作流 = create 空项目 → add runtime（配置对象 JSON）→ 落地代码 → build → deploy。
+  const _lang=(c.runtime||'').toLowerCase().indexOf('node')>=0||(c.runtime||'').toLowerCase().indexOf('typescript')>=0?'typescript':'python';
+  const _life=`'{"idleRuntimeSessionTimeout":${parseInt(c.idle_timeout)||900},"maxLifetime":${parseInt(c.max_lifetime)||28800}}'`;
+  let addRt=`$AC add runtime --name ${c.name} --language ${_lang} --protocol ${c.protocol} --lifecycle-configuration ${_life}`;
+  if((c.session_storage||'').trim())addRt+=` --filesystem-configurations '[{"sessionStorage":{"mountPath":"${c.session_storage.trim()}"}}]'`;
+  // 入站认证：JWT → 声明式 --authorizer-type/--authorizer-configuration（IAM=默认 SigV4，无需 flag）。入站归 Runtime 自身，不再由 Identity 节点承载
   if(c.inbound_auth==='JWT'&&(c.in_discovery_url||'').trim()){
     const _aud=c.in_audience?`,"allowedAudience":[${c.in_audience.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
     const _cli=c.in_clients?`,"allowedClients":[${c.in_clients.split(',').map(x=>`"${x.trim()}"`).join(',')}]`:'';
-    cfg+=` --authorizer-config '{"customJWTAuthorizer":{"discoveryUrl":"${c.in_discovery_url.trim()}"${_aud}${_cli}}}'`;
+    addRt+=` --authorizer-type CUSTOM_JWT --authorizer-configuration '{"customJwtAuthorizer":{"discoveryUrl":"${c.in_discovery_url.trim()}"${_aud}${_cli}}}'`;
   }
-  if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
+  // v1 create 项目名：字母数字/下划线，起始为字母
+  const rtPn=((c.name||'agent').replace(/[^a-zA-Z0-9]/g,'')||'agent').slice(0,23);
+  // v1: container 构建由 runtime 目录下是否存在 Dockerfile 决定（不再有 --deployment-type/--ecr/--s3 flag）
+  const _rtDir=`app/${c.name}`;
+  const cfg=[
+    '# Runtime 与 Harness 共用同一枚固定版 CLI（npx，无需裸 agentcore 二进制）',
+    `AC="${AC_CLI}"`,
+    'command -v npx >/dev/null 2>&1 || { echo "❌ 未找到 npx，请安装 Node.js 20+（含 npx）后重试"; exit 1; }',
+    '# v1 工作流：空项目 → add runtime（BYO 代码）→ 落地 Studio 生成的入口/依赖 → build → deploy',
+    `if [ ! -f agentcore/agentcore.json ]; then $AC create --name ${rtPn} --template empty --skip-git --json; fi`,
+    '# 旧 v0 项目（version 1）需先迁移到 v1（version 2），保留已部署资源',
+    'if [ -f agentcore/agentcore.json ] && grep -q \'"version": 1\' agentcore/agentcore.json 2>/dev/null; then $AC migrate || true; fi',
+    'ACCT=$(aws sts get-caller-identity --query Account --output text)',
+    `echo "[{\\"name\\":\\"default\\",\\"account\\":\\"$ACCT\\",\\"region\\":\\"${region}\\"}]" > agentcore/aws-targets.json`,
+    `[ -d ${_rtDir} ] || ${addRt}`,
+    `# 落地 Studio 生成的入口代码与依赖到 runtime 目录（${_rtDir}）`,
+    `mkdir -p ${_rtDir}`,
+    `cp -f ${c.entry||'agentcore_entry.py'} ${_rtDir}/ 2>/dev/null || true`,
+    `cp -f requirements.txt ${_rtDir}/ 2>/dev/null || true`,
+    // container 构建：放一个 Dockerfile 到 runtime 目录即切换为容器构建
+    ...(c.deploy_type==='container'?[`[ -f Dockerfile ] && cp -f Dockerfile ${_rtDir}/ 2>/dev/null || true`]:[]),
+    '# 构建可部署制品（v1：替代 v0 的 package/validate）',
+    '$AC build'
+  ].join('\n');
   // 增量发布：各单元指纹（runtime 折入 memory/obs/tools/skills/model/framework，因其随 runtime 制品打包/配置）
   // 制品指纹（变了才重建）：代码/依赖/框架/模型/记忆/可观测/工具/skills/部署方式/运行时/镜像/S3
   const fpArt=_fp({entry,region,ct:c.compute_type||'microVM',cp:c.capacity_provider_arn||'',dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode,strategy:mem.cfg.strategy}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,ev:ev?ev.cfg:0,opz:opz?opz.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname})),kb:kbs.map(k=>({n:k.cfg.name,id:k.cfg.kb_id,r:k.cfg.region,t:k.cfg.top_k})),inb:{a:c.inbound_auth||'IAM',d:c.in_discovery_url||'',au:c.in_audience||'',cl:c.in_clients||''}});
@@ -1522,15 +1556,50 @@ if __name__ == "__main__":
     `    aws iam put-role-policy --role-name "$_RTROLE4" --policy-name studio-invoke-subagents --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["bedrock-agentcore:InvokeAgentRuntime"],"Resource":"*"}]}' >/dev/null 2>&1 && echo "✅ 已为编排器 Runtime 授予子 Agent 调用权限(InvokeAgentRuntime)" || echo "⚠ 授予子 Agent 调用权限失败（需 iam:PutRolePolicy），可手动补"`,
     '  fi',
     'fi']:[];
+  const _isInstances=c.compute_type==='instances';
+  // instances 计算类型：agentcore deploy 只建 microVM。build 产出制品后，用 create-agent-runtime + capacityProviderConfiguration 建托管 EC2 Runtime（创建后不可改）。
+  const _rtArtifactPy=_isInstances?(
+    c.deploy_type==='container'
+      ?`{"containerConfiguration":{"containerUri":"${(c.container_uri||'<ECR 镜像 URI，如 <acct>.dkr.ecr.'+region+'.amazonaws.com/<repo>:<tag>>').trim()}"}}`
+      :`{"codeConfiguration":{"code":{"s3":{"bucket":"${(c.code_s3||'<代码包 S3 桶名>').trim()}","prefix":"${c.name}/"}},"runtime":"${_lang==='typescript'?'NODEJS_22':'PYTHON_3_12'}","entryPoint":["${c.entry||'agentcore_entry.py'}"]}`
+  ):'';
+  const instancesCreateLines=_isInstances?[
+    'echo "###STEP### runtime-instances"',
+    '# instances 计算类型：CLI deploy 只建 microVM；此处 build 产出制品后，直接用控制面 API 建托管 EC2 Runtime（immutable，创建后不可改）',
+    '  '+cfg.replace(/\n/g,'\n  '),
+    `  _CP_ARN="${(c.capacity_provider_arn||'').trim()}"`,
+    '  if [ -z "$_CP_ARN" ]; then echo "❌ instances 需提供容量提供方 ARN（capacity_provider_arn），已跳过创建"; else',
+    `  _RT_EXIST=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)`,
+    '  if [ -n "$_RT_EXIST" ] && [ "$_RT_EXIST" != "None" ]; then echo "ℹ 已存在同名 Runtime（$_RT_EXIST）；instances 计算类型创建后不可改，跳过重建"; else',
+    `    _RT_ROLE_ARN="arn:aws:iam::$ACCT:role/${c.name}-runtime-exec"`,
+    '    # 需预先提供执行角色（信任 bedrock-agentcore.amazonaws.com）；create-agent-runtime 必填 role-arn',
+    `    aws bedrock-agentcore-control create-agent-runtime \\`,
+    `      --agent-runtime-name ${c.name} \\`,
+    `      --agent-runtime-artifact '${_rtArtifactPy}' \\`,
+    `      --role-arn "$_RT_ROLE_ARN" \\`,
+    `      --network-configuration '{"networkMode":"PUBLIC"}' \\`,
+    `      --protocol-configuration '{"serverProtocol":"${c.protocol}"}' \\`,
+    `      --capacity-provider-configuration "{\\"capacityProviderArn\\":\\"$_CP_ARN\\"}" \\`,
+    `      --region ${region} >/dev/null 2>&1 \\`,
+    '      && echo "✅ instances Runtime 已创建（托管 EC2 / 容量提供方；immutable）" \\',
+    '      || echo "⚠ create-agent-runtime 失败：确认执行角色/容量提供方/制品 S3 或 ECR 可用（需 bedrock-agentcore:CreateAgentRuntime）"',
+    '  fi; fi',
+    '  _fpset art "$FP_art"; RTC=1'
+  ]:[];
   let s=['#!/usr/bin/env bash','# AgentCore 部署脚本 — 由 AgentCore Studio 生成（增量发布：指纹未变化的组件自动跳过）','export AGENTCORE_SUPPRESS_RECOMMENDATION=1','set -e','',
     ...helpers,'',rtcfgFn,'',
     '# 1) Runtime（核心）— 三态：制品变→重建 / 仅配置变→秒级 update / 未变→跳过','echo "###STEP### runtime"','RTC=0',
     'if [ "$(_fpget art)" != "$FP_art" ]; then',
-    '  echo ">>> 制品/代码变更（或首次）→ 全量 configure + deploy（重建）"',
-    '  '+cfg.replace(/\n/g,'\n  '),
-    '  PYTHONIOENCODING=utf-8 agentcore deploy --auto-update-on-conflict',
-    `  PYTHONIOENCODING=utf-8 agentcore invoke '{"prompt": "Hello"}' || true`,
-    '  _fpset art "$FP_art"; RTC=1',
+    ...(_isInstances?[
+      '  echo ">>> 制品/代码变更（或首次）→ build + create-agent-runtime（instances 托管 EC2，immutable）"',
+      ...instancesCreateLines.map(l=>'  '+l.replace(/^\s{2}/,''))
+    ]:[
+      '  echo ">>> 制品/代码变更（或首次）→ v1: add runtime + build + deploy（重建 microVM）"',
+      '  '+cfg.replace(/\n/g,'\n  '),
+      `  $AC deploy --target default`,                                    // v1: deploy（无 --auto-update-on-conflict，v1 原地更新无需确认）
+      `  $AC invoke --runtime ${c.name} --payload '{"prompt": "Hello"}' || true`, // v1: runtime 用 --payload（--prompt 仅 harness）
+      '  _fpset art "$FP_art"; RTC=1'
+    ]),
     '  _rtcfg || true; _fpset cfg "$FP_cfg"',
     'elif [ "$(_fpget cfg)" != "$FP_cfg" ]; then',
     '  echo ">>> 仅控制面配置变更 → update-agent-runtime 秒级更新（复用现有制品，不重建）"',
@@ -2047,7 +2116,7 @@ function graphRisks(){
     if(!inst&&c.platform_version==='V2')R.push({id:'v2slow',node:_rt.id,sev:'low',
       msg:'⚙️ Runtime V2：创建/更新要几分钟才 READY（做快照）；容器须在 120 秒内 /ping 健康，否则创建失败'});
     if(inst)R.push({id:'inst',node:_rt.id,sev:'mid',
-      msg:'⚙️ instances 计算类型须在创建时指定且之后不可改；agentcore deploy 只建 microVM，请用 create-agent-runtime --capacity-provider-configuration 或控制台创建'});
+      msg:'⚙️ instances 计算类型须在创建时指定且之后不可改；agentcore(v1) build/deploy 只建 microVM，Studio 会改走 create-agent-runtime --capacity-provider-configuration（需先备好容量提供方 ARN 与执行角色）或用控制台创建'});
   }
   // 知识库跨区
   nodes.filter(n=>n.type==='kb').forEach(n=>{const kr=(n.cfg.region||'').trim();
@@ -2111,7 +2180,7 @@ async function doPublish(){const rt0=centerNode();if(rt0&&isIncomplete(rt0)){toa
   if(pubNotice)addMsg('sys','🔁 '+pubNotice);
   if(zipWarn)zipWarn.forEach(w=>addMsg('sys','⚠ '+w));
   if(cloudReady){deployed=true;document.getElementById('srcCloud').classList.add('avail');addMsg('sys',`☁️ 检测到云端已就绪的 ${cloudReady.agent}（${cloudReady.region}）— 可直接切「AWS 云端」与托底环境互动；改配置后重新部署会原地更新（重建期间旧版本继续服务）`)}
-  if(rt.type==='harness')addMsg('sys','🧩 Harness 模式：发布到云端会用 @aws/agentcore(preview) 创建独立的 Harness 资源（声明式，AgentCore 托管 Agent 循环）。它与 runtime 是不同资源——同名 runtime 不会被覆盖；harness 走不可变版本 + 命名 endpoint，可即时回滚（非 runtime 的「原地重建」语义）。需容器内含 Node 20 + preview CLI。');}
+  if(rt.type==='harness')addMsg('sys','🧩 Harness 模式：发布到云端会用 @aws/agentcore v'+AC_CLI_VERSION+'(GA) 创建独立的 Harness 资源（声明式，AgentCore 托管 Agent 循环）。它与 runtime 是不同资源——同名 runtime 不会被覆盖；harness 走不可变版本 + 命名 endpoint，可即时回滚（非 runtime 的「原地重建」语义）。需容器内含 Node 20+ 与 GA CLI。');}
 async function autoPublish(){const rt=centerNode();
   if(!rt){toast('请先添加 Runtime 或 Harness');switchView('cfg');return false}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');switchView('cfg');return false}

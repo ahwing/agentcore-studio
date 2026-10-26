@@ -9,11 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends zip curl unzip 
     curl -s "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip && \
     unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscliv2.zip && \
     rm -rf /var/lib/apt/lists/*
-# Node 20 + @aws/agentcore preview CLI（harness 模式需要；用 npx 调用，不全局装以免与 Python 版 agentcore 命名冲突，构建时预热缓存）
-# Node 20 + @aws/agentcore preview CLI (required for harness mode; call using npx; do not install globally to avoid naming conflicts with the Python version of agentcore; preheat the cache during build)
+# Node 20 + @aws/agentcore v1.0.0 GA CLI（Runtime 与 Harness 两模式共用；用 npx 调用，不全局装，构建时预热缓存）
+# Node 20 + @aws/agentcore v1.0.0 GA CLI (shared by both Runtime and Harness modes; call using npx; not installed globally; preheat the cache during build)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesetup.sh && bash /tmp/nodesetup.sh && \
     apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/* /tmp/nodesetup.sh && \
-    (npx -y @aws/agentcore@preview --version >/dev/null 2>&1 || true)
+    (npx -y @aws/agentcore@1.0.0 --version >/dev/null 2>&1 || true)
 COPY index.html compare.html server.py deep_generate.py ./
 ENV HOST=0.0.0.0 PORT=8080 AGENTCORE_SUPPRESS_RECOMMENDATION=1
 EXPOSE 8080

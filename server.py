@@ -11,6 +11,11 @@ log = logging.getLogger("studio")
 
 AUTH = os.environ.get("STUDIO_PASSWORD")  # 设置则对所有 HTTP 请求启用 Basic Auth
 
+# AgentCore CLI v1 (GA), pinned to an exact version. Both Runtime and Harness
+# modes invoke the SAME CLI via npx (no bare `agentcore` binary dependency).
+AC_CLI_VERSION = "1.0.0"
+AC_CLI = ["npx", "-y", f"@aws/agentcore@{AC_CLI_VERSION}"]
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WS = os.path.join(ROOT, "workspace")
 STATE_FILE = os.path.join(WS, ".studio_state.json")
@@ -496,7 +501,7 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
             proj_dir = info["dir"]  # 回退：项目可能直接在 dir
         try:
             r = subprocess.run(
-                ["npx", "@aws/agentcore@preview", "invoke", "--harness", pn, "--prompt", prompt],
+                AC_CLI + ["invoke", "--harness", pn, "--prompt", prompt],
                 cwd=proj_dir, capture_output=True, text=True, timeout=120,
                 env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
             out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
@@ -505,13 +510,13 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
                 return text, "cloud", trace
             return out.strip()[-1500:] or "（无输出）", "cloud-error", None
         except FileNotFoundError:
-            return "未找到 @aws/agentcore CLI，请运行: npm install -g @aws/agentcore@preview", "error", None
+            return "未找到 node/npx，无法调用 @aws/agentcore CLI，请安装 Node.js 20+（含 npx）", "error", None
         except Exception as e:
             return f"Harness 调用失败: {e}", "error", None
-    # Runtime 模式: 用 agentcore invoke CLI
+    # Runtime 模式: 用 agentcore invoke --runtime CLI（v1：payload 用 --payload，--prompt 仅限 harness）
     payload = json.dumps({"prompt": prompt, "history": history or [], **({"system_prompt": sp} if sp else {})})
     try:
-        r = subprocess.run(["agentcore", "invoke", payload], cwd=info["dir"],
+        r = subprocess.run(AC_CLI + ["invoke", "--runtime", name, "--payload", payload], cwd=info["dir"],
                            capture_output=True, text=True, timeout=120,
                            env={**os.environ, "PYTHONIOENCODING": "utf-8", "AGENTCORE_SUPPRESS_RECOMMENDATION": "1", "COLUMNS": "100000"})
         out = re.sub(r"\x1b\[[0-9;]*m", "", (r.stdout + r.stderr))
@@ -520,7 +525,7 @@ def invoke_cloud(name, prompt, region=None, sp=None, history=None, session=None)
             return text, "cloud", trace
         return out.strip()[-1500:] or "（无输出）", "cloud-error", None
     except FileNotFoundError:
-        return "未找到 uv / agentcore CLI，无法调用云端 runtime", "error", None
+        return "未找到 node/npx，无法调用 @aws/agentcore CLI 的云端 runtime，请安装 Node.js 20+（含 npx）", "error", None
     except Exception as e:
         return f"云端调用失败: {e}", "error", None
 
