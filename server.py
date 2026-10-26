@@ -61,6 +61,26 @@ def write_project(name, files):
         with open(fp, "w") as f: f.write(txt)
     return d
 
+def _bundle_connectors(d, files):
+    """若生成的 entry 引用了 connectors 框架，则把框架源码打包进项目目录，随 agent 一起部署。
+    连接器是零依赖(仅标准库)，不需改 requirements。"""
+    try:
+        entry = files.get("agentcore_entry.py", "")
+        if "from connectors" not in entry and "import connectors" not in entry:
+            return []
+        src = os.path.join(ROOT, "connectors")
+        dst = os.path.join(d, "connectors")
+        os.makedirs(dst, exist_ok=True)
+        copied = []
+        # 复制所有 *.py（排除测试），新增连接器子类自动随包部署，避免漏包 ImportError
+        for fn in sorted(os.listdir(src)):
+            if fn.endswith(".py") and not fn.startswith("test_"):
+                shutil.copy2(os.path.join(src, fn), os.path.join(dst, fn)); copied.append(fn)
+        return copied
+    except Exception as e:
+        log.warning(f"打包 connectors 失败: {e}")
+        return []
+
 def clean_stale_region(d, target_region):
     """若本地 .bedrock_agentcore.yaml 记录的 agent_arn 区域与目标区域不一致，
     清除过期的 toolkit 状态，使下次部署在新区域全新创建（而非跨区 Update 失败）。"""
@@ -541,6 +561,7 @@ class H(BaseHTTPRequestHandler):
         data = json.loads(self.rfile.read(n) or "{}")
         if self.path == "/api/publish":
             d = write_project(data["name"], data["files"])
+            _bundle_connectors(d, data["files"])
             # 写入上传的 zip 技能包（base64），并校验含 SKILL.md
             zip_warn = []
             for fn, b64 in (data.get("zips") or {}).items():
@@ -561,7 +582,7 @@ class H(BaseHTTPRequestHandler):
             resp = {"ok": True, "dir": d, "zip_warn": zip_warn}
             if region_notice: resp["region_notice"] = region_notice
             # harness 与 runtime 是不同资源类型；runtime 云端就绪检测(list-agent-runtimes)对 harness 会误报（命中同名旧 runtime），故 harness 模式跳过
-            cs = cloud_status(d, (data.get("cfg") or {}).get("region"), data.get("name")) if (data.get("cfg") or {}).get("deploy_mode") != "harness" else None
+            cs = cloud_status(d, (data.get("cfg") or {}).get("region"), data.get("name")) if ((data.get("cfg") or {}).get("deploy_mode") != "harness" and not data.get("probe")) else None
             if cs:
                 PUBLISHED[data["name"]]["cloud_arn"] = cs.get("arn")
                 PUBLISHED[data["name"]]["cloud_region"] = cs.get("region")

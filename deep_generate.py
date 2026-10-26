@@ -28,7 +28,8 @@ CAPABILITY_MAP = """
 - **harness**: 声明式托管 Agent，AgentCore 跑 Agent 循环，零容器管理，不可变版本。适合标准 Agent 场景。
 - **memory_semantic**: 向量存储事实知识，语义检索。适用于：知识库、FAQ。
 - **memory_episodic**: 捕获交互经验为 episode，支持回溯反思。适用于：记住历史、学习经验、趋势分析。
-- **gateway**: MCP 协议网关，注册外部工具目标（Lambda/远程 MCP）。仅当内置工具不能满足时使用。
+- **connector**: 声明式业务系统连接器（REST/HTTP API、数据库）。用一份配置描述"怎么调这个业务系统 + 有哪些操作"，每个操作自动变成一个工具。**接入客户已有业务系统（订单/CRM/ERP/内部 API）的首选**——比现写 Lambda 更可复用、可审计、可被 Policy 治理。密钥只存引用（Secrets Manager / env），绝不写死。
+- **gateway**: MCP 协议网关，注册外部工具目标（Lambda/远程 MCP）。connector 的生产形态即注册为 Gateway target；仅当已有 Lambda/远程 MCP 需接入时直接用。
 - **identity**: 出站凭证管理（API Key、OAuth）。当需要安全调用认证的外部服务时使用。
 - **policy**: Cedar 策略引擎，实时拦截/放行工具调用。用于安全限制、合规。
 - **evaluations**: 定义测试用例，持续监控 Agent 质量。用于生产环境质量保障。
@@ -41,7 +42,7 @@ CAPABILITY_MAP = """
 2. code_interpreter 能执行 boto3，因此发邮件(SES)、读写 DynamoDB、调 S3 等 AWS 操作无需额外 Lambda
 3. 简单场景优先 harness（零代码管理）；需要复杂自定义工具循环时用 runtime
 4. 定时触发统一用 EventBridge Schedule（唯一需要的非 AgentCore 组件）
-5. 只在客户有自己的私有 API/数据库且无法通过 code_interpreter 访问时，才用 Gateway
+5. 客户有自己的私有 REST/HTTP API 或数据库时，**优先用 connector 声明式接入**（可复用/可审计/可治理），而不是现写 Lambda；仅当已有 Lambda 或远程 MCP 时才用 gateway 直接注册
 """
 
 DECOMPOSE_PROMPT = CAPABILITY_MAP + """
@@ -57,6 +58,7 @@ DECOMPOSE_PROMPT = CAPABILITY_MAP + """
   "builtin_tools": ["browser", "code_interpreter", "web_search 中需要的"],
   "memory": null 或 {"strategy": "semantic/episodic", "reason": "为什么需要"},
   "gateway_targets": [] 或 [{"name": "工具名", "type": "lambda/remote_mcp", "reason": "为什么内置工具不够"}],
+  "connectors": [] 或 [{"name": "order_system", "type": "rest", "description": "订单系统：查询/退款", "connection": {"base_url": "https://api.example.com", "timeout": 10, "retries": 2, "auth": {"type": "none/api_key/bearer/oauth2", "secret_ref": "arn:aws:secretsmanager:... 或 env:VAR_NAME"}}, "operations": [{"name": "query_order", "description": "按订单号查询", "method": "GET", "path": "/orders/{order_id}", "params": {"order_id": {"in": "path", "type": "string", "required": true, "description": "订单号"}}, "response": {"pick": "$.data"}}]}],
   "identity": null 或 {"reason": "需要什么凭证"},
   "policy": null 或 {"rules_desc": ["自然语言描述的规则"]},
   "evaluations": null 或 {"test_cases_desc": ["验证点描述"]},
@@ -165,7 +167,7 @@ COMPONENT_SCHEMAS = {
         "desc": "Harness 声明式 Agent",
         "schema": """{
   "name": "agent 名称（字母数字，<=23 字符）",
-  "model_id": "Bedrock 模型 ID，如 anthropic.claude-sonnet-4-5-20250514",
+  "model_id": "Bedrock 模型 ID，如 anthropic.claude-sonnet-4-6",
   "region": "部署区域",
   "system_prompt": "（由后续步骤单独生成，此处留空字符串）",
   "tools": ["内置工具列表: browser / code_interpreter / web_search"],
@@ -184,6 +186,7 @@ COMPONENT_SCHEMAS = {
   "system_prompt": "（由后续步骤单独生成，此处留空字符串）",
   "entry": "agentcore_entry.py",
   "protocol": "HTTP",
+  "platform_version": "V1 或 V2（V2=快照启动、冷启动稳定，仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1；默认 V1）",
   "idle_timeout": 900,
   "max_lifetime": 28800
 }"""
@@ -222,6 +225,27 @@ COMPONENT_SCHEMAS = {
   "description": "工具描述（Agent 看到的）",
   "input_schema": {"参数名": {"type": "类型", "description": "描述"}},
   "output_schema": "输出格式描述"
+}"""
+    },
+    "connector": {
+        "desc": "声明式业务系统连接器（REST/HTTP）",
+        "schema": """{
+  "name": "连接器名（字母数字下划线）",
+  "type": "rest",
+  "description": "这个业务系统是做什么的（Agent 看到的）",
+  "deployment": "inline",
+  "connection": {
+    "base_url": "https://api.example.com",
+    "timeout": 10,
+    "retries": 2,
+    "auth": {"type": "none/api_key/bearer/oauth2", "secret_ref": "arn:aws:secretsmanager:... 或 env:VAR_NAME"}
+  },
+  "operations": [
+    {"name": "操作名（=一个工具）", "description": "这个操作做什么", "method": "GET/POST",
+     "path": "/path/{path_param}",
+     "params": {"参数名": {"in": "path/query/body", "type": "string/number/boolean", "required": true, "description": "参数说明"}},
+     "response": {"pick": "$.data（可选，裁剪响应）"}}
+  ]
 }"""
     },
     "scheduler": {
@@ -276,6 +300,7 @@ def deep_generate(nl_prompt, llm_fn, region="us-west-2", on_progress=None):
             return result
         spec.setdefault("user_params", {})
         spec.setdefault("builtin_tools", [])
+        spec.setdefault("connectors", [])
         spec.setdefault("decisions", [])
         result["spec"] = spec
     except Exception as e:
@@ -328,7 +353,7 @@ def deep_generate(nl_prompt, llm_fn, region="us-west-2", on_progress=None):
         futures["main"] = pool.submit(
             _gen_component, deploy_mode, spec.get("summary", ""),
             deploy_mode if deploy_mode in COMPONENT_SCHEMAS else "harness",
-            {"name": "agent", "model_id": "anthropic.claude-sonnet-4-5-20250514", "region": region})
+            {"name": "agent", "model_id": "anthropic.claude-sonnet-4-6", "region": region})
         # Memory
         if spec.get("memory"):
             mem_type = f"memory_{spec['memory'].get('strategy', 'episodic')}"
@@ -357,6 +382,8 @@ def deep_generate(nl_prompt, llm_fn, region="us-west-2", on_progress=None):
         components["scheduler"] = spec["scheduler"]
     if spec.get("gateway_targets"):
         components["gateway_targets"] = spec["gateway_targets"]
+    if spec.get("connectors"):
+        components["connectors"] = spec["connectors"]
     if spec.get("evaluations"):
         components["evaluations"] = spec["evaluations"]
 
@@ -497,6 +524,9 @@ def _build_tools_description(spec, components):
     if spec.get("gateway_targets"):
         for target in spec["gateway_targets"]:
             lines.append(f"- **{target['name']}**: {target.get('reason', '自定义工具')}。通过 Gateway MCP 协议调用。")
+    for conn in spec.get("connectors", []):
+        for op in conn.get("operations", []):
+            lines.append(f"- **{op.get('name')}**: {op.get('description', conn.get('description', ''))}（业务连接器 {conn.get('name')} 的操作，直接按参数调用）。")
     return "\n".join(lines) if lines else "无额外工具（Agent 仅做对话）"
 
 
@@ -517,12 +547,17 @@ def _build_canvas_nodes(spec, components, region):
     # 主节点
     main_node_cfg = {
         "name": _sanitize_name(main_cfg.get("name", "agent")),
-        "model_id": main_cfg.get("model_id", "anthropic.claude-sonnet-4-5-20250514"),
+        "model_id": main_cfg.get("model_id", "anthropic.claude-sonnet-4-6"),
         "region": region,
         "system_prompt": main_cfg.get("system_prompt", ""),
         "deploy_mode": deploy_mode,
         **({k: main_cfg[k] for k in ("max_iterations", "idle_timeout", "max_lifetime", "tools") if k in main_cfg})
     }
+    # Runtime 平台版本：只接受 V1/V2；V2 不支持的区域退回 V1
+    if deploy_mode == "runtime":
+        pv = str(main_cfg.get("platform_version", "V1")).strip().upper()
+        v2_regions = {"us-east-1", "us-east-2", "us-west-2", "eu-west-1", "ap-northeast-1"}
+        main_node_cfg["platform_version"] = "V2" if pv.startswith("V2") and region in v2_regions else "V1"
     # EventBridge Scheduler 配置注入主节点（deploy.sh 生成时读取）
     sched = components.get("scheduler") or spec.get("scheduler")
     if sched:
@@ -564,6 +599,18 @@ def _build_canvas_nodes(spec, components, region):
                     "description": target.get("reason", ""),
                 }
             })
+
+    # 连接器（并进 MCP 节点：type=rest，携带完整 connector 配置，供 genEntry 接线）
+    for conn in spec.get("connectors", []):
+        nodes.append({
+            "type": "mcp",
+            "cfg": {
+                "name": conn.get("name", "connector"),
+                "type": "rest",
+                "description": conn.get("description", ""),
+                "connector": conn,
+            }
+        })
 
     # Policy
     if components.get("policy"):

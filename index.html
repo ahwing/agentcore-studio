@@ -148,7 +148,7 @@
   .st.act{color:var(--id);background:rgba(92,214,160,.15)}
   /* playground */
   .pg{flex:1;display:flex;flex-direction:column;min-height:0}
-  .pg-bar{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .pg-bar{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
   .pg-bar .srcbtn{font-family:var(--ui);font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;margin-right:6px}
   .pg-bar .srcbtn.on{background:rgba(255,153,0,.14);border-color:var(--orange);color:var(--orange)}
   .pg-bar .srcbtn.avail{border-color:var(--id);color:var(--id)}.pg-bar .srcbtn.avail::after{content:" ●";color:var(--id);font-size:8px;vertical-align:middle}
@@ -215,6 +215,74 @@
   .dt-stage.skip .dt-ck{display:inline;color:var(--muted);font-weight:800}
   .dt-stage.skip .dt-ic{filter:grayscale(1);opacity:.7}
   .dt-conn{width:14px;height:2px;background:var(--line2);flex:none}
+  /* —— 消融 / 留档 —— */
+  .ab-setup select,.ab-setup input[type=number]{background:#0c0f16;border:1px solid var(--line2);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:11.5px;padding:5px 7px;box-sizing:border-box}
+  .ab-setup select{width:100%}
+  .ab-setup select:focus,.ab-setup input[type=number]:focus{outline:none;border-color:var(--orange)}
+  .ab-setup .row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}
+  .ab-setup .row .sep{width:1px;height:14px;background:var(--line2)}
+  .ab-setup .srcbtn{font-family:var(--ui);font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer}
+  .ab-setup .srcbtn:hover{border-color:var(--orange);color:var(--orange)}
+  .ab-setup .row .hint{margin-top:0}
+  .pg-stats{font-family:var(--mono);font-size:10.5px;color:var(--muted2);padding:6px 14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,.02)}
+  .abl-card{align-self:stretch;max-width:100%;background:#0c0f16;border:1px solid var(--line2);border-radius:10px;padding:10px 12px}
+  .abl-vd{font-family:var(--ui);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .abl-badge{font-family:var(--mono);font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;flex:none}
+  .abl-badge.ok{color:var(--id);background:rgba(92,214,160,.12)}
+  .abl-badge.warn{color:var(--orange);background:rgba(255,153,0,.12)}
+  .abl-vd .vt{color:var(--text);font-size:11.5px;font-weight:600;line-height:1.45}
+  .abl-sec{font-family:var(--ui);font-size:9.5px;color:var(--muted2);letter-spacing:.6px;margin:9px 0 4px;text-transform:uppercase}
+  .abl-chips{display:flex;gap:5px;flex-wrap:wrap}
+  .abl-chips .dt-chip.hit{color:var(--id);border-color:rgba(92,214,160,.4)}
+  .abl-chips .dt-chip.miss{color:var(--muted2)}
+  .abl-chips .dt-chip.fail{color:var(--pol);border-color:rgba(255,122,162,.45)}
+  .abl-probe{margin-top:7px}
+  .abl-probe .ap-in{font-family:var(--mono);font-size:11px;color:var(--text);background:#0c0f16;border:1px solid var(--line2);border-radius:7px;padding:6px 8px;line-height:1.5}
+  .abl-probe .ap-as{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+  .abl-probe .ap-why{font-size:10px;color:var(--muted2);margin-top:4px;line-height:1.5}
+  .abl-probe .ap-ok{font-size:10px;color:var(--id);margin-top:5px;line-height:1.5;font-family:var(--mono)}
+  .abl-probe .ap-na{font-size:10px;color:var(--orange);margin-top:5px;line-height:1.5;font-family:var(--mono)}
+  .abl-note{font-size:10.5px;color:var(--muted2);margin-top:9px;line-height:1.55;border-top:1px solid rgba(255,255,255,.05);padding-top:7px}
+  /* —— pre-flight 风险面板 —— */
+  #statPill{cursor:pointer}
+  .risk-panel{position:fixed;z-index:60;top:64px;left:50%;transform:translateX(-50%);width:min(720px,92vw);max-height:70vh;overflow:auto;
+    background:var(--ink2);border:1px solid var(--line2);border-radius:12px;box-shadow:0 22px 60px rgba(0,0,0,.55);padding:14px 16px}
+  .risk-panel .rp-hd{display:flex;align-items:center;gap:8px;font-family:var(--ui);font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+  .risk-panel .rp-sub{font-size:11px;color:var(--muted2);margin-bottom:11px;line-height:1.5}
+  .risk-panel .rp-x{margin-left:auto;cursor:pointer;color:var(--muted2);font-size:16px;line-height:1}
+  .risk-row{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid var(--line2);border-radius:9px;background:rgba(255,255,255,.03);margin-bottom:7px}
+  .risk-row .rs{width:7px;height:7px;border-radius:99px;flex:none;margin-top:5px}
+  .risk-row.high .rs{background:var(--pol)}.risk-row.mid .rs{background:var(--orange)}.risk-row.low .rs{background:var(--id)}
+  .risk-row .rm{flex:1;font-size:11.5px;color:var(--text);line-height:1.55}
+  .risk-row .ra{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .risk-row .ra button{font-family:var(--ui);font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer}
+  .risk-row .ra button.fix{border-color:var(--id);color:var(--id)}
+  .risk-row .ra button:hover{border-color:var(--orange);color:var(--orange)}
+  .risk-ok{font-size:12px;color:var(--id);font-family:var(--ui);padding:10px 0}
+  .risk-inc{font-size:11px;color:var(--muted);border-top:1px solid var(--line2);margin-top:8px;padding-top:9px;line-height:1.6}
+  /* —— 产物 diff 直播 —— */
+  .artdiff{background:rgba(255,153,0,.06);border:1px solid rgba(255,153,0,.35);border-radius:9px;padding:8px 10px;margin-bottom:11px}
+  .artdiff .ad-hd{font-family:var(--ui);font-size:11px;font-weight:700;color:var(--orange);margin-bottom:6px}
+  .ad-row{display:flex;align-items:baseline;gap:8px;padding:3px 5px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:10.5px}
+  .ad-row:hover{background:rgba(255,255,255,.05)}
+  .ad-row.cur{background:rgba(255,255,255,.06)}
+  .ad-row .ad-f{color:var(--text);min-width:150px}
+  .ad-row .ad-n b{margin-right:5px}.ad-row .ad-n b.p{color:var(--id)}.ad-row .ad-n b.m{color:var(--pol)}
+  .ad-row .ad-hi{color:var(--muted2);flex:1}
+  .code .addln{display:inline-block;width:100%;background:rgba(92,214,160,.13);border-left:2px solid var(--id);margin-left:-2px;padding-left:4px}
+  /* —— 发布指纹对比表 —— */
+  .fp-why{font-size:11px;color:var(--orange);background:rgba(255,153,0,.07);border:1px solid rgba(255,153,0,.25);border-radius:8px;padding:7px 9px;margin-bottom:10px;line-height:1.6;font-family:var(--mono)}
+  .fp-g{margin-bottom:10px}
+  .fp-gh{font-family:var(--ui);font-size:10.5px;font-weight:700;color:var(--muted2);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+  .fp-gh span{font-family:var(--mono);font-size:10px;font-weight:700;border-radius:5px;padding:1px 6px}
+  .fp-gh span.chg{color:var(--orange);background:rgba(255,153,0,.12)}
+  .fp-gh span.same{color:var(--id);background:rgba(92,214,160,.1)}
+  .fp-r{display:flex;align-items:baseline;gap:9px;font-family:var(--mono);font-size:10.5px;padding:2px 6px;border-radius:5px}
+  .fp-r.chg{background:rgba(255,153,0,.09)}
+  .fp-r .fn{color:var(--muted);min-width:130px}
+  .fp-r .fv{color:var(--text);flex:1;word-break:break-all}
+  .fp-r .fv s{color:var(--muted2)}
+  .fp-r .fs{color:var(--muted2)}.fp-r.chg .fs{color:var(--orange)}
   @keyframes dtpulse{0%{box-shadow:0 0 0 0 rgba(255,153,0,.45)}70%{box-shadow:0 0 0 6px rgba(255,153,0,0)}100%{box-shadow:0 0 0 0 rgba(255,153,0,0)}}
   .pg-in{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--line)}
   .pg-in input{flex:1;padding:11px 13px;border:1px solid var(--line2);border-radius:10px;background:var(--ink3);color:var(--text);font-size:13.5px;font-family:var(--body)}
@@ -289,7 +357,7 @@
 </defs>
 </svg></div><div><h1>AgentCore Studio</h1><div class="sub" data-i18n>拖拽编排 · 一键上线你的 AI Agent</div></div></div>
   <span class="spacer"></span>
-  <span class="pill" id="statPill"><span class="dot"></span><span id="statTxt" data-i18n>空画布</span></span>
+  <span class="pill" id="statPill" onclick="toggleRiskPanel()" data-i18n-title title="点击查看 pre-flight 校验详情"><span class="dot"></span><span id="statTxt" data-i18n>空画布</span></span>
   <div class="set-wrap">
     <button class="btn-ghost" id="setBtn" onclick="toggleSettings(event)" data-i18n data-i18n-title title="设置：对比 / 语言 / 演示模式">⚙️ 设置</button>
     <div class="set-menu" id="settingsMenu" hidden>
@@ -313,6 +381,8 @@
     <option value="support" data-i18n>客服 Agent（带工具）</option>
     <option value="analyst" data-i18n>数据分析 Agent</option>
     <option value="full" data-i18n>全家桶（全部组件）</option>
+    <option value="pitfall" data-i18n>⚠ 典型踩坑（pre-flight 演示）</option>
+    <option value="okf" data-i18n>📚 OKF 知识包 Agent</option>
   </select>
   <button class="btn-pri" onclick="deployCloud()" data-i18n>☁️ 发布到云端</button>
   <button class="btn-cloud" onclick="publish()" data-i18n>🚀 本地发布</button>
@@ -338,13 +408,13 @@
       <div class="view" style="flex:1">
         <div class="tabs" id="tabs"></div>
         <div class="code" id="code"></div>
-        <div class="pv-foot"><button onclick="downloadCurrent()" data-i18n>⬇ 下载当前</button><button onclick="copyCurrent()" data-i18n>📋 复制</button></div>
+        <div class="pv-foot"><button onclick="downloadCurrent()" data-i18n>⬇ 下载当前</button><button onclick="copyCurrent()" data-i18n>📋 复制</button><button onclick="toggleFpPanel()" data-i18n data-i18n-title title="对比上次发布基线与当前配置的指纹，看出会走全量重建 / 秒级更新 / 跳过">🧬 发布指纹对比</button></div>
       </div>
     </div>
     <!-- playground -->
     <div class="view" id="vPlay">
       <div class="pg">
-        <div class="pg-bar"><span data-i18n>来源</span> <button class="srcbtn on" id="srcLocal" onclick="setSrc('local')" data-i18n>本地模拟</button><button class="srcbtn" id="srcCloud" onclick="setSrc('cloud')" data-i18n>AWS 云端</button><span class="mode mock" id="pgMode" data-i18n>未发布</span><button class="srcbtn" id="abBtn" onclick="toggleAB()" style="margin-left:auto" data-i18n data-i18n-title title="A/B 对比：同一句输入，基线 vs 候选 System Prompt 并排跑，不写入对话历史">⚖ A/B</button><button class="srcbtn" id="tsetBtn" onclick="toggleSet()" data-i18n>📋 测试集</button></div>
+        <div class="pg-bar"><span data-i18n>来源</span> <button class="srcbtn on" id="srcLocal" onclick="setSrc('local')" data-i18n>本地模拟</button><button class="srcbtn" id="srcCloud" onclick="setSrc('cloud')" data-i18n>AWS 云端</button><span class="mode mock" id="pgMode" data-i18n>未发布</span><button class="srcbtn" id="abBtn" onclick="toggleAB()" style="margin-left:auto" data-i18n data-i18n-title title="A/B 对比：同一句输入，基线 vs 候选 System Prompt 并排跑，不写入对话历史">⚖ A/B</button><button class="srcbtn" id="tsetBtn" onclick="toggleSet()" data-i18n>📋 测试集</button><button class="srcbtn" id="ablBtn" onclick="toggleAbl()" data-i18n data-i18n-title title="组件消融：关掉某个组件重新发布并跑同一句，并排看差异（真实重发布，非模拟）">🔬 消融</button><button class="srcbtn" onclick="exportEvidence()" data-i18n data-i18n-title title="导出本次演示的画布配置、pre-flight、交互 trace 与产物为 Markdown">📄 留档</button></div>
         <div class="ab-setup" id="abSetup" hidden>
           <label data-i18n>B 版 System Prompt（候选）</label>
           <textarea id="abPrompt" rows="2" data-i18n-ph placeholder="留空=复制画布当前 System Prompt"></textarea>
@@ -354,6 +424,13 @@
           <label data-i18n>测试集（每行一个输入）</label>
           <textarea id="setPrompts" rows="4" data-i18n-ph placeholder="每行一个测试输入…"></textarea>
           <div style="margin-top:6px;display:flex;align-items:center;gap:8px"><button class="srcbtn" onclick="runSet()" data-i18n>▶ 全跑</button><span class="hint" data-i18n>结果与上次对比标注变化；每条独立单轮，不写入对话历史</span></div>
+        </div>
+        <div class="ab-setup" id="ablSetup" hidden>
+          <label data-i18n>关闭哪个组件（消融对比）</label>
+          <select id="ablTarget" onchange="onAblTargetChange()"></select>
+          <div id="ablProbe" class="abl-probe"></div>
+          <div class="row"><button class="srcbtn" onclick="runAblProbe()" data-i18n>▶ 用预置探针跑</button><button class="srcbtn" onclick="fillAblTargets()" data-i18n>↻ 刷新组件</button></div>
+          <div class="hint" data-i18n>预置探针是「没有该组件就做不到」的任务 + 可自动判定的断言；也可以自己输入一句发送。A=当前画布，B=去掉所选组件后重新发布的产物，两侧独立单轮，跑完自动还原画布</div>
         </div>
         <div class="msgs" id="msgs"></div>
         <div class="pg-in"><input id="pgIn" data-i18n-ph placeholder="输入消息…" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()" data-i18n>发送</button></div>
@@ -366,6 +443,8 @@
     </div>
   </div>
 </main>
+<div class="risk-panel" id="riskPanel" hidden></div>
+<div class="risk-panel" id="fpPanel" hidden></div>
 <div class="modal" id="modal"><div class="mcard">
   <div class="mhd"><span data-i18n>🚀 发布前确认</span><span class="mx" onclick="closeModal()">×</span></div>
   <div class="mbody" id="reviewBody"></div>
@@ -441,6 +520,7 @@
 /* ===== i18n (default English; UI chrome only, generated artifacts stay as-is) ===== */
 let LANG=localStorage.getItem('acs_lang')||'en';
 const EN={
+  '计算类型':'Compute type','Runtime 平台版本':'Runtime platform version','容量提供方 ARN':'Capacity provider ARN','会话存储挂载路径':'Session storage mount path','microVM: serverless，会话≤8 小时；instances: 托管 EC2（容量提供方），会话≤14 天、可用 GPU ⚠ 创建后不可改':'microVM: serverless, sessions up to 8h; instances: managed EC2 (capacity provider), sessions up to 14 days, GPU capable. Immutable after creation','仅 microVM。V1: 默认，秒级 READY；V2: 快照启动，冷启动稳定、按实际用量计费':'microVM only. V1: default, READY in seconds; V2: snapshot start, consistent cold starts, pay for active usage','instances 必填，形如 arn:aws:bedrock-agentcore:<region>:<acct>:capacity-provider/<name>-<id>':'Required for instances, e.g. arn:aws:bedrock-agentcore:<region>:<acct>:capacity-provider/<name>-<id>','可选，跨调用持久化文件，须为 /mnt/<一级目录>，如 /mnt/data':'Optional, persists files across invocations; must be /mnt/<one-level dir>, e.g. /mnt/data','V2 仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1':'V2 only in us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1','ENFORCE: 强制拦截（平台默认，默认拒绝，需 permit 放行）; LOG_ONLY: 仅记录不拦截，适合上线前观察':'ENFORCE: block (platform default, default-deny, needs permit); LOG_ONLY: log only, good for pre-launch observation',
   // header / chrome
   '拖拽编排 · 一键上线你的 AI Agent':'Drag-and-drop orchestration · ship your AI Agent in one click',
   '📊 对比分析':'📊 Compare','空画布':'Empty canvas','🖥 演示模式':'🖥 Demo Mode','🖥 退出演示':'🖥 Exit Demo','⚙️ 设置':'⚙️ Settings','设置：对比 / 语言 / 演示模式':'Settings: Compare / Language / Demo',
@@ -450,6 +530,30 @@ const EN={
   'B 版 System Prompt（候选）':'B System Prompt (candidate)','留空=复制画布当前 System Prompt':'Empty = copy current canvas System Prompt',
   'A=画布当前 System Prompt（基线），B=上面的候选；发送一句并排对比，不写入对话历史':'A = current canvas System Prompt (baseline), B = candidate above; send one message to compare side by side, not added to chat history',
   '基线':'Baseline','候选':'Candidate',
+  '🔬 消融':'🔬 Ablation','关闭哪个组件（消融对比）':'Which component to disable (ablation)','↻ 刷新组件':'↻ Refresh',
+  '发一句输入：A=当前画布，B=去掉所选组件后重新发布的产物；两侧独立单轮，跑完自动还原画布':'Send one input: A = current canvas, B = artifacts republished without the selected component; both run as isolated single turns and the canvas is restored afterwards',
+  '📄 留档':'📄 Evidence','已导出演示证据（Markdown）':'Demo evidence exported (Markdown)',
+  '轮':'turns','消融对比':'Ablation',
+  'Pre-flight 校验':'Pre-flight checks','项风险':'risks','通过':'passed','全部修复':'Fix all','定位节点':'Locate','一键修复':'Fix',
+  '当前画布没有跨节点风险':'No cross-node risks in the current canvas',
+  '这些是完整性检查抓不到的问题——能部署成功，但运行时会出错或有安全风险。跨节点语义、区域一致性、策略与网络暴露。':'These are issues completeness checks miss — the deploy succeeds but the agent fails or is unsafe at runtime: cross-node semantics, region consistency, policy and network exposure.',
+  '另有 ':'Plus ',' 个组件未配置完整（发布时会自动跳过）：':' components are incomplete (skipped at publish): ',
+  'pre-flight 重新校验':'pre-flight re-checked','点击查看 pre-flight 校验详情':'Click to see pre-flight details',
+  '🧬 发布指纹对比':'🧬 Publish fingerprints','发布指纹对比':'Publish fingerprint diff','以当前为基线':'Set as baseline',
+  '基线时间':'Baseline','无基线记录':'no baseline recorded','预计':'ETA','项变化':'changed','未变化':'unchanged',
+  '这次配置改动同时改了 ':'This change touched ',' 个产物文件':' artifact files',
+  '▶ 用预置探针跑':'▶ Run preset probe','断言':'Assertions',
+  '断言证明':'ASSERT PROVEN','并非必需':'NOT REQUIRED','探针未命中':'PROBE MISS','本地不可判定':'LOCAL N/A',
+  '含该组件时断言全部通过，去掉后断言失败 — 这个任务离开该组件做不到，这是最强的证据':'All assertions pass with the component and fail without it — the task cannot be done without it; strongest possible evidence',
+  '两侧断言都通过 — 这个任务不需要该组件，或模型换了别的路径完成；换一个只有它能做的任务再试':'Assertions pass on both sides — the task does not need this component, or the model found another path; try a task only it can do',
+  '含该组件的一侧断言就没通过 — 模型没按预期用它（提示词不够强制，或模型链路不通），先修探针再下结论':'Assertions already fail on the side that has the component — the model did not use it as expected (weak prompt, or the model path is broken); fix the probe before concluding','发布基线':'Publish A','调用 A':'Invoke A','发布消融变体':'Publish B','调用 B':'Invoke B','还原画布':'Restore',
+  '工具调用':'Tool calls','产物差异':'Artifact diff','行为差异':'BEHAVIOR DIFF','仅文本差异':'TEXT ONLY','无差异':'NO DIFF','无':'none','行':'lines',
+  '工具调用不同 — 关闭该组件后 Agent 的实际行为改变了，这是最硬的证据':'Tool calls differ — disabling the component changed what the agent actually did; this is the strongest evidence',
+  '工具调用相同，但生成的产物不同 — 该组件影响部署产物；行为差异需要一句真正用到它的输入，或切到 AWS 云端验证':'Same tool calls but different generated artifacts — the component affects deployment artifacts; for a behavioral difference use an input that actually exercises it, or verify on AWS',
+  '产物与工具调用都没变，只有输出文本不同 — 这很可能只是模型采样随机性，不能当作组件效果':'Artifacts and tool calls are identical, only the text differs — most likely just sampling randomness, not a component effect',
+  '两侧完全相同 — 这一句没有触发到该组件，不能当作「组件无用」的证据，换一句必须用到它的输入再试':'Both sides identical — this input never exercised the component, so it is not evidence the component is useless; try an input that requires it',
+  '无差异（该组件只影响云端资源，不影响本地产物）':'No diff (component only affects cloud resources, not local artifacts)',
+  '两侧都是真实重新发布的产物各调用一次，均为独立单轮（不带客户端历史）。Memory / Policy / Knowledge Base 等云端资源型组件在本地通常只体现产物差异。':'Both sides are genuinely republished artifacts invoked once each, as isolated single turns (no client history). Cloud-resource components such as Memory / Policy / Knowledge Base usually only show artifact diffs locally.',
   '📋 测试集':'📋 Test set','测试集（每行一个输入）':'Test set (one input per line)','每行一个测试输入…':'One test input per line…',
   '▶ 全跑':'▶ Run all','结果与上次对比标注变化；每条独立单轮，不写入对话历史':'Compares with last run and flags changes; each runs as an isolated single turn, not added to chat history',
   '测试集结果':'Test set results','条':'items','新':'new','变化':'changed','未变':'unchanged','测试集为空':'Test set is empty',
@@ -571,32 +675,46 @@ function toggleSettings(e){if(e)e.stopPropagation();const m=document.getElementB
 function _addOutside(e){const w=document.getElementById('addBtn'),m=document.getElementById('addMenu');if(m&&!m.contains(e.target)&&w&&!w.contains(e.target))closeAdd()}
 function closeAdd(){const m=document.getElementById('addMenu');if(m)m.hidden=true;document.removeEventListener('click',_addOutside)}
 function toggleAdd(e){if(e)e.stopPropagation();const m=document.getElementById('addMenu');if(!m)return;if(m.hidden){m.hidden=false;setTimeout(()=>document.addEventListener('click',_addOutside),0)}else{closeAdd()}}
+// 模型：均有 us./eu./apac. 跨区推理配置文件（按区域自动加前缀）；Opus 4.7/4.8 不收 temperature 参数，与本工具生成的代码不兼容，暂不列出
+const MODEL_OPTS=['anthropic.claude-sonnet-4-6','anthropic.claude-opus-4-6-v1','anthropic.claude-sonnet-4-5-20250929-v1:0','anthropic.claude-haiku-4-5-20251001-v1:0','anthropic.claude-opus-4-5-20251101-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'];
+// AgentCore Runtime 可用区域；V2 平台版本只在其中 5 个区域
+const RT_REGIONS=['us-west-2','us-east-1','us-east-2','eu-west-1','eu-central-1','ap-northeast-1','ap-northeast-2','ap-southeast-1','ap-southeast-2','ap-south-1'];
+const V2_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1'];
+// 生命周期上限：microVM 8 小时，instances 14 天
+function rtMaxLife(c){return c&&c.compute_type==='instances'?1209600:28800}
+// 环境变量总大小上限（字节）：V1 4KB；V2 代码包 1.5KB / 容器 2.5KB
+function rtEnvLimit(c){if(!c||c.compute_type==='instances'||c.platform_version!=='V2')return 4096;return c.deploy_type==='container'?2560:1536}
+function rtEnvBytes(c){const o={};(c.env||'').split(',').forEach(p=>{const i=p.indexOf('=');if(i>0)o[p.slice(0,i).trim()]=p.slice(i+1)});if((c.system_prompt||'').length)o['SYSTEM_PROMPT']=c.system_prompt;return new TextEncoder().encode(Object.entries(o).map(([k,v])=>k+v).join('')).length}
 const COMPONENTS={
   runtime:{label:'Runtime',ic:'⚙️',ac:'var(--rt)',required:true,fields:[
     {k:'name',l:'Agent 名称',t:'text',d:'my_agent',hint:'仅下划线，不能用连字符'},
     {k:'framework',l:'Agent 框架',t:'select',o:['strands','minimal','claude_sdk','langchain','custom'],d:'strands'},
-    {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-5-20250929-v1:0','anthropic.claude-haiku-4-5-20251001-v1:0','anthropic.claude-opus-4-1-20250805-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-5-20250929-v1:0'},
+    {k:'model_id',l:'模型 ID',t:'select',o:MODEL_OPTS,d:'anthropic.claude-sonnet-4-6'},
     {k:'system_prompt',l:'系统提示 (System Prompt)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
     {k:'temperature',l:'温度',t:'select',o:['0','0.3','0.7','1.0'],d:'0.7'},
     {k:'max_tokens',l:'最大输出 Token',t:'text',d:'1024'},
     {k:'deploy_type',l:'部署方式',t:'select',o:['direct_code_deploy','container'],d:'direct_code_deploy',hint:'direct_code_deploy: 代码包(S3); container: 容器镜像(ECR)'},
     {k:'container_uri',l:'ECR 镜像 URI',t:'text',d:'',hint:'container 模式：自带镜像，留空则工具链自动构建并推送 ECR'},
     {k:'code_s3',l:'代码包 S3 桶',t:'text',d:'',hint:'direct_code_deploy 模式：指定 S3 桶；留空则工具链自动托管'},
+    {k:'compute_type',l:'计算类型',t:'select',o:['microVM','instances'],d:'microVM',hint:'microVM: serverless，会话≤8 小时；instances: 托管 EC2（容量提供方），会话≤14 天、可用 GPU ⚠ 创建后不可改'},
+    {k:'platform_version',l:'Runtime 平台版本',t:'select',o:['V1','V2'],d:'V1',hint:'仅 microVM。V1: 默认，秒级 READY；V2: 快照启动，冷启动稳定、按实际用量计费'},
+    {k:'capacity_provider_arn',l:'容量提供方 ARN',t:'text',d:'',hint:'instances 必填，形如 arn:aws:bedrock-agentcore:<region>:<acct>:capacity-provider/<name>-<id>'},
+    {k:'session_storage',l:'会话存储挂载路径',t:'text',d:'',hint:'可选，跨调用持久化文件，须为 /mnt/<一级目录>，如 /mnt/data'},
     {k:'runtime',l:'运行时',t:'select',o:['PYTHON_3_10','PYTHON_3_11','PYTHON_3_12','PYTHON_3_13','PYTHON_3_14','NODE_22'],d:'PYTHON_3_11'},
-    {k:'region',l:'AWS 区域',t:'select',o:['us-west-2','us-east-1','ap-southeast-1'],d:'us-west-2'},
+    {k:'region',l:'AWS 区域',t:'select',o:RT_REGIONS,d:'us-west-2',hint:'V2 仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1'},
     {k:'protocol',l:'协议',t:'select',o:['HTTP','MCP','A2A'],d:'HTTP'},
     {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 configure --authorizer-config 声明'},
     {k:'in_discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 入站，形如 https://.../.well-known/openid-configuration'},
     {k:'in_audience',l:'允许的 Audience',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 aud'},
     {k:'in_clients',l:'允许的 Client ID',t:'text',d:'',hint:'JWT 入站，逗号分隔，校验 client_id'},
-    {k:'idle_timeout',l:'会话超时(秒)',t:'text',d:'900',hint:'60-28800'},
-    {k:'max_lifetime',l:'实例最大存活(秒)',t:'text',d:'28800',hint:'60-28800'},
+    {k:'idle_timeout',l:'会话超时(秒)',t:'text',d:'900',hint:'60-28800（instances 可到 1209600）'},
+    {k:'max_lifetime',l:'实例最大存活(秒)',t:'text',d:'28800',hint:'60-28800（instances 可到 1209600 = 14 天）'},
     {k:'env',l:'环境变量',t:'text',d:'',hint:'KEY=val,KEY2=val2'},
     {k:'description',l:'描述',t:'text',d:'',hint:'Runtime 描述（可选）'}]},
   harness:{label:'Harness',ic:'🚀',ac:'var(--hn)',fields:[
     {k:'name',l:'Harness 名称',t:'text',d:'my_harness',hint:'字母数字/下划线，<=48；声明式托管，AgentCore 跑 Agent 循环'},
     {k:'model_provider',l:'模型提供方',t:'select',o:['bedrock','open_ai','gemini'],d:'bedrock'},
-    {k:'model_id',l:'模型 ID',t:'select',o:['anthropic.claude-sonnet-4-5-20250929-v1:0','anthropic.claude-haiku-4-5-20251001-v1:0','anthropic.claude-opus-4-1-20250805-v1:0','amazon.nova-pro-v1:0','amazon.nova-lite-v1:0','amazon.nova-micro-v1:0'],d:'anthropic.claude-sonnet-4-5-20250929-v1:0'},
+    {k:'model_id',l:'模型 ID',t:'select',o:MODEL_OPTS,d:'anthropic.claude-sonnet-4-6'},
     {k:'api_key_arn',l:'API Key ARN',t:'text',d:'',hint:'非 Bedrock 模型必填（AgentCore Identity Token Vault ARN）'},
     {k:'system_prompt',l:'指令 (Instructions)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
     {k:'max_tokens',l:'每轮最大 Token',t:'text',d:'4096'},
@@ -604,7 +722,7 @@ const COMPONENTS={
     {k:'timeout',l:'单次超时(秒)',t:'text',d:'300'},
     {k:'truncation',l:'上下文截断策略',t:'select',o:['sliding_window','summarization'],d:'sliding_window'},
     {k:'memory',l:'记忆',t:'select',o:['auto','none'],d:'auto',hint:'auto: 自动建 STM+LTM; none: 不建'},
-    {k:'region',l:'AWS 区域',t:'select',o:['us-west-2','us-east-1','ap-southeast-1'],d:'us-east-1'},
+    {k:'region',l:'AWS 区域',t:'select',o:RT_REGIONS,d:'us-east-1'},
     {k:'network_mode',l:'网络模式',t:'select',o:['PUBLIC','VPC'],d:'PUBLIC'},
     {k:'session_storage',l:'会话存储挂载路径',t:'text',d:'',hint:'如 /mnt/data/（持久化跨会话文件，可选）'},
     {k:'container',l:'自带容器 (URI/Dockerfile)',t:'text',d:'',hint:'留空用默认环境'},
@@ -618,8 +736,8 @@ const COMPONENTS={
     {k:'desc',l:'能力描述（供主控判断何时调用）',t:'text',d:''}]},
   memory:{label:'Memory',ic:'🧠',ac:'var(--mem)',fields:[
     {k:'mem_name',l:'记忆名称',t:'text',d:'my_memory'},
-    {k:'mode',l:'记忆模式 (可多选)',t:'checks',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM'},
-    {k:'strategy',l:'记忆策略 (可多选)',t:'checks',o:['SEMANTIC','SUMMARIZATION','USER_PREFERENCE'],d:'SEMANTIC'},
+    {k:'mode',l:'记忆模式',t:'checks',o:['STM','LTM','STM_AND_LTM'],d:'STM_AND_LTM',hint:'STM=只存事件流（API 无需策略）；含 LTM 时按上面选中的策略调 update-memory 追加长期记忆策略'},
+    {k:'strategy',l:'长期记忆策略 (可多选)',t:'checks',o:['SEMANTIC','SUMMARY','USER_PREFERENCE','EPISODIC','CUSTOM'],d:'SEMANTIC',hint:'对应 API 的 semantic/summary/userPreference/episodic/customMemoryStrategy；EPISODIC 记录事件序列与因果（多轮任务复盘）；CUSTOM 支持覆写内置提示，或自管理策略（selfManagedConfiguration：触发条件 + SNS/S3，由你自己的管道抽取）'},
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'expiry',l:'事件保留天数',t:'text',d:'90'}]},
   gateway:{label:'Gateway',ic:'🔌',ac:'var(--gw)',fields:[
@@ -650,7 +768,7 @@ const COMPONENTS={
   kb:{label:'Knowledge Base',ic:'📚',ac:'var(--kb)',multi:true,parent:'gateway',fields:[
     {k:'name',l:'工具名称',t:'text',d:'knowledge_base',hint:'作为 Agent 可调用工具的函数名'},
     {k:'kb_id',l:'Bedrock 知识库 ID',t:'text',d:'',hint:'Bedrock Knowledge Base ID，如 ABCDEFGHIJ'},
-    {k:'region',l:'KB 区域',t:'select',o:['us-west-2','us-east-1','ap-southeast-1'],d:'us-east-1'},
+    {k:'region',l:'KB 区域',t:'select',o:RT_REGIONS,d:'us-east-1'},
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'description',l:'描述',t:'text',d:'从知识库检索相关内容'}]},
   codeinterp:{label:'Code Interpreter',ic:'💻',ac:'var(--ci)',fields:[
@@ -660,7 +778,7 @@ const COMPONENTS={
     {k:'timeout',l:'会话超时(秒)',t:'text',d:'900'}]},
   browser:{label:'Browser',ic:'🌐',ac:'var(--br)',fields:[
     {k:'identifier',l:'浏览器 ID',t:'text',d:'aws.browser.v1'},
-    {k:'network',l:'网络模式',t:'select',o:['SANDBOX','PUBLIC'],d:'SANDBOX'},
+    {k:'network',l:'网络模式',t:'select',o:['VPC','PUBLIC'],d:'VPC',hint:'AgentCore Browser 仅支持 VPC / PUBLIC（无 SANDBOX）；VPC 更隔离'},
     {k:'live_view',l:'实时画面',t:'select',o:['true','false'],d:'true'},
     {k:'recording',l:'会话录制',t:'select',o:['true','false'],d:'false'},
     {k:'timeout',l:'会话超时(秒)',t:'text',d:'900'}]},
@@ -681,8 +799,9 @@ const COMPONENTS={
     {k:'dashboard',l:'CloudWatch 仪表盘',t:'select',o:['true','false'],d:'true'}]},
   evaluation:{label:'Evaluations',ic:'📈',ac:'var(--eval)',parent:'observability',fields:[
     {k:'enabled',l:'启用评估',t:'select',o:['true','false'],d:'true'},
-    {k:'eval_type',l:'评估类型',t:'select',o:['quality','trajectory','safety','custom'],d:'quality',hint:'对 Agent 输出做自动评估，结果汇入 Observability'},
-    {k:'sampling',l:'评估采样率',t:'select',o:['1.0','0.5','0.1'],d:'1.0'},
+    {k:'eval_type',l:'指标族（内置 evaluator）',t:'select',o:['quality','tool_use','trajectory','safety','all'],d:'quality',hint:'quality=Correctness/Helpfulness/ResponseRelevance/Coherence；tool_use=ToolSelectionAccuracy/ToolParameterAccuracy/GoalSuccessRate；trajectory=Trajectory*Match；safety=Harmfulness/Stereotyping/Refusal'},
+    {k:'extra_evaluators',l:'追加 evaluator ID（逗号分隔）',t:'text',d:'',hint:'内置 ID（如 Builtin.Faithfulness、Builtin.InstructionFollowing），或自定义 evaluator ID（LLM 裁判 / Lambda 代码评估器，先用 agentcore eval evaluator create 建好）'},
+    {k:'sampling',l:'评估采样率',t:'select',o:['1.0','0.5','0.1','0.05'],d:'1.0',hint:'转成 online-evaluation 的 --sampling-rate 百分比（1.0 → 100）'},
     {k:'dataset',l:'评估数据集 (可选)',t:'text',d:'',hint:'S3 URI；留空则对线上流量抽样评估'}]},
   optimisation:{label:'Optimization',ic:'🎯',ac:'var(--opt)',parents:['evaluation'],fields:[
     {k:'enabled',l:'启用优化',t:'select',o:['true','false'],d:'true'},
@@ -692,7 +811,7 @@ const COMPONENTS={
   policy:{label:'Policy',ic:'🛡️',ac:'var(--pol)',parent:'gateway',fields:[
     {k:'engine',l:'策略引擎名称',t:'text',d:'my_engine',hint:'⚠ 引擎创建后改 mode/Gateway关联需删除引擎重建；Cedar 策略内容可原地更新'},
     {k:'attach_gateway',l:'关联 Gateway',t:'select',o:['(画布中的 Gateway)','(不关联)'],d:'(画布中的 Gateway)',hint:'策略引擎作用于关联的 Gateway 的工具调用'},
-    {k:'mode',l:'执行模式',t:'select',o:['LOG_ONLY','ENFORCE'],d:'LOG_ONLY',hint:'LOG_ONLY: 仅记录; ENFORCE: 强制拦截'},
+    {k:'mode',l:'执行模式',t:'select',o:['ENFORCE','LOG_ONLY'],d:'ENFORCE',hint:'ENFORCE: 强制拦截（平台默认，默认拒绝，需 permit 放行）; LOG_ONLY: 仅记录不拦截，适合上线前观察'},
     {k:'pname',l:'策略名称',t:'text',d:'my_policy'},
     {k:'authoring',l:'策略编写方式',t:'select',o:['cedar','natural'],d:'cedar',hint:'cedar: 直接写 Cedar; natural: 自然语言生成'},
     {k:'cedar',l:'Cedar 策略定义',t:'skillcode',d:'permit(\n  principal,\n  action,\n  resource\n);'},
@@ -779,8 +898,14 @@ function isIncomplete(n){
   switch(n.type){
     case'runtime':
       if(!isNum(c.max_tokens,1,200000))return 'max_tokens 需为正整数';
-      if(!isNum(c.idle_timeout,60,28800))return 'idle_timeout 需 60-28800';
-      if(!isNum(c.max_lifetime,60,28800))return 'max_lifetime 需 60-28800';
+      {const ML=rtMaxLife(c);
+      if(!isNum(c.idle_timeout,60,ML))return 'idle_timeout 需 60-'+ML;
+      if(!isNum(c.max_lifetime,60,ML))return 'max_lifetime 需 60-'+ML;
+      if(Number(c.idle_timeout)>Number(c.max_lifetime))return 'idle_timeout 不能大于 max_lifetime';}
+      if(c.compute_type==='instances'&&!/^arn:aws(-[^:]+)?:bedrock-agentcore:[a-z0-9-]+:\d{12}:capacity-provider\/\S+$/.test((c.capacity_provider_arn||'').trim()))return 'instances 需填写有效的容量提供方 ARN';
+      if((c.session_storage||'').trim()&&!/^\/mnt\/[a-zA-Z0-9._-]+\/?$/.test(c.session_storage.trim()))return '会话存储路径须为 /mnt/<一级目录>';
+      if(c.compute_type!=='instances'&&c.platform_version==='V2'&&!V2_REGIONS.includes(c.region))return 'V2 不支持区域 '+c.region;
+      if(rtEnvBytes(c)>rtEnvLimit(c))return '环境变量(含系统提示)共 '+rtEnvBytes(c)+'B，超过 '+(c.platform_version==='V2'&&c.compute_type!=='instances'?'V2':'V1')+' 上限 '+rtEnvLimit(c)+'B';
       if(c.env&&c.env.trim()&&!/^([A-Za-z_][A-Za-z0-9_]*=[^,]*)(,[A-Za-z_][A-Za-z0-9_]*=[^,]*)*$/.test(c.env.trim()))return '环境变量格式应为 KEY=val,KEY2=val2';
       if(c.inbound_auth==='JWT'&&(!c.in_discovery_url||!c.in_discovery_url.trim()))return '入站 JWT 需填写 OIDC Discovery URL';
       break;
@@ -881,7 +1006,11 @@ function summary(n){const c=n.cfg;switch(n.type){
   case'observability':return `OTel: ${c.enabled}`;
   case'codeinterp':return `net: ${c.network}`;
   case'browser':return `net: ${c.network}`;
-  case'policy':return `${c.engine} · ${c.mode}`}}
+  case'policy':return `${c.engine} · ${c.mode}`;
+  case'kb':return `${c.name}<br><span style="opacity:.55">${(c.kb_id||'未填 KB ID')} · ${c.region||''}</span>`;
+  case'evaluation':return `eval: ${c.eval_type||'—'}<br><span style="opacity:.55">sampling ${c.sampling||'—'}</span>`;
+  case'optimisation':return `opt: ${c.enabled||'—'}`;
+  default:return COMPONENTS[n.type]?tr(COMPONENTS[n.type].label):n.type}}
 
 function drawEdges(rt){const svg=document.getElementById('edges');[...svg.querySelectorAll('path')].forEach(p=>p.remove());
   if(!rt)return;const gw=nodes.find(n=>n.type==='gateway');
@@ -911,6 +1040,9 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
     if(n.type==='runtime'){
       if(f.k==='container_uri'&&n.cfg.deploy_type!=='container')return '';
       if(f.k==='code_s3'&&n.cfg.deploy_type!=='direct_code_deploy')return '';
+      const _inst=n.cfg.compute_type==='instances';
+      if(f.k==='platform_version'&&_inst)return '';          // 平台版本只用于 microVM
+      if(f.k==='capacity_provider_arn'&&!_inst)return '';     // 容量提供方只用于 instances
     }
     // Skill 组件按 source_type 条件显示字段（三选一）
     if(n.type==='skill'){
@@ -952,7 +1084,19 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
       if(f.k==='cedar'&&n.cfg.authoring!=='cedar')return '';
       if(f.k==='nl_desc'&&n.cfg.authoring!=='natural')return '';
     }
-    if(f.t==='select')inp=`<select onchange="setCfg(${n.id},'${f.k}',this.value);renderProps()">${f.o.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+    let fo=f.o;
+    if(n.type==='runtime'){
+      const _v2=n.cfg.compute_type!=='instances'&&n.cfg.platform_version==='V2';
+      if(f.k==='region'&&_v2)fo=V2_REGIONS;                 // V2 只列支持的区域
+      const _en=LANG==='en',_lim=rtEnvLimit(n.cfg),_used=rtEnvBytes(n.cfg);
+      if(f.k==='platform_version')fhint=n.cfg.platform_version==='V2'
+        ?(_en?'V2: snapshot start, consistent cold starts, pay for active usage ⚠ create/update takes minutes to reach READY; container must pass /ping within 120s; env-var limit '+_lim+'B (now '+_used+'B)'
+             :'V2: 快照启动，冷启动稳定、按实际用量计费 ⚠ 创建/更新需几分钟才 READY；容器须在 120 秒内 /ping 健康；环境变量上限 '+_lim+'B（当前 '+_used+'B）')
+        :(_en?'V1: default, create/update READY in seconds; env-var limit 4KB (now '+_used+'B)'
+             :'V1: 默认，创建/更新秒级 READY；环境变量上限 4KB（当前 '+_used+'B）');
+      if((f.k==='idle_timeout'||f.k==='max_lifetime'))fhint='60-'+rtMaxLife(n.cfg)+(n.cfg.compute_type==='instances'?(_en?' (instances, up to 14 days)':'（instances，最长 14 天）'):(_en?' (microVM, up to 8 hours)':'（microVM，最长 8 小时）'));
+    }
+    if(f.t==='select')inp=`<select onchange="setCfg(${n.id},'${f.k}',this.value);renderProps()">${fo.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
     else if(f.t==='checks'){const vals=(v||'').split(',');inp=`<div class="checks">${f.o.map(o=>`<label class="chk"><input type="checkbox" ${vals.includes(o)?'checked':''} onchange="toggleCheck(${n.id},'${f.k}','${o}',this.checked)">${o}</label>`).join('')}</div>`}
     else if(f.t==='skillcode'){const up=n.type==='mcp'?`<label class="upbtn">${tr('📎 上传文件')}<input type="file" accept=".json,.yaml,.yml,.txt" style="display:none" onchange="uploadSkill(${n.id},this,'${f.k}')"></label>`:'';inp=`${up}<textarea class="codearea" oninput="setCfg(${n.id},'${f.k}',this.value)">${(v||'').replace(/</g,'&lt;')}</textarea>`}
     else if(f.t==='skillzip'){const zn=n.cfg._zipname;const status=zn?`<div class="ziphint ok">✓ ${LANG==='en'?'Loaded':'已载入'}: ${zn} ${tr('（含 SKILL.md）')}</div>`:`<div class="ziphint">${tr('尚未上传')}</div>`;inp=`<label class="upbtn">${tr('📦 选择 .zip 压缩包')}<input type="file" accept=".zip" style="display:none" onchange="uploadSkillZip(${n.id},this)"></label>${status}`}
@@ -969,7 +1113,16 @@ function positionPop(n){const pop=document.getElementById('pop'),wrap=document.q
   pop.style.left=x+'px';pop.style.top=Math.min(ny,Math.max(8,wh-ph-8))+'px'}
 function closePop(){sel=null;render();renderProps()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sel){closePop()}});
-function setCfg(id,k,v){nodes.find(x=>x.id===id).cfg[k]=v;published=false;render()}
+function setCfg(id,k,v){const n=nodes.find(x=>x.id===id);n.cfg[k]=v;
+  if(n.type==='runtime'&&(k==='platform_version'||k==='compute_type'))rtCoerce(n.cfg);
+  published=false;render()}
+// 平台版本/计算类型联动：区域收窄到 V2 支持区；超时收回到新上限内
+function rtCoerce(c){
+  if(c.compute_type!=='instances'&&c.platform_version==='V2'&&!V2_REGIONS.includes(c.region)){toast('V2 不支持 '+c.region+'，区域已改为 us-west-2');c.region='us-west-2'}
+  const ML=rtMaxLife(c);
+  if(Number(c.max_lifetime)>ML)c.max_lifetime=String(ML);
+  if(Number(c.idle_timeout)>ML)c.idle_timeout=String(Math.min(900,ML));
+}
 function uploadSkill(id,input,key){const f=input.files[0];if(!f)return;
   if(f.size>200*1024){toast('文件过大（>200KB）');return}
   const r=new FileReader();r.onload=()=>{const n=nodes.find(x=>x.id===id);n.cfg[key||'code']=r.result;n.cfg._filename=f.name;published=false;render();renderProps();toast('已载入 '+f.name)};r.readAsText(f)}
@@ -992,11 +1145,111 @@ function toggleCheck(id,k,val,checked){const n=nodes.find(x=>x.id===id);let vals
 function updateStat(rt){const p=document.getElementById('statPill'),tx=document.getElementById('statTxt');
   if(!rt){p.classList.remove('ready');tx.textContent=tr('空画布 — 需要 Runtime')}
   else{const inc=nodes.filter(n=>isIncomplete(n)).length,total=nodes.length,ok=total-inc;
-    const risks=graphWarnings().length;
+    const risks=graphRisks().length;
     p.classList.toggle('ready',inc===0);
     const riskTag=risks>0?(LANG==='en'?(' · ⚠ '+risks+' risk'+(risks>1?'s':'')):(' · ⚠ '+risks+' 风险')):'';
     if(inc>0)tx.innerHTML=`<b>${ok}/${total}</b> ${LANG==='en'?('components · ⚠ '+inc+' to configure'):('组件 · ⚠ '+inc+' 待配置')}${riskTag}`;
-    else tx.innerHTML=`<b>${total}</b> ${LANG==='en'?('components · '+(published?'Published 🟢':'Deploy-ready')):('组件 · '+(published?'已发布 🟢':'Deploy-ready'))}${riskTag}`}}
+    else tx.innerHTML=`<b>${total}</b> ${LANG==='en'?('components · '+(published?'Published 🟢':'Deploy-ready')):('组件 · '+(published?'已发布 🟢':'Deploy-ready'))}${riskTag}`}
+  if(!document.getElementById('riskPanel').hidden)renderRiskPanel()}
+
+// ---- 增量发布指纹对比表：为什么走全量重建 / 秒级更新 / 跳过 ----
+function _fpKey(){const rt=centerNode();return 'acs_fp_'+((rt&&rt.cfg.name)||'_')}
+function loadFpBase(){try{return JSON.parse(localStorage.getItem(_fpKey())||'null')}catch(e){return null}}
+function saveFpBase(){const o=gen();if(!o.fp)return null;
+  const snap={fp:o.fp,vals:{},ts:Date.now()};
+  ['art','cfg','unit'].forEach(g=>(o.fpFields[g]||[]).forEach(r=>{snap.vals[g+'|'+r[0]]=String(r[2])}));
+  try{localStorage.setItem(_fpKey(),JSON.stringify(snap))}catch(e){}
+  return snap}
+function markFpBase(){if(!centerNode()){toast('请先添加 Runtime');return}
+  saveFpBase();renderFpPanel();toast('已把当前配置记为发布基线')}
+function toggleFpPanel(){const p=document.getElementById('fpPanel');p.hidden=!p.hidden;if(!p.hidden)renderFpPanel()}
+function closeFpPanel(){document.getElementById('fpPanel').hidden=true}
+function fpVerdict(){  // 返回 {path, why[], groups}
+  const rt=centerNode(),o=gen();
+  if(!rt||!o.fp)return{path:'none',why:['画布没有 Runtime'],groups:[]};
+  if(rt.type==='harness')return{path:'harness',why:['Harness 走不可变版本 + 命名 endpoint，不使用 runtime 指纹路径'],groups:[]};
+  const base=loadFpBase();
+  const groups=[['art','制品指纹（变了 → 全量重建）'],['cfg','配置指纹（只它变 → update-agent-runtime 秒级）'],['unit','单元指纹（各自原地更新）']]
+    .map(([g,label])=>({g:g,label:label,rows:(o.fpFields[g]||[]).map(r=>{
+      const cur=String(r[2]),prev=base?base.vals[g+'|'+r[0]]:undefined;
+      return{name:r[0],cur:cur,prev:prev,changed:base?(prev!==cur):null}})}));
+  if(!base)return{path:'first',why:['本地没有基线记录 → 视为首次发布，全量部署'],groups:groups};
+  const chg=g=>groups.find(x=>x.g===g).rows.filter(r=>r.changed).map(r=>r.name);
+  const ca=chg('art'),cc=chg('cfg'),cu=chg('unit');
+  const why=[];
+  if(ca.length)why.push('制品项变了：'+ca.join('、'));
+  if(cc.length)why.push('配置项变了：'+cc.join('、'));
+  if(cu.length)why.push('单元变了：'+cu.join('、'));
+  let path='skip';
+  if(ca.length)path='full';
+  else if(cc.length)path='cfgonly';
+  else if(cu.length)path='unit';
+  if(path==='skip')why.push('所有指纹一致 → Runtime 与各单元全部跳过');
+  return{path:path,why:why,groups:groups}}
+function renderFpPanel(){const p=document.getElementById('fpPanel');if(!p)return;
+  const v=fpVerdict(),base=loadFpBase();
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const PATH={full:['var(--orange)','全量重建','重新打包制品 → 推 ECR/S3 → 重建 Runtime（重建期间旧版本继续服务）','2-4 分钟'],
+    cfgonly:['var(--id)','update-agent-runtime 秒级更新','只改控制面配置，复用现有制品，ARN 不变','秒级'],
+    unit:['var(--gw)','单元原地更新','Runtime 跳过，只更新变化的 Identity / Gateway / Policy','数十秒'],
+    skip:['var(--muted)','全部跳过','指纹未变，不做任何云端调用','—'],
+    first:['var(--orange)','首次全量部署','没有基线记录，全部资源创建','2-4 分钟'],
+    harness:['var(--hn)','Harness 路径','不可变版本 + 命名 endpoint 即时回滚','—'],
+    none:['var(--muted)','—','','—']}[v.path];
+  let h='<div class="rp-hd">🧬 '+tr('发布指纹对比')
+    +'<span style="font-weight:600;color:'+PATH[0]+'"> · '+E(PATH[1])+'</span>'
+    +'<button onclick="markFpBase()" style="margin-left:10px;font-family:var(--ui);font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer">'+tr('以当前为基线')+'</button>'
+    +'<span class="rp-x" onclick="closeFpPanel()">×</span></div>'
+    +'<div class="rp-sub">'+E(PATH[2])+(PATH[3]!=='—'?('　·　'+tr('预计')+' '+PATH[3]):'')
+    +(base?('　·　'+tr('基线时间')+' '+new Date(base.ts).toLocaleString()):('　·　'+tr('无基线记录')))+'</div>';
+  if(v.why.length)h+='<div class="fp-why">'+v.why.map(w=>'· '+E(w)).join('<br>')+'</div>';
+  v.groups.forEach(g=>{
+    const n=g.rows.filter(r=>r.changed).length;
+    h+='<div class="fp-g"><div class="fp-gh">'+E(g.label)+(base?('<span class="'+(n?'chg':'same')+'">'+(n?(n+' '+tr('项变化')):tr('未变化'))+'</span>'):'')+'</div>';
+    g.rows.forEach(r=>{h+='<div class="fp-r'+(r.changed?' chg':'')+'"><span class="fn">'+E(r.name)+'</span>'
+      +'<span class="fv">'+(r.changed&&r.prev!==undefined?('<s>'+E(String(r.prev).slice(0,28))+'</s> → '):'')+E(String(r.cur).slice(0,34))+'</span>'
+      +'<span class="fs">'+(r.changed===null?'—':(r.changed?'●':'○'))+'</span></div>'});
+    h+='</div>'});
+  h+='<div class="risk-inc">'+tr('指纹由 Studio 生成的 deploy.sh 在云端 S3 状态桶里比对；此表用本地记录的基线做同样的判定，用于发布前预演。制品项包含 entry 代码 / 区域 / 部署方式 / 模型 / 框架 / Memory / Observability / 内置工具 / Skills；配置项是控制面字段。')+'</div>';
+  p.innerHTML=h}
+let RISK_FIX={};
+function toggleRiskPanel(){const p=document.getElementById('riskPanel');p.hidden=!p.hidden;
+  if(!p.hidden)renderRiskPanel()}
+function closeRiskPanel(){document.getElementById('riskPanel').hidden=true}
+function focusNode(id){const n=nodes.find(x=>x.id===id);if(!n){toast('该节点已不在画布上');return}
+  sel=id;render();renderProps();
+  const el=[...canvas.querySelectorAll('.node')].find(e=>e.classList.contains('sel'));
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'})}
+function applyRiskFix(key){const f=RISK_FIX[key];if(!f){toast('该修复已失效，请刷新面板');return}
+  f();published=false;render();renderProps();renderRiskPanel();toast('已应用修复：'+tr('pre-flight 重新校验'))}
+function fixAllRisks(){let n=0;
+  // 迭代收敛：修一条就重算，因为一条修复可能改变另一条的判定（如改 Agent 区域会让知识库重新跨区）
+  for(let pass=0;pass<8;pass++){
+    const r=graphRisks().find(x=>x.fix);if(!r)break;
+    try{r.fix();n++}catch(e){break}
+  }
+  if(!n){toast('没有可自动修复的风险');return}
+  published=false;render();renderProps();renderRiskPanel();
+  const left=graphRisks().length;
+  toast('已修复 '+n+' 项'+(left?('，仍剩 '+left+' 项需手工处理'):'，风险已清零'))}
+function renderRiskPanel(){const p=document.getElementById('riskPanel');if(!p)return;
+  const risks=graphRisks(),inc=nodes.filter(n=>isIncomplete(n));
+  RISK_FIX={};
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let h='<div class="rp-hd">🛡️ '+tr('Pre-flight 校验')
+    +'<span style="font-weight:600;color:'+(risks.length?'var(--orange)':'var(--id)')+'">'+(risks.length?(' · '+risks.length+' '+tr('项风险')):(' · '+tr('通过')))+'</span>'
+    +(risks.some(r=>r.fix)?'<button onclick="fixAllRisks()" style="margin-left:10px;font-family:var(--ui);font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--id);background:rgba(92,214,160,.1);color:var(--id);cursor:pointer">'+tr('全部修复')+'</button>':'')
+    +'<span class="rp-x" onclick="closeRiskPanel()">×</span></div>'
+    +'<div class="rp-sub">'+tr('这些是完整性检查抓不到的问题——能部署成功，但运行时会出错或有安全风险。跨节点语义、区域一致性、策略与网络暴露。')+'</div>';
+  if(!risks.length)h+='<div class="risk-ok">✅ '+tr('当前画布没有跨节点风险')+'</div>';
+  risks.forEach((r,i)=>{RISK_FIX[i]=r.fix;
+    h+='<div class="risk-row '+r.sev+'"><span class="rs"></span><div class="rm">'+E(r.msg)
+      +'<div class="ra">'+(r.node?'<button onclick="focusNode('+r.node+')">🎯 '+tr('定位节点')+'</button>':'')
+      +(r.fix?'<button class="fix" onclick="applyRiskFix('+i+')">🔧 '+E(r.fixLabel||tr('一键修复'))+'</button>':'')
+      +'</div></div></div>'});
+  if(inc.length){h+='<div class="risk-inc">⚙ '+tr('另有 ')+inc.length+tr(' 个组件未配置完整（发布时会自动跳过）：')
+    +inc.map(n=>{const c=COMPONENTS[n.type];return c.ic+' '+tr(c.label)+'「'+E(n.cfg.name||n.cfg.gw_name||n.cfg.pname||c.label)+'」: '+E(isIncomplete(n))}).join('；')+'</div>'}
+  p.innerHTML=h}
 
 // ---- Registry ----
 function renderRegistry(){
@@ -1032,6 +1285,7 @@ function gen(){
   const mcps=nodes.filter(n=>n.type==='mcp'&&ok(n)),skills=nodes.filter(n=>n.type==='skill'&&ok(n));
   const kbs=nodes.filter(n=>n.type==='kb'&&ok(n));
   const ci=nodes.find(n=>n.type==='codeinterp'&&ok(n)),br=nodes.find(n=>n.type==='browser'&&ok(n));
+  const ev=nodes.find(n=>n.type==='evaluation'&&ok(n)),opz=nodes.find(n=>n.type==='optimisation'&&ok(n));
   const wsTools=mcps.filter(m=>m.cfg.type==='web_search');const hasWS=wsTools.length>0;
 
   // === Harness 模式 ===
@@ -1186,12 +1440,21 @@ if __name__ == "__main__":
   if(!mem)cfg+=' --disable-memory';if(obs&&obs.cfg.enabled==='false')cfg+=' --disable-otel';cfg+=' -ni';
   // 增量发布：各单元指纹（runtime 折入 memory/obs/tools/skills/model/framework，因其随 runtime 制品打包/配置）
   // 制品指纹（变了才重建）：代码/依赖/框架/模型/记忆/可观测/工具/skills/部署方式/运行时/镜像/S3
-  const fpArt=_fp({entry,region,dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname})),kb:kbs.map(k=>({n:k.cfg.name,id:k.cfg.kb_id,r:k.cfg.region,t:k.cfg.top_k})),inb:{a:c.inbound_auth||'IAM',d:c.in_discovery_url||'',au:c.in_audience||'',cl:c.in_clients||''}});
+  const fpArt=_fp({entry,region,ct:c.compute_type||'microVM',cp:c.capacity_provider_arn||'',dtype:c.deploy_type,rt:c.runtime,ecr:c.container_uri||'',s3:c.code_s3||'',model:c.model_id,fw:c.framework,mem:mem?{mode:mem.cfg.mode,strategy:mem.cfg.strategy}:0,obs:obs?obs.cfg:0,ci:ci?ci.cfg:0,br:br?br.cfg:0,ev:ev?ev.cfg:0,opz:opz?opz.cfg:0,skills:skills.map(k=>({n:k.cfg.name,t:k.cfg.source_type,c:k.cfg.code,s:k.cfg.source,z:k.cfg._zipname})),kb:kbs.map(k=>({n:k.cfg.name,id:k.cfg.kb_id,r:k.cfg.region,t:k.cfg.top_k})),inb:{a:c.inbound_auth||'IAM',d:c.in_discovery_url||'',au:c.in_audience||'',cl:c.in_clients||''}});
   // 配置指纹（只它变 → update-agent-runtime 秒级，不重建）：协议/超时/环境变量/描述/系统提示(外置为 env)
-  const fpCfg=_fp({protocol:c.protocol,idle:c.idle_timeout,max:c.max_lifetime,env:c.env||'',desc:c.description||'',sp:c.system_prompt||''});  // system_prompt 纳入配置指纹：仅改 prompt → update-agent-runtime 秒级推送 SYSTEM_PROMPT 环境变量到云端（不重建镜像）；Playground 仍每次对话 payload 即时生效
-  const envObj={};(c.env||'').split(',').forEach(p=>{const i=p.indexOf('=');if(i>0)envObj[p.slice(0,i).trim()]=p.slice(i+1)});if((c.system_prompt||'').length)envObj['SYSTEM_PROMPT']=c.system_prompt;const envJson=JSON.stringify(envObj);
+  const fpCfg=_fp({pv:c.platform_version||'V1',ss:c.session_storage||'',protocol:c.protocol,idle:c.idle_timeout,max:c.max_lifetime,env:c.env||'',desc:c.description||'',sp:c.system_prompt||'',obs:obs?{l:obs.cfg.level,t:obs.cfg.traces,s:obs.cfg.sampling}:0});  // system_prompt 纳入配置指纹：仅改 prompt → update-agent-runtime 秒级推送 SYSTEM_PROMPT 环境变量到云端（不重建镜像）；Playground 仍每次对话 payload 即时生效
+  const envObj={};(c.env||'').split(',').forEach(p=>{const i=p.indexOf('=');if(i>0)envObj[p.slice(0,i).trim()]=p.slice(i+1)});if((c.system_prompt||'').length)envObj['SYSTEM_PROMPT']=c.system_prompt;
+  // Observability：把日志级别 / 链路开关 / 采样率落成 OpenTelemetry SDK 标准环境变量（由 aws-opentelemetry-distro 读取）
+  if(obs&&obs.cfg.enabled!=='false'){
+    envObj['OTEL_LOG_LEVEL']=(obs.cfg.level||'INFO').toLowerCase();
+    envObj['OTEL_TRACES_EXPORTER']=(obs.cfg.traces==='false')?'none':'otlp';
+    const sr=parseFloat(obs.cfg.sampling||'1.0');
+    if(isFinite(sr)&&sr>0&&sr<1){envObj['OTEL_TRACES_SAMPLER']='traceidratio';envObj['OTEL_TRACES_SAMPLER_ARG']=String(sr)}
+    else{envObj['OTEL_TRACES_SAMPLER']='always_on'}
+  }
+  const envJson=JSON.stringify(envObj);
   const descPy=(c.description||'').trim()?`out["description"]=${JSON.stringify(c.description)}`:'pass';
-  const rtcfgFn=`# 配置级更新：复用现有 artifact/role/network，仅改控制面配置（协议/超时/环境变量/描述），不重建\n_rtcfg(){\n  local RID\n  RID=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)\n  if [ -z "$RID" ] || [ "$RID" = "None" ]; then echo "⚠ 云端未找到 ${c.name}，跳过配置更新"; return 0; fi\n  aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$RID" --region ${region} --output json > /tmp/_rtcur.json 2>/dev/null || { echo "⚠ get-agent-runtime 失败"; return 0; }\n  python3 - > /tmp/_rtupd.json <<'PYEOF' || { echo "⚠ 构造更新参数失败"; return 0; }\nimport json\ncur=json.load(open('/tmp/_rtcur.json'))\nenv=dict(cur.get('environmentVariables') or {})\nenv.update(json.loads(r'''${envJson}'''))\nout={"agentRuntimeId":cur["agentRuntimeId"],"agentRuntimeArtifact":cur["agentRuntimeArtifact"],"roleArn":cur["roleArn"],"networkConfiguration":cur["networkConfiguration"],"protocolConfiguration":{"serverProtocol":"${c.protocol}"},"lifecycleConfiguration":{"idleRuntimeSessionTimeout":${parseInt(c.idle_timeout)||900},"maxLifetime":${parseInt(c.max_lifetime)||28800}},"environmentVariables":env}\n${descPy}\njson.dump(out,open('/tmp/_rtupd.json','w'))\nPYEOF\n  aws bedrock-agentcore-control update-agent-runtime --cli-input-json file:///tmp/_rtupd.json --region ${region} >/dev/null 2>&1 && echo "✅ 控制面配置已更新（协议/超时/环境变量/描述，未重建）" || echo "⚠ update-agent-runtime 失败（非致命，可能正在创建中）"\n}`;
+  const rtcfgFn=`# 配置级更新：复用现有 artifact/role/network，仅改控制面配置（协议/超时/环境变量/描述），不重建\n_rtcfg(){\n  local RID\n  RID=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeId | [0]" --output text 2>/dev/null)\n  if [ -z "$RID" ] || [ "$RID" = "None" ]; then echo "⚠ 云端未找到 ${c.name}，跳过配置更新"; return 0; fi\n  aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id "$RID" --region ${region} --output json > /tmp/_rtcur.json 2>/dev/null || { echo "⚠ get-agent-runtime 失败"; return 0; }\n  python3 - > /tmp/_rtupd.json <<'PYEOF' || { echo "⚠ 构造更新参数失败"; return 0; }\nimport json\ncur=json.load(open('/tmp/_rtcur.json'))\nenv=dict(cur.get('environmentVariables') or {})\nenv.update(json.loads(r'''${envJson}'''))\nout={"agentRuntimeId":cur["agentRuntimeId"],"agentRuntimeArtifact":cur["agentRuntimeArtifact"],"roleArn":cur["roleArn"],"networkConfiguration":cur["networkConfiguration"],"protocolConfiguration":{"serverProtocol":"${c.protocol}"},"lifecycleConfiguration":{"idleRuntimeSessionTimeout":${parseInt(c.idle_timeout)||900},"maxLifetime":${parseInt(c.max_lifetime)||28800}},"environmentVariables":env}\n${descPy}\nif cur.get("capacityProviderConfiguration"): out["capacityProviderConfiguration"]=cur["capacityProviderConfiguration"]\nelse: out["platformVersion"]="${c.platform_version||'V1'}"\nss="${(c.session_storage||'').trim()}"\nif ss: out["filesystemConfigurations"]=[{"sessionStorage":{"mountPath":ss}}]\nelif cur.get("filesystemConfigurations"): out["filesystemConfigurations"]=cur["filesystemConfigurations"]\njson.dump(out,open('/tmp/_rtupd.json','w'))\nPYEOF\n  aws bedrock-agentcore-control update-agent-runtime --cli-input-json file:///tmp/_rtupd.json --region ${region} >/dev/null 2>&1 && echo "✅ 控制面配置已更新（协议/超时/环境变量/描述，未重建）" || echo "⚠ update-agent-runtime 失败（非致命，可能正在创建中）"\n  # V2 更新要做快照（几分钟），轮询到 READY/FAILED 再继续\n  local _i=0 _st=\"\"; while [ $_i -lt 90 ]; do _st=$(aws bedrock-agentcore-control get-agent-runtime --agent-runtime-id \"$RID\" --region ${region} --query status --output text 2>/dev/null); case \"$_st\" in READY|*FAILED) break;; esac; sleep 10; _i=$((_i+1)); done; echo \"ℹ Runtime 状态: $_st（平台版本 ${c.platform_version||'V1'}）\"\n}`;
   const fpIdentity=ident?_fp(ident.cfg):'';
   const fpGateway=gw?_fp({gw:gw.cfg,targets:mcps.map(m=>m.cfg)}):'';
   const fpPolicy=pol?_fp(pol.cfg):'';
@@ -1273,10 +1536,96 @@ if __name__ == "__main__":
     ...(obs&&obs.cfg.enabled!=='false'?['[ "$RTC" = "1" ] && echo "###STEP### observability" || echo "###SKIP### observability"']:[]),
     '','# 后续组件允许部分失败','set +e','',...lamPermLines,...builtinPermLines,...kbPermLines,...wkPermLines];
   let opt=[];
+  const memStratMap={SEMANTIC:'semanticMemoryStrategy',SUMMARY:'summaryMemoryStrategy',USER_PREFERENCE:'userPreferenceMemoryStrategy',EPISODIC:'episodicMemoryStrategy',CUSTOM:'customMemoryStrategy'};
+  const memWantsLtm=mem?/LTM/.test(mem.cfg.mode||''):false;
+  const memStrats=(mem&&memWantsLtm)?(mem.cfg.strategy||'').split(',').filter(Boolean)
+    .map(k=>memStratMap[k]).filter(Boolean):[];
   if(mem)opt.push('echo "###STEP### memory"',
-    `# Memory: configure 阶段创建；保留期(expiry) 可原地更新（update-memory），mode/策略改动需随 runtime 重建`,
+    `# Memory: configure 阶段随 runtime 创建（事件流=短期记忆）；保留期与长期记忆策略经 update-memory 原地追加`,
     `MEM_ID=$(aws bedrock-agentcore-control list-memories --region ${region} --query "memories[?starts_with(id, '${c.name}_mem-')].id | [0]" --output text 2>/dev/null)`,
-    `if [ -n "$MEM_ID" ] && [ "$MEM_ID" != "None" ]; then aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --event-expiry-duration ${parseInt(mem.cfg.expiry)||30} --region ${region} >/dev/null 2>&1 && echo "✅ Memory 保留期=${parseInt(mem.cfg.expiry)||30} 天（原地更新，未重建）" || echo ">>> Memory 保留期更新跳过（可能正在创建中）"; else echo ">>> Memory 将随 runtime 创建"; fi`);
+    `if [ -n "$MEM_ID" ] && [ "$MEM_ID" != "None" ]; then aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --event-expiry-duration ${parseInt(mem.cfg.expiry)||30} --region ${region} >/dev/null 2>&1 && echo "✅ Memory 保留期=${parseInt(mem.cfg.expiry)||30} 天（原地更新，未重建）" || echo ">>> Memory 保留期更新跳过（可能正在创建中）"; else echo ">>> Memory 将随 runtime 创建"; fi`,
+    ...(memStrats.length?[
+      `# 长期记忆策略：${memStrats.join(', ')}（已存在同名策略时 add 会失败，属预期，不中断）`,
+      `if [ -n "$MEM_ID" ] && [ "$MEM_ID" != "None" ]; then`,
+      `  MEM_HAS=$(aws bedrock-agentcore-control get-memory --memory-id "$MEM_ID" --region ${region} --query "memory.strategies[].type" --output text 2>/dev/null)`,
+      `  echo ">>> 现有长期记忆策略: \${MEM_HAS:-（无）}"`,
+      `  cat > /tmp/mem_strat.json <<'MEOF'`,
+      JSON.stringify({addMemoryStrategies:memStrats.map(t=>({[t]:{name:t.replace('MemoryStrategy','')}}))},null,2),
+      `MEOF`,
+      `  aws bedrock-agentcore-control update-memory --memory-id "$MEM_ID" --memory-strategies file:///tmp/mem_strat.json --region ${region} >/dev/null 2>&1 \\`,
+      `    && echo "✅ 已追加长期记忆策略: ${memStrats.join(', ')}" \\`,
+      `    || echo ">>> 长期记忆策略未追加（可能已存在或 Memory 正在创建中）"`,
+      `fi`]:[
+      `# 记忆模式为 STM：只保留事件流，不创建长期记忆策略`]));
+  // Observability：dashboard 开关 → 真实建 CloudWatch 仪表盘（Runtime 内置指标 + 模型调用）
+  if(obs&&obs.cfg.enabled!=='false'&&obs.cfg.dashboard!=='false'){
+    const dashBody={widgets:[
+      {type:'metric',x:0,y:0,width:12,height:6,properties:{title:'AgentCore Runtime · Invocations / Errors',region:region,
+        metrics:[['AWS/BedrockAgentCore','Invocations','AgentRuntimeName',c.name],
+                 ['AWS/BedrockAgentCore','InvocationErrors','AgentRuntimeName',c.name]],view:'timeSeries',stat:'Sum',period:300}},
+      {type:'metric',x:12,y:0,width:12,height:6,properties:{title:'AgentCore Runtime · Latency (p50/p95)',region:region,
+        metrics:[['AWS/BedrockAgentCore','InvocationLatency','AgentRuntimeName',c.name,{stat:'p50'}],
+                 ['AWS/BedrockAgentCore','InvocationLatency','AgentRuntimeName',c.name,{stat:'p95'}]],view:'timeSeries',period:300}},
+      {type:'metric',x:0,y:6,width:12,height:6,properties:{title:'Bedrock 模型调用 token',region:region,
+        metrics:[['AWS/Bedrock','InputTokenCount'],['AWS/Bedrock','OutputTokenCount']],view:'timeSeries',stat:'Sum',period:300}},
+      {type:'log',x:12,y:6,width:12,height:6,properties:{title:'Runtime 日志（最近错误）',region:region,
+        query:`SOURCE '/aws/bedrock-agentcore/runtimes/${c.name}' | fields @timestamp, @message | filter @message like /ERROR|Exception/ | sort @timestamp desc | limit 20`}}]};
+    opt.push('echo "###STEP### dashboard"',
+      `# CloudWatch 仪表盘（幂等：同名 put-dashboard 直接覆盖）`,
+      `cat > /tmp/${c.name}_dash.json <<'DASHEOF'`,
+      JSON.stringify(dashBody,null,1),
+      `DASHEOF`,
+      `aws cloudwatch put-dashboard --dashboard-name ${c.name}-agentcore --dashboard-body file:///tmp/${c.name}_dash.json --region ${region} >/dev/null 2>&1 \\`,
+      `  && echo "✅ CloudWatch 仪表盘 ${c.name}-agentcore 已就绪" \\`,
+      `  || echo "⚠ 仪表盘创建失败（需 cloudwatch:PutDashboard 权限）"`);
+  }
+  // Evaluations：内置 evaluator（agentcore eval evaluator list 可查）→ 持续在线评估配置
+  const EVAL_SETS={
+    quality:['Builtin.Correctness','Builtin.Helpfulness','Builtin.ResponseRelevance','Builtin.Coherence'],
+    tool_use:['Builtin.ToolSelectionAccuracy','Builtin.ToolParameterAccuracy','Builtin.GoalSuccessRate'],
+    trajectory:['Builtin.TrajectoryInOrderMatch','Builtin.TrajectoryAnyOrderMatch','Builtin.GoalSuccessRate'],
+    safety:['Builtin.Harmfulness','Builtin.Stereotyping','Builtin.Refusal'],
+    all:['Builtin.Correctness','Builtin.Helpfulness','Builtin.Coherence','Builtin.GoalSuccessRate',
+         'Builtin.ToolSelectionAccuracy','Builtin.Harmfulness','Builtin.Stereotyping']};
+  if(ev&&ev.cfg.enabled!=='false'){
+    const picked=[...(EVAL_SETS[ev.cfg.eval_type]||EVAL_SETS.quality),
+      ...(ev.cfg.extra_evaluators||'').split(',').map(x=>x.trim()).filter(Boolean)];
+    const uniq=[...new Set(picked)];
+    const rate=Math.max(0.01,Math.min(100,(parseFloat(ev.cfg.sampling||'1.0')||1)*100));
+    const ecName=(c.name+'_online_eval').slice(0,60);
+    opt.push('echo "###STEP### evaluations"',
+      `# 持续在线评估：${uniq.length} 个 evaluator，采样率 ${rate}%（agentcore eval online create 会自动建执行角色）`,
+      `EC_EXIST=$(aws bedrock-agentcore-control list-online-evaluation-configs --region ${region} --query "items[?name=='${ecName}'].onlineEvaluationConfigId | [0]" --output text 2>/dev/null)`,
+      `if [ -n "$EC_EXIST" ] && [ "$EC_EXIST" != "None" ]; then`,
+      `  echo ">>> 在线评估配置 ${ecName} 已存在，跳过创建（改 evaluator 需 update-online-evaluation-config）"`,
+      `else`,
+      `  PYTHONIOENCODING=utf-8 agentcore eval online create -n ${ecName} -a ${c.name} --endpoint ${ev.cfg.endpoint||'DEFAULT'} -s ${rate} `+
+        uniq.map(x=>`-e ${x}`).join(' ')+` ${(ev.cfg.enabled==='false')?'--disabled ':''}>/dev/null 2>&1 \\`,
+      `    && echo "✅ 在线评估已开启：${uniq.join(', ')}（采样 ${rate}%）" \\`,
+      `    || echo "⚠ 在线评估配置失败（Runtime 需先部署完成；或检查 evaluator ID）"`,
+      `fi`);
+  }
+  // Optimization：配置包（不可变版本快照）——改 System Prompt 不重新部署，切版本即生效
+  if(opz&&opz.cfg.enabled!=='false'&&opz.cfg.config_bundles!=='false'){
+    const bundleCfg={systemPrompt:c.system_prompt||'',modelId:c.model_id||'',
+      temperature:c.temperature||'',maxTokens:c.max_tokens||''};
+    opt.push('echo "###STEP### optimization"',
+      `# 配置包：components 是 {组件 ARN: {configuration: 自由 JSON}}，组件类型由 ARN 推断`,
+      `_ORT=$(aws bedrock-agentcore-control list-agent-runtimes --region ${region} --query "agentRuntimes[?agentRuntimeName=='${c.name}'].agentRuntimeArn | [0]" --output text 2>/dev/null)`,
+      `if [ -n "$_ORT" ] && [ "$_ORT" != "None" ]; then`,
+      `  python3 - "$_ORT" > /tmp/${c.name}_bundle.json <<'BEOF'`,
+      `import json,sys`,
+      `arn=sys.argv[1]`,
+      `cfg=json.loads(${JSON.stringify(JSON.stringify(bundleCfg))})`,
+      `json.dump({"bundleName":"${c.name}_cfg","components":{arn:{"configuration":cfg}},`+
+        `"commitMessage":"AgentCore Studio 快照"},sys.stdout)`,
+      `BEOF`,
+      `  aws bedrock-agentcore-control create-configuration-bundle --cli-input-json file:///tmp/${c.name}_bundle.json --region ${region} \\`,
+      `    --query '[bundleId,versionId]' --output text 2>/dev/null \\`,
+      `    && echo "✅ 配置包 ${c.name}_cfg 已生成新版本（System Prompt / 模型 / 采样参数快照）" \\`,
+      `    || echo "⚠ 配置包创建失败（同名 bundle 会新增版本；检查 bedrock-agentcore:CreateConfigurationBundle 权限）"`,
+      `else echo "⚠ 未取到 Runtime ARN，跳过配置包"; fi`);
+  }
   const identActive=ident&&ident.cfg.outbound_auth!=='none';  // Identity 仅出站凭证；入站鉴权已移至 Runtime/Gateway 各自的 --authorizer-config
   if(identActive){
     opt.push('echo "###STEP### identity"',
@@ -1392,11 +1741,34 @@ if __name__ == "__main__":
     '  echo "###SKIP### policy"; echo ">>> Policy 未变化，跳过"',
     'else',
     `echo ">>> 创建 Policy Engine: ${pol.cfg.engine}"`,
-    `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region}${attachGw?' --gateway-arn "$GW_ARN"':''}${pol.cfg.mode?` --mode ${pol.cfg.mode}`:''} 2>&1)`,
+    `# 注：create-policy-engine 只接受 name/region/description/encryption-key-arn/tags；`,
+    `# 与 Gateway 的关联和 enforcement mode 属于 Gateway 的 policyEngineConfiguration（见下方 update-gateway）`,
+    `PE_OUTPUT=$(PYTHONIOENCODING=utf-8 agentcore policy create-policy-engine -n ${pol.cfg.engine} -r ${region} 2>&1)`,
     'echo "$PE_OUTPUT"',
     'PE_ID=$(echo "$PE_OUTPUT" | grep -oE \'[a-zA-Z0-9_-]+-[a-zA-Z0-9]{10}\' | head -1)',
     `if [ -z "$PE_ID" ]; then PE_ID=$(aws bedrock-agentcore-control list-policy-engines --region ${region} --query "policyEngines[?name=='${pol.cfg.engine}'].policyEngineId | [0]" --output text 2>/dev/null); fi`,
-    `[ -n "$PE_ID" ] && [ "$PE_ID" != "None" ] && echo ">>> Policy Engine: $PE_ID（注：引擎 mode/Gateway 关联如需改，需删除引擎后重建）"`,
+    `[ -n "$PE_ID" ] && [ "$PE_ID" != "None" ] && echo ">>> Policy Engine: $PE_ID"`,
+    ...(attachGw?[
+      `# 把策略引擎挂到 Gateway 上并设 enforcement mode（LOG_ONLY / ENFORCE）——update-gateway 是全量替换，需先取现状再合并`,
+      `if [ -n "$PE_ID" ] && [ "$PE_ID" != "None" ] && [ -n "$GW_ID" ] && [ "$GW_ID" != "None" ]; then`,
+      `  PE_ARN=$(aws bedrock-agentcore-control get-policy-engine --policy-engine-id "$PE_ID" --region ${region} --query policyEngineArn --output text 2>/dev/null)`,
+      `  aws bedrock-agentcore-control get-gateway --gateway-identifier "$GW_ID" --region ${region} --output json > /tmp/gw_pol_cur.json 2>/dev/null`,
+      `  if [ -n "$PE_ARN" ] && [ "$PE_ARN" != "None" ] && [ -s /tmp/gw_pol_cur.json ]; then`,
+      `    python3 - "$PE_ARN" "${pol.cfg.mode||'ENFORCE'}" > /tmp/gw_pol_upd.json <<'PYEOF'`,
+      `import json,sys`,
+      `arn,mode=sys.argv[1],sys.argv[2]`,
+      `g=json.load(open('/tmp/gw_pol_cur.json'))`,
+      `out={"gatewayIdentifier":g["gatewayId"],"name":g["name"],"roleArn":g["roleArn"],"protocolType":g["protocolType"],"authorizerType":g["authorizerType"]}`,
+      `if g.get("authorizerConfiguration"): out["authorizerConfiguration"]=g["authorizerConfiguration"]`,
+      `if g.get("protocolConfiguration"): out["protocolConfiguration"]=g["protocolConfiguration"]`,
+      `out["policyEngineConfiguration"]={"arn":arn,"mode":mode}`,
+      `json.dump(out,open('/tmp/gw_pol_upd.json','w'))`,
+      `PYEOF`,
+      `    aws bedrock-agentcore-control update-gateway --cli-input-json file:///tmp/gw_pol_upd.json --region ${region} >/dev/null 2>&1 \\`,
+      `      && echo "✅ Policy Engine 已挂到 Gateway ${gw?gw.cfg.gw_name:''}，enforcement mode=${pol.cfg.mode||'ENFORCE'}" \\`,
+      `      || echo "⚠ 挂载 Policy Engine 到 Gateway 失败（检查 GW/PE 状态是否 READY）"`,
+      `  else echo "⚠ 未取到 Policy Engine ARN 或 Gateway 现状，跳过挂载"; fi`,
+      `fi`]:[]),
     'if [ -n "$PE_ID" ] && [ "$PE_ID" != "None" ]; then');
     if(pol.cfg.authoring==='natural'){
       opt.push(`  # 自然语言生成 Cedar（每次发布会重新生成；需稳定可改用 Cedar 模式）`,
@@ -1428,7 +1800,10 @@ if __name__ == "__main__":
       opt.push(`echo "###STEP### skill:${kc.name}"`);
       if(kc.source_type==='path'){opt.push(`echo ">>> Skill ${kc.name}: 引用路径 ${kc.source}"`,`[ -e "${kc.source}" ] && cp -r "${kc.source}" skills/ 2>/dev/null || echo "⚠ 路径不存在: ${kc.source}"`);}
       else if(kc.source_type==='upload'){const zf=`skills/${kc.name}.zip`;skillZips[zf]=kc._zipdata;opt.push(`echo ">>> Skill ${kc.name}: 解压 ${kc._zipname||zf}"`,`mkdir -p skills/${kc.name} && unzip -o ${zf} -d skills/${kc.name} >/dev/null && rm -f ${zf} || echo "⚠ 解压失败"`);}
-      else{const fn=`skills/${kc.name}.py`;skillFiles[fn]=kc.code||'';opt.push(`echo ">>> Skill ${kc.name}: 已打包 ${fn}"`);}});}
+      else{const fn=`skills/${kc.name}.py`;skillFiles[fn]=kc.code||'';opt.push(`echo ">>> Skill ${kc.name}: 已打包 ${fn}"`);
+        if((kc.code||'').indexOf('okf_bundle')>=0&&typeof OKF_BUNDLE!=='undefined'){
+          Object.keys(OKF_BUNDLE).forEach(rel=>{skillFiles['skills/okf_bundle/'+rel]=OKF_BUNDLE[rel]});
+          opt.push(`echo ">>> OKF 知识包: 打包 ${Object.keys(OKF_BUNDLE).length} 个 markdown 概念到 skills/okf_bundle/（随 Runtime 上云，运行时直接读取，非向量库）"`);}}});}
   if(opt.length)s.push(...opt);
   // 方案②：把画布 spec 存档到 state 桶，供「导入」读回重建可编辑视图（复用上面已建的 $STATE_BUCKET）
   s.push('','echo "###STEP### studio-spec"',
@@ -1477,8 +1852,12 @@ if __name__ == "__main__":
     mcp_tools:mcps.map(m=>({name:m.cfg.name,target_type:m.cfg.type})),
     skills:skills.map(k=>{const st=k.cfg.source_type||'inline';return{name:k.cfg.name,description:k.cfg.desc,source_type:st,source:st==='path'?k.cfg.source:st==='upload'?`skills/${k.cfg.name}/`:`skills/${k.cfg.name}.py`}})};
   const reg=JSON.stringify(registry,null,2);
+  const _connSecretArns=mcps.filter(m=>m.cfg.type==='rest'&&m.cfg.connector).map(m=>(((m.cfg.connector.connection||{}).auth||{}).secret_ref)||'').filter(a=>a.startsWith('arn:aws:secretsmanager:'));
   const stmts=[{Sid:'BedrockInvoke',Effect:'Allow',Action:['bedrock:InvokeModel','bedrock:InvokeModelWithResponseStream'],Resource:'*'},
-    {Sid:'SecretsManager',Effect:'Allow',Action:['secretsmanager:GetSecretValue'],Resource:[`arn:aws:secretsmanager:${region}:${acct}:secret:${c.name}/*`]}];
+    {Sid:'SecretsManager',Effect:'Allow',Action:['secretsmanager:GetSecretValue'],Resource:[`arn:aws:secretsmanager:${region}:${acct}:secret:${c.name}/*`,...new Set(_connSecretArns)]}];
+  if(ev&&ev.cfg.enabled!=='false')stmts.push({Sid:'Evaluations',Effect:'Allow',Action:['bedrock-agentcore:CreateOnlineEvaluationConfig','bedrock-agentcore:UpdateOnlineEvaluationConfig','bedrock-agentcore:ListOnlineEvaluationConfigs','bedrock-agentcore:ListEvaluators','bedrock-agentcore:GetEvaluator'],Resource:'*'});
+  if(opz&&opz.cfg.enabled!=='false'&&opz.cfg.config_bundles!=='false')stmts.push({Sid:'ConfigBundles',Effect:'Allow',Action:['bedrock-agentcore:CreateConfigurationBundle','bedrock-agentcore:GetConfigurationBundle','bedrock-agentcore:ListConfigurationBundles'],Resource:'*'});
+  if(obs&&obs.cfg.enabled!=='false'&&obs.cfg.dashboard!=='false')stmts.push({Sid:'Dashboard',Effect:'Allow',Action:['cloudwatch:PutDashboard','cloudwatch:GetDashboard'],Resource:'*'});
   if(obs&&obs.cfg.enabled!=='false')stmts.push({Sid:'Observability',Effect:'Allow',Action:['logs:CreateLogGroup','logs:CreateLogStream','logs:PutLogEvents','xray:PutTraceSegments'],Resource:'*'});
   if(gw)stmts.push({Sid:'Gateway',Effect:'Allow',Action:['bedrock-agentcore:InvokeGateway','lambda:InvokeFunction'],Resource:'*'});
   if((c.workers||[]).some(w=>w&&w.arn))stmts.push({Sid:'InvokeSubAgents',Effect:'Allow',Action:['bedrock-agentcore:InvokeAgentRuntime'],Resource:'*'});
@@ -1489,7 +1868,19 @@ if __name__ == "__main__":
   if(c.framework==='custom')req.push('boto3>=1.34.0','python-dotenv>=1.0.0');if(obs&&obs.cfg.enabled!=='false')req.push('aws-opentelemetry-distro>=0.10.0');
   if(br)req.push('playwright>=1.40.0');  // Browser 工具：connect_over_cdp 连 AgentCore 受管浏览器（仅 pip 包，无需本地 chromium）
   if(hasWS)req.push('mcp>=1.9.0','httpx>=0.27.0');  // Web Search：strands 经 SigV4 streamable-http 连 Gateway MCP connector
-  return{entry,deploy,registry:reg,policy,req:req.join('\n'),skillFiles,skillZips}}
+  return{entry,deploy,registry:reg,policy,req:req.join('\n'),skillFiles,skillZips,
+    fp:{art:fpArt,cfg:fpCfg,identity:fpIdentity,gateway:fpGateway,policy:fpPolicy},
+    fpFields:{  // 供「指纹对比表」逐项展示：哪一项变了 → 决定走哪条发布路径
+      art:[['entry 代码','entry',_hash(entry)],['区域','art',region],['部署方式','art',c.deploy_type||''],
+        ['模型','art',c.model_id||''],['框架','art',c.framework||''],
+        ['ECR 镜像','art',c.container_uri||'—'],['S3 制品','art',c.code_s3||'—'],
+        ['Memory','art',mem?((mem.cfg.mode||'on')+(mem.cfg.strategy?' / '+mem.cfg.strategy:'')):'—'],['Observability','art',obs?(obs.cfg.enabled||'on'):'—'],
+        ['Code Interpreter','art',ci?(ci.cfg.network||'on'):'—'],['Browser','art',br?(br.cfg.network||'on'):'—'],
+        ['Skills','art',skills.map(k=>k.cfg.name).join(',')||'—']],
+      cfg:[['协议','cfg',c.protocol||''],['空闲超时','cfg',String(c.idle_timeout||'')],
+        ['最大生命周期','cfg',String(c.max_lifetime||'')],['环境变量','cfg',c.env||'—'],
+        ['描述','cfg',c.description||'—'],['System Prompt','cfg',_hash(c.system_prompt||'')]],
+      unit:[['Identity','identity',fpIdentity||'—'],['Gateway + Targets','gateway',fpGateway||'—'],['Policy','policy',fpPolicy||'—']]}}}
 function inferProfile(model,region){
   // 跨区域推理配置 ID：新模型(Claude 4/3.5、Nova 等)按需调用必须带地域前缀
   if(!model||/^(us|eu|apac|us-gov)\./.test(model))return model;
@@ -1501,8 +1892,9 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   const mid=inferProfile(c.model_id,c.region);
   const sk=skills.map(s=>s.cfg.name),tl=mcps.map(m=>m.cfg.name);
   const wsTools=mcps.filter(m=>m.cfg.type==='web_search');const hasWS=wsTools.length>0;
+  const connTools=mcps.filter(m=>m.cfg.type==='rest'&&m.cfg.connector);
   let tools='';
-  if(ci)tools+=`\nfrom bedrock_agentcore.tools.code_interpreter_client import code_session\n\ndef run_code(code: str) -> str:\n    """AgentCore Code Interpreter 沙箱执行代码 (network=${ci.cfg.network})."""\n    with code_session("${c.region}") as ci:\n        return str(ci.execute_code(code))\n`;
+  if(ci)tools+=`\nfrom bedrock_agentcore.tools.code_interpreter_client import code_session\n\ndef run_code(code: str) -> str:\n    """AgentCore Code Interpreter 沙箱执行代码 (network=${ci.cfg.network})。返回 stdout/stderr，不是原始响应对象。"""\n    with code_session("${c.region}") as ci:\n        _resp = ci.execute_code(code)\n        _out, _err, _txt = "", "", []\n        for _ev in _resp.get("stream", []):\n            _r = _ev.get("result") or {}\n            for _c in (_r.get("content") or []):\n                if _c.get("type") == "text" and _c.get("text"):\n                    _txt.append(str(_c["text"]))\n            _sc = _r.get("structuredContent") or {}\n            _out = _sc.get("stdout") or _out\n            _err = _sc.get("stderr") or _err\n            if _r.get("isError"):\n                _err = _err or "execution error"\n        _body = _out or " ".join(_txt)\n        if _err:\n            return ("stdout: " + _body + " | stderr: " + _err) if _body else ("执行失败: " + _err)\n        return _body if _body.strip() else "(无输出)"\n`;
   if(br)tools+=`\nfrom bedrock_agentcore.tools.browser_client import browser_session\n\ndef browse(url: str) -> str:\n    """打开网页并返回标题与正文摘要（AgentCore 受管浏览器 + Playwright over CDP，network=${br.cfg.network}）。"""\n    from playwright.sync_api import sync_playwright\n    with browser_session("${c.region}") as _bc:\n        ws_url, headers = _bc.generate_ws_headers()\n        with sync_playwright() as _pw:\n            _b = _pw.chromium.connect_over_cdp(ws_url, headers=headers)\n            try:\n                _ctx = _b.contexts[0]\n                _pg = _ctx.pages[0] if _ctx.pages else _ctx.new_page()\n                _pg.goto(url, wait_until="domcontentloaded", timeout=45000)\n                _pg.wait_for_timeout(2500)\n                return f"标题: {_pg.title()}\\n正文摘录:\\n{_pg.inner_text('body')[:2000]}"\n            except Exception as _e:\n                return f"浏览失败: {_e}"\n            finally:\n                _b.close()\n`;
   // Skills: 从 skills/ 目录动态加载已打包的技能模块
   if(skills.length)tools+=`\nimport importlib.util, os as _os\n\ndef _load_skills():\n    """加载 skills/ 目录下的技能模块，返回 {name: run_callable}。"""\n    loaded = {}\n    d = _os.path.join(_os.path.dirname(__file__), "skills")\n    if not _os.path.isdir(d):\n        return loaded\n    for fn in _os.listdir(d):\n        if fn.endswith(".py"):\n            name = fn[:-3]\n            try:\n                spec = importlib.util.spec_from_file_location("skill_" + name, _os.path.join(d, fn))\n                mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)\n                if hasattr(mod, "run"):\n                    loaded[name] = mod.run\n            except Exception as e:\n                print(f"加载技能 {name} 失败: {e}")\n    return loaded\n\nSKILL_FNS = _load_skills()\n`;
@@ -1527,11 +1919,14 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   const _wkfn=(c.orch_mode==='a2a')?'_invoke_a2a':'_invoke_agent';
   const wkDefs=wkTools.map(w=>{const fn=pyId(w.name);return `@tool\ndef ${fn}(query: str) -> str:\n    """${escPy(w.desc||('调用子 Agent '+w.name+' 处理相关请求'))}"""\n    return ${_wkfn}("${w.arn}", "${w.region||c.region||'us-east-1'}", query)\n`;}).join('\n');
   const toolList=[...lamTools.map(m=>pyId(m.cfg.name)),...skTools.map(k=>pyId(k.cfg.name)),...kbTools.map(k=>pyId(k.cfg.name)),...wkTools.map(w=>pyId(w.name)),...(ci?['code_interpreter']:[]),...(br?['browser']:[])].join(', ');
+  // 连接器：把声明式 config 经框架转成 strands 工具（config 驱动，entry 代码不随连接器数量变化）
+  // 用 base64 承载 config，避免 description/base_url 里的引号破坏或注入生成的 Python（M1）
+  const connSetup=connTools.length?`import base64 as _b64\n_CONNECTORS = _j3.loads(_b64.b64decode("${btoa(unescape(encodeURIComponent(JSON.stringify(connTools.map(m=>m.cfg.connector)))))}").decode("utf-8"))\nfrom connectors.base import Connector as _Connector\n_CONN_TOOLS = []\nfor _cc in _CONNECTORS:\n    try:\n        _CONN_TOOLS += _Connector.from_config(_cc).as_tools()\n    except Exception as _e:\n        print(f"连接器加载失败 {_cc.get('name')}: {_e}")\n\n`:'';
   const wsSetup=(c.framework==='strands'&&hasWS)?`_GW_URL = os.environ.get("GATEWAY_URL")\n_GW_MCP = None\nif _GW_URL:\n    try:\n        import httpx, botocore.session\n        from botocore.auth import SigV4Auth\n        from botocore.awsrequest import AWSRequest\n        from strands.tools.mcp.mcp_client import MCPClient\n        from mcp.client.streamable_http import streamablehttp_client\n        class _SigV4Auth(httpx.Auth):\n            def auth_flow(self, request):\n                _cr = botocore.session.get_session().get_credentials().get_frozen_credentials()\n                _ar = AWSRequest(method=request.method, url=str(request.url), data=request.content, headers=dict(request.headers))\n                SigV4Auth(_cr, "bedrock-agentcore", "${c.region}").add_auth(_ar)\n                request.headers.update(dict(_ar.headers))\n                yield request\n        _GW_MCP = MCPClient(lambda: streamablehttp_client(_GW_URL, auth=_SigV4Auth()))\n    except Exception as _e:\n        _GW_MCP = None\n\n`:'';
   const strandsProc=hasWS?`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    if _GW_MCP is not None:\n        try:\n            with _GW_MCP:\n                _gwt = _GW_MCP.list_tools_sync()\n                agent = Agent(model=model, system_prompt=sp, tools=_TOOLS + _gwt, messages=_hist_msgs(history))\n                _r = agent(prompt)\n                return str(_r), _trace_from(_r, agent)\n        except Exception:\n            pass\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    _r = agent(prompt)\n    return str(_r), _trace_from(_r, agent)\n`:`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   let logic;
   if(c.framework==='strands'){
-    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n_TOOLS = [${toolList}]\n\n${wsSetup}${strandsProc}`;
+    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length||connTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n${connSetup}_TOOLS = [${toolList}${connTools.length?((toolList?', ':'')+'*_CONN_TOOLS'):''}]\n\n${wsSetup}${strandsProc}`;
     else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", temperature=${c.temperature}, max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   }
   else if(c.framework==='claude_sdk')logic=`import anthropic\n_c = anthropic.Anthropic()\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    _msgs = [{"role": h["role"], "content": h["content"]} for h in (history or []) if h.get("role") in ("user", "assistant") and h.get("content")]\n    _msgs.append({"role": "user", "content": prompt})\n    msg = _c.messages.create(model="${mid}", max_tokens=${c.max_tokens}, temperature=${c.temperature},\n        system=sp, messages=_msgs)\n    return msg.content[0].text\n`;
@@ -1540,10 +1935,64 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   return head+tools+`\napp = BedrockAgentCoreApp()\n\n${logic}\n@app.entrypoint\ndef invoke(payload: Dict[str, Any]) -> Dict[str, Any]:\n    import time as _t\n    prompt = payload.get("prompt", "")\n    sp = payload.get("system_prompt") or SYSTEM_PROMPT  # 每次请求可覆盖系统提示（改 prompt 即时生效，无需重新部署）\n    history = payload.get("history") or []  # 会话内多轮记忆\n    if not prompt:\n        return {"error": "No prompt provided", "result": ""}\n    _t0 = _t.time()\n    try:\n        _out = process_request(prompt, sp, history)\n    except Exception as e:\n        return {"error": str(e), "result": ""}\n    if isinstance(_out, tuple):\n        _text, _trace = _out[0], dict(_out[1] or {})\n    else:\n        _text, _trace = _out, {}\n    _trace.setdefault("latency_ms", int((_t.time() - _t0) * 1000))\n    _trace.setdefault("model", MODEL_ID)\n    return {"result": _text, "trace": _trace}\n\n\nif __name__ == "__main__":\n    app.run()\n`}
 function renderPreview(){[...tabsEl.children].forEach(b=>b.classList.toggle('on',b.dataset.k===tab));
   const o=gen(),m={entry:o.entry,deploy:o.deploy,registry:o.registry,policy:o.policy,req:o.req};
-  const el=document.getElementById('code');el.innerHTML=highlight(m[tab]||'');el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
-function highlight(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
-  .replace(/(#[^\n]*)/g,"<span class='c'>$1</span>").replace(/\b(from|import|def|return|try|except|if|not|app)\b/g,"<span class='kw'>$1</span>")
-  .replace(/(&lt;[A-Z_]+&gt;)/g,"<span class='ph'>$1</span>").replace(/("[^"\n]*")/g,"<span class='str'>$1</span>")}
+  const d=diffLive(m);
+  const el=document.getElementById('code');
+  el.innerHTML=(d.bar||'')+highlight(m[tab]||'',d.lines[tab]);
+  el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+// ---- 产物 diff 直播：一次配置改动 → 哪几个文件、哪几行、什么权限跟着变 ----
+let lastArt=null,lastArtKey=null,lastDiffOut={bar:'',lines:{}};
+const ART_LBL={entry:'agentcore_entry.py',deploy:'deploy.sh',policy:'iam-policy.json',registry:'registry.json',req:'requirements.txt'};
+// 从新增行里认出"有意义的东西"，而不是只报行数。逐行匹配（同名行可能已存在于旧文件，不能靠整体 join）
+function _artHi(k,adds){
+  const out=[];const push=t=>{if(t&&out.indexOf(t)<0)out.push(t)};
+  adds.forEach(l=>{const t=l.trim();
+    let m;
+    if((m=t.match(/^def\s+([A-Za-z_0-9]+)\s*\(/)))push('新工具 '+m[1]+'()');
+    if((m=t.match(/"Sid"\s*:\s*"([A-Za-z]+)"/)))push('IAM 语句 '+m[1]);
+    (t.match(/"(bedrock[a-z-]*:[A-Za-z*]+|logs:[A-Za-z]+|xray:[A-Za-z*]+|lambda:[A-Za-z]+|scheduler:[A-Za-z*]+|iam:[A-Za-z]+|s3:[A-Za-z*]+)"/g)||[])
+      .forEach(x=>push('权限 '+x.replace(/"/g,'')));
+    if((m=t.match(/--policy-name\s+([a-z-]+)/)))push('角色内联策略 '+m[1]);
+    if((m=t.match(/aws\s+(scheduler|bedrock-agentcore-control|bedrock-agentcore|iam)\s+([a-z-]+)/)))push('部署步骤 '+m[1]+' '+m[2]);
+    if((m=t.match(/^(from|import)\s+([A-Za-z_0-9.]+)/)))push('依赖 '+m[2]);
+    if((m=t.match(/^"([a-z_]+)"\s*:\s*"?([^",]{1,28})/)))push(m[1]+'='+m[2]);
+    if(/--network-mode|networkConfiguration|"network"/.test(t))push('网络配置变更');
+    if((m=t.match(/tools\s*=\s*\[([^\]]*)\]/)))push('工具清单 ['+m[1].slice(0,40)+']');
+  });
+  if(!out.length){const f=(adds.find(l=>l.trim().length>4)||'').trim();if(f)push(f.slice(0,58))}
+  return out.slice(0,5)}
+function diffLive(m){
+  const key=(centerNode()||{cfg:{}}).cfg.name||'';
+  const empty={bar:'',lines:{}};
+  const noise=l=>/^\s*FP_(art|cfg|identity|gateway|policy)=/.test(l);  // 指纹记账行必然随任何改动变化，不是有信息的差异
+  if(lastArtKey!==key){lastArtKey=key;lastArt=Object.assign({},m);lastDiffOut=empty;return empty}
+  if(!lastArt){lastArt=Object.assign({},m);return empty}
+  const chg=[],lines={};
+  Object.keys(ART_LBL).forEach(k=>{
+    const a=(lastArt[k]||'').split('\n'),b=(m[k]||'').split('\n');
+    if(a.join('\n')===b.join('\n'))return;
+    const sa=new Set(a),sb=new Set(b);
+    const adds=b.filter(l=>l.trim()&&!sa.has(l)&&!noise(l)),dels=a.filter(l=>l.trim()&&!sb.has(l)&&!noise(l));
+    if(!adds.length&&!dels.length)return;  // 只有指纹行变了 → 不算实质变化
+    lines[k]=new Set(adds);
+    chg.push({k:k,add:adds.length,del:dels.length,hi:_artHi(k,adds.length?adds:dels),rm:!adds.length})});
+  lastArt=Object.assign({},m);
+  if(!chg.length)return lastDiffOut;  // 本次渲染没有实质变化 → 保持上次的差异条（切 tab / 重渲染不会把它冲掉）
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let bar='<div class="artdiff"><div class="ad-hd">⚡ '+tr('这次配置改动同时改了 ')+chg.length+tr(' 个产物文件')+'</div>';
+  chg.forEach(c=>{bar+='<div class="ad-row'+(c.k===tab?' cur':'')+'" onclick="tab=\''+c.k+'\';renderPreview()">'
+    +'<span class="ad-f">'+ART_LBL[c.k]+'</span>'
+    +'<span class="ad-n">'+(c.add?'<b class="p">+'+c.add+'</b>':'')+(c.del?'<b class="m">-'+c.del+'</b>':'')+'</span>'
+    +'<span class="ad-hi">'+(c.hi.length?(c.rm?'− ':'')+E(c.hi.join(' · ')):'')+'</span></div>'});
+  bar+='</div>';
+  lastDiffOut={bar:bar,lines:lines};
+  return lastDiffOut}
+function highlight(s,addSet){
+  const kw=t=>t.replace(/(#[^\n]*)/g,"<span class='c'>$1</span>").replace(/\b(from|import|def|return|try|except|if|not|app)\b/g,"<span class='kw'>$1</span>")
+    .replace(/(&lt;[A-Z_]+&gt;)/g,"<span class='ph'>$1</span>").replace(/("[^"\n]*")/g,"<span class='str'>$1</span>");
+  const esc=t=>(''+t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  if(!addSet||!addSet.size)return kw(esc(s));
+  return (''+s).split('\n').map(l=>{const h=kw(esc(l));
+    return addSet.has(l)?"<span class='addln'>"+h+"</span>":h}).join('\n')}
 
 // ---- 视图切换 ----
 function switchView(v){view=v;['cfg','play','reg'].forEach(x=>{document.getElementById('v'+x[0].toUpperCase()+x.slice(1)).hidden=(x!==v)});
@@ -1573,25 +2022,51 @@ function collectWarnings(){
   if(nodes.some(n=>n.type==='runtime')&&nodes.some(n=>n.type==='harness'))w.push('⚙️🚀 Runtime 与 Harness 二选一：二者都是 Agent 中枢，同时存在时仅以 Runtime 为准，请删除其一');
   w.push(...graphWarnings());  // A1 pre-flight：跨节点语义/区域/行为风险
   return [...new Set(w)]}
-function graphWarnings(){  // 完整性检查抓不到的"能部署但会出错/有风险"——跨节点语义、区域、行为
-  const w=[];const _rt=centerNode();const _region=_rt?(_rt.cfg.region||''):'';
+function graphWarnings(){return graphRisks().map(r=>r.msg)}
+// 结构化 pre-flight 风险：每条带命中节点 id 与一键修复
+function graphRisks(){
+  const R=[];const _rt=centerNode();const _region=_rt?(_rt.cfg.region||''):'';
   // web_search 托管 connector 仅 us-east-1
-  if(nodes.some(n=>n.type==='mcp'&&n.cfg.type==='web_search')&&_region&&_region!=='us-east-1')
-    w.push('🧰 web_search 托管 connector 仅支持 us-east-1，当前 Agent 区域 '+_region+' 将无法使用（改区域或换工具）');
+  nodes.filter(n=>n.type==='mcp'&&n.cfg.type==='web_search').forEach(n=>{
+    if(_region&&_region!=='us-east-1')R.push({id:'ws:'+n.id,node:_rt?_rt.id:null,sev:'high',
+      msg:'🧰 web_search 托管 connector 仅支持 us-east-1，当前 Agent 区域 '+_region+' 将无法使用（改区域或换工具）',
+      fixLabel:'把 Agent 区域改为 us-east-1',fix:()=>{_rt.cfg.region='us-east-1'}})});
+  // Runtime 平台版本 / 计算类型
+  if(_rt&&_rt.type==='runtime'){const c=_rt.cfg;const inst=c.compute_type==='instances';
+    if(!inst&&c.platform_version==='V2'&&!V2_REGIONS.includes(c.region))R.push({id:'v2reg',node:_rt.id,sev:'high',
+      msg:'⚙️ Runtime V2 不支持区域 '+c.region+'（仅 '+V2_REGIONS.join('/')+'）',
+      fixLabel:'把区域改为 us-west-2',fix:()=>{c.region='us-west-2'}});
+    if(rtEnvBytes(c)>rtEnvLimit(c))R.push({id:'envsz',node:_rt.id,sev:'high',
+      msg:'⚙️ 环境变量(含 SYSTEM_PROMPT)共 '+rtEnvBytes(c)+'B，超过 '+(!inst&&c.platform_version==='V2'?'V2':'V1')+' 上限 '+rtEnvLimit(c)+'B，部署会报 ValidationException',
+      fixLabel:'切回 V1（上限 4KB）',fix:()=>{c.platform_version='V1'}});
+    if(!inst&&c.platform_version==='V2')R.push({id:'v2slow',node:_rt.id,sev:'low',
+      msg:'⚙️ Runtime V2：创建/更新要几分钟才 READY（做快照）；容器须在 120 秒内 /ping 健康，否则创建失败'});
+    if(inst)R.push({id:'inst',node:_rt.id,sev:'mid',
+      msg:'⚙️ instances 计算类型须在创建时指定且之后不可改；agentcore deploy 只建 microVM，请用 create-agent-runtime --capacity-provider-configuration 或控制台创建'});
+  }
   // 知识库跨区
   nodes.filter(n=>n.type==='kb').forEach(n=>{const kr=(n.cfg.region||'').trim();
-    if(kr&&_region&&kr!==_region)w.push('📚 知识库「'+(n.cfg.name||'kb')+'」区域 '+kr+' 与 Agent 区域 '+_region+' 不一致（跨区检索，注意延迟/权限/费用）')});
+    if(kr&&_region&&kr!==_region)R.push({id:'kb:'+n.id,node:n.id,sev:'mid',
+      msg:'📚 知识库「'+(n.cfg.name||'kb')+'」区域 '+kr+' 与 Agent 区域 '+_region+' 不一致（跨区检索，注意延迟/权限/费用）',
+      fixLabel:'把知识库区域对齐到 '+_region,fix:()=>{n.cfg.region=_region}})});
   // Policy ENFORCE 但 Cedar 无 permit → 拦截所有调用
   nodes.filter(n=>n.type==='policy').forEach(n=>{const c=n.cfg;
     if(c.mode==='ENFORCE'&&c.authoring==='cedar'&&!/permit\s*\(/.test(c.cedar||''))
-      w.push('🛡️ Policy「'+(c.pname||c.engine||'policy')+'」为 ENFORCE 但 Cedar 无 permit 语句，将拦截全部工具调用')});
+      R.push({id:'pol:'+n.id,node:n.id,sev:'high',
+        msg:'🛡️ Policy「'+(c.pname||c.engine||'policy')+'」为 ENFORCE 但 Cedar 无 permit 语句，将拦截全部工具调用',
+        fixLabel:'插入一条 permit 语句',fix:()=>{c.cedar=(c.cedar||'').trim()+'\n\npermit(\n  principal,\n  action,\n  resource\n);'}})});
   // Policy 但无 Gateway
   if(nodes.some(n=>n.type==='policy')&&!nodes.some(n=>n.type==='gateway'))
-    w.push('🛡️ 存在 Policy 但缺少 Gateway（策略作用于 Gateway 的工具调用，否则无对象）');
+    R.push({id:'pol-nogw',node:nodes.find(n=>n.type==='policy').id,sev:'high',
+      msg:'🛡️ 存在 Policy 但缺少 Gateway（策略作用于 Gateway 的工具调用，否则无对象）',
+      fixLabel:'添加 Gateway',fix:()=>{addNode('gateway',360,300)}});
   // Code Interpreter / Browser 出公网
   nodes.filter(n=>(n.type==='codeinterp'||n.type==='browser')&&n.cfg.network==='PUBLIC').forEach(n=>{
-    w.push((n.type==='browser'?'🌐 Browser':'💻 Code Interpreter')+' 网络为 PUBLIC（可出公网，注意数据外泄；默认 SANDBOX 更安全）')});
-  return w}
+    const isBr=n.type==='browser';const safe=isBr?'VPC':'SANDBOX';
+    R.push({id:'net:'+n.id,node:n.id,sev:'mid',
+      msg:(isBr?'🌐 Browser':'💻 Code Interpreter')+' 网络为 PUBLIC（可出公网，注意数据外泄；'+safe+' 更隔离）',
+      fixLabel:'改为 '+safe,fix:()=>{n.cfg.network=safe}})});
+  return R}
 function publish(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
   curName=rt.cfg.name;  // session 按实际发布的 agent 名对齐（处理改名）
@@ -1645,11 +2120,13 @@ async function sendMsg(){const inp=document.getElementById('pgIn'),txt=inp.value
   if(!published){if(cloud){toast('请先「发布到云端」');return}const ok=await autoPublish();if(!ok)return}
   if(cloud&&!deployed){toast('请先「发布到云端」');return}
   if(abMode){inp.value='';return sendAB(txt,cloud);}
+  if(ablMode){inp.value='';return sendAbl(txt);}
   inp.value='';addMsg('u',txt);
   let res,mode,trace;try{const rtNode=centerNode();const r=await fetch(cloud?'/api/invoke-cloud':'/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:agentName(),prompt:txt,region:rtNode?rtNode.cfg.region:undefined,system_prompt:rtNode?rtNode.cfg.system_prompt:undefined,history:pgHist,session:pgSession})});
     const j=await r.json();res=j.result;mode=j.mode;trace=j.trace}catch(e){if(cloud){res='云端调用失败（后端未启动）';mode='error'}else{res=localReply(txt);mode='mock'}}
   setMode(mode);addMsg('a',res);
   if(trace)addTrace(trace);
+  evPush('chat',txt,[{label:'输出',mode:mode,result:res,trace:trace}]);
   if(res&&(mode==='real'||mode==='cloud'||mode==='bedrock'))pgHist.push({role:'user',content:txt},{role:'assistant',content:res})}
 function localReply(p){const rt=centerNode();const sp=rt?rt.cfg.system_prompt:'';
   const tl=nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),sk=nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name);
@@ -1699,14 +2176,20 @@ function addTrace(T){const el=buildTraceEl(T);if(!el)return;el.classList.add('ms
   renderPgStats()}
 function renderPgStats(){
   let bar=document.getElementById('pgStatsBar');
-  if(!bar){bar=document.createElement('div');bar.id='pgStatsBar';bar.style.cssText='font-size:11px;color:#888;padding:4px 12px;border-top:1px solid #eee;display:flex;gap:12px;flex-wrap:wrap';
+  if(!bar){bar=document.createElement('div');bar.id='pgStatsBar';bar.className='pg-stats';
     const pg=document.getElementById('msgs');pg.parentNode.insertBefore(bar,pg.nextSibling)}
-  if(!pgStats.turns){bar.textContent='';return}
+  if(!pgStats.turns&&!pgStats.tokens.in){bar.textContent='';return}
   const avgLat=pgStats.latency.length?Math.round(pgStats.latency.reduce((a,b)=>a+b,0)/pgStats.latency.length):0;
   const toolStr=Object.entries(pgStats.tools).map(([k,v])=>k+'×'+v).join(' ');
-  bar.textContent=`📊 ${pgStats.turns} 轮 | 🎫 ${pgStats.tokens.in}→${pgStats.tokens.out} tok | ⏱ avg ${avgLat}ms`+(toolStr?` | 🔧 ${toolStr}`:'')}
+  bar.textContent='';
+  const add=(txt,cls)=>{const s=document.createElement('span');if(cls)s.className=cls;s.textContent=txt;bar.appendChild(s)};
+  if(pgStats.turns)add('📊 '+pgStats.turns+' '+tr('轮'));
+  add('🎫 '+pgStats.tokens.in+'→'+pgStats.tokens.out+' tok');
+  if(avgLat)add('⏱ avg '+avgLat+' ms');
+  if(toolStr)add('🔧 '+toolStr)}
 let abMode=false;
 function toggleAB(){abMode=!abMode;
+  if(abMode&&ablMode)toggleAbl();      // 与消融互斥
   if(abMode&&setRunMode)toggleSet();  // 与测试集互斥
   const b=document.getElementById('abBtn');if(b)b.classList.toggle('on',abMode);
   const s=document.getElementById('abSetup');if(s)s.hidden=!abMode;
@@ -1719,7 +2202,9 @@ async function sendAB(txt,cloud){
       body:JSON.stringify({name:agentName(),prompt:txt,region:rt?rt.cfg.region:undefined,system_prompt:sp,history:pgHist,session:pgSession})})
     .then(r=>r.json()).catch(()=>({result:cloud?'云端调用失败（后端未启动）':localReply(txt),mode:cloud?'error':'mock'}));
   const [A,B]=await Promise.all([call(baseSp),call(candSp)]);  // A/B 为对比探针，不写入 pgHist
-  renderAB(A,B)}
+  renderAB(A,B);
+  evPush('ab',txt,[{label:'A · 基线',mode:A&&A.mode,result:A&&A.result,trace:A&&A.trace},
+    {label:'B · 候选',mode:B&&B.mode,result:B&&B.result,trace:B&&B.trace}])}
 function renderAB(A,B){const m=document.getElementById('msgs');
   const wrap=document.createElement('div');wrap.className='msg abtest';
   [['A',tr('基线'),A,''],['B',tr('候选'),B,'b']].forEach(([k,sub,R,cls])=>{
@@ -1732,6 +2217,7 @@ function renderAB(A,B){const m=document.getElementById('msgs');
   m.appendChild(wrap);m.scrollTop=m.scrollHeight}
 let setRunMode=false;
 function toggleSet(){setRunMode=!setRunMode;
+  if(setRunMode&&ablMode)toggleAbl();  // 与消融互斥
   if(setRunMode&&abMode)toggleAB();  // 与 A/B 互斥
   const b=document.getElementById('tsetBtn');if(b)b.classList.toggle('on',setRunMode);
   const s=document.getElementById('setSetup');if(s)s.hidden=!setRunMode;
@@ -1754,6 +2240,7 @@ async function runSet(){
     .then(r=>r.json()).catch(()=>({result:cloud?'调用失败（后端未启动）':localReply(q),mode:'error'}));
   const results=await Promise.all(lines.map(call));
   renderSetRun(lines,results,prev);
+  evPush('testset','（'+lines.length+' 条批跑）',lines.map((q,i)=>({label:'输入：'+q,mode:results[i]&&results[i].mode,result:results[i]&&results[i].result,trace:results[i]&&results[i].trace})));
   const cur={};lines.forEach((q,i)=>{cur[q]=(results[i]&&results[i].result)||''});
   try{localStorage.setItem(_runKey(),JSON.stringify(cur))}catch(e){}}
 function renderSetRun(qs,results,prev){const m=document.getElementById('msgs');
@@ -1770,6 +2257,380 @@ function renderSetRun(qs,results,prev){const m=document.getElementById('msgs');
     const te=buildTraceEl(R&&R.trace);if(te){te.style.marginTop='6px';it.appendChild(te)}
     wrap.appendChild(it)});
   m.appendChild(wrap);m.scrollTop=m.scrollHeight}
+// ---------- 演示证据留档 ----------
+let evLog=[];
+function evPush(kind,prompt,items,extra){
+  const norm=(items||[]).map(it=>({label:it.label||'',mode:it.mode||'',result:''+(it.result==null?'':it.result),
+      trace:it.trace||null}));
+  // chat 的用量已由 addTrace 计入；A/B、消融、测试集这些探针调用也是真实调用，token 一并计入
+  if(kind!=='chat'){let touched=false;
+    norm.forEach(it=>{const u=(it.trace&&it.trace.usage)||{};
+      pgStats.tokens.in+=(u.input_tokens||0);pgStats.tokens.out+=(u.output_tokens||0);
+      if(u.input_tokens||u.output_tokens)touched=true});
+    if(touched)renderPgStats()}
+  evLog.push({ts:new Date().toISOString(),kind:kind,prompt:''+(prompt==null?'':prompt),items:norm,extra:extra||null})}
+function _evTraceLines(T){const L=[];if(!T)return L;
+  const u=T.usage||{};const bits=[];
+  if(T.model)bits.push('model=`'+T.model+'`');
+  if(u.input_tokens!=null||u.output_tokens!=null)bits.push('token='+(u.input_tokens||0)+'→'+(u.output_tokens||0));
+  if(T.latency_ms!=null)bits.push('latency='+T.latency_ms+'ms');
+  if(T.stop_reason)bits.push('stop='+T.stop_reason);
+  if(bits.length)L.push('- 指标：'+bits.join(' · '));
+  (T.tool_calls||[]).forEach(c=>{const ins=(c&&typeof c.input==='object')?JSON.stringify(c.input):(''+((c&&c.input)==null?'':c.input));
+    L.push('- 工具 `'+((c&&c.name)||'tool')+'` in: `'+ins.slice(0,300)+'`'+((c&&c.output)?' → out: `'+(''+c.output).slice(0,300)+'`':''))});
+  return L}
+function exportEvidence(){
+  const rt=centerNode();if(!rt){toast('画布为空，请先添加 Runtime 或 Harness');return}
+  const c=rt.cfg,o=gen(),warns=collectWarnings(),mid=c.model_id||'';
+  const L=[];
+  L.push('# AgentCore Studio 演示证据');L.push('');
+  L.push('> 由 AgentCore Studio 导出，用于复现本次演示。Studio 是内部自研工具，不是 AWS 官方产品，不承诺 SLA；');
+  L.push('> 其生成的产物是可读、可改、可 review 的起点，不等于生产就绪。');L.push('');
+  L.push('## 基本信息');L.push('');
+  L.push('| 项 | 值 |');L.push('|---|---|');
+  [['导出时间',new Date().toISOString()],['Agent 名称',c.name||''],
+   ['中枢类型',rt.type==='harness'?'Harness（声明式，AgentCore 托管 agent loop）':'Runtime（自带编排代码）'],
+   ['区域',c.region||''],['模型',mid],['框架',c.framework||''],
+   ['Playground 来源',pgSrc==='cloud'?'AWS 云端':'本地'],
+   ['画布节点数',String(nodes.length)],['交互记录',evLog.length+' 条']].forEach(([a,b])=>L.push('| '+a+' | '+b+' |'));
+  L.push('');
+  L.push('## 画布组件');L.push('');
+  L.push('| 组件 | 名称 | 关键配置 |');L.push('|---|---|---|');
+  nodes.forEach(n=>{const cc=COMPONENTS[n.type]||{ic:'•',label:n.type};
+    const nm=n.cfg.name||n.cfg.gw_name||n.cfg.pname||n.cfg.engine||'-';
+    const kv=Object.keys(n.cfg).filter(k=>k!=='name'&&n.cfg[k]!==''&&n.cfg[k]!=null)
+      .slice(0,6).map(k=>k+'='+(''+n.cfg[k]).replace(/\n/g,' ').slice(0,40)).join('; ');
+    L.push('| '+cc.ic+' '+cc.label+' | '+nm+' | '+(kv||'-')+' |')});
+  L.push('');
+  L.push('## Pre-flight 校验');L.push('');
+  if(!warns.length)L.push('本次导出时无风险项。');
+  else warns.forEach(w=>L.push('- '+w));
+  L.push('');
+  L.push('## 用量');L.push('');
+  L.push('| 项 | 值 |');L.push('|---|---|');
+  [['模型',mid],['token 合计',pgStats.tokens.in+' → '+pgStats.tokens.out],
+   ['对话轮次',String(pgStats.turns)]].forEach(([a,b])=>L.push('| '+a+' | '+b+' |'));
+  L.push('');
+  L.push('## 交互记录');L.push('');
+  if(!evLog.length)L.push('本次会话没有记录到交互。');
+  evLog.forEach((e,i)=>{
+    const kindLbl={chat:'对话',ab:'A/B 对比（System Prompt）',ablation:'组件消融对比',testset:'测试集批跑'}[e.kind]||e.kind;
+    L.push('### '+(i+1)+'. '+kindLbl+(e.extra&&e.extra.ablated?' — 关闭 '+e.extra.ablated:''));
+    L.push('');L.push('- 时间：'+e.ts);
+    L.push('- 输入：`'+e.prompt.replace(/`/g,"'").slice(0,500)+'`');
+    if(e.extra&&e.extra.asserts&&e.extra.asserts.length)L.push('- 断言：'+e.extra.asserts.map(a=>
+      a.label+'（A '+(a.A?'✓':'✗')+' / B '+(a.B?'✓':'✗')+'）').join('；'));
+    if(e.extra&&e.extra.artifact)L.push('- 产物差异：'+(e.extra.artifact.length
+      ? e.extra.artifact.map(x=>'`'+x.file+'` '+x.a+' → '+x.b+' 行（消失 '+x.gone+' 行）').join('；')
+      : '无（该组件不影响本地生成的产物）'));
+    L.push('');
+    e.items.forEach(it=>{
+      L.push('**'+(it.label||'输出')+'**'+(it.mode?'（mode='+it.mode+'）':''));L.push('');
+      L.push('```text');L.push(it.result.slice(0,4000));L.push('```');
+      _evTraceLines(it.trace).forEach(x=>L.push(x));L.push('')})});
+  L.push('## 生成产物');L.push('');
+  [['agentcore_entry.py','python',o.entry],['deploy.sh','bash',o.deploy],
+   ['iam-policy.json','json',o.policy],['requirements.txt','text',o.req],
+   ['registry.json','json',o.registry]].forEach(([fn,lang,body])=>{
+    if(body==null)return;L.push('### '+fn);L.push('');L.push('```'+lang);L.push(''+body);L.push('```');L.push('')});
+  L.push('## 口径说明');L.push('');
+  L.push('- Playground 来源标注含义：本地·真跑=执行了你编排的工具；本地·模型=直连模型但未跑工具；本地模拟=无凭证的文本兜底；AWS 云端=调用已部署的 Runtime。');
+  L.push('- 组件消融对比的两侧都是**真实重新发布**的产物并各自调用一次，不是模拟；两侧均为独立单轮（history 为空），客户端历史不参与。');
+  L.push('- 消融的确定性证据是产物差异（entry.py 行数与消失行）和工具调用差异；输出文本差异可能只是模型采样随机性，不能单独作为组件效果的证据。');
+  L.push('- 若消融两侧输出完全相同，说明该输入没有触发到被关闭的组件，不能作为「组件无用」的证据。');
+  L.push('- Memory / Policy / Knowledge Base 等依赖云端资源的组件，在本地来源下通常只体现产物差异；行为差异需切到 AWS 云端来源验证。');
+  const md=L.join('\n');
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='agentcore-studio-evidence_'+((c.name||'agent'))+'_'+new Date().toISOString().replace(/[-:T]/g,'').slice(0,14)+'.md';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},0);
+  toast('已导出演示证据（Markdown）')}
+
+// ---------- ① 组件消融对比 ----------
+let ablMode=false;
+function toggleAbl(){ablMode=!ablMode;
+  if(ablMode&&abMode)toggleAB();       // 与 A/B 互斥
+  if(ablMode&&setRunMode)toggleSet();  // 与测试集互斥
+  const b=document.getElementById('ablBtn');if(b)b.classList.toggle('on',ablMode);
+  const s=document.getElementById('ablSetup');if(s)s.hidden=!ablMode;
+  if(ablMode)fillAblTargets()}
+function nodeLabel(n){const c=COMPONENTS[n.type]||{ic:'•',label:n.type};
+  const nm=n.cfg.name||n.cfg.gw_name||n.cfg.pname||'';
+  return c.ic+' '+c.label+(nm?'「'+nm+'」':'')}
+function ablatable(){return nodes.filter(n=>n.type!=='runtime'&&n.type!=='harness'&&!isIncomplete(n))}
+// ---- 预置探针 + 断言：让"没有这个组件就做不到"变成可自动判定的事实 ----
+function _pyId(s){return (s||'tool').replace(/[^a-zA-Z0-9_]/g,'_').replace(/^([0-9])/,'_$1')}
+function ablProbeFor(n){
+  if(!n)return null;
+  const nm=n.cfg.name||'';
+  switch(n.type){
+    case'codeinterp':{
+      // 探针必须是"没有代码执行就做不到"的：18 位整数精确相乘，模型口算不出来。
+      // 期望值由浏览器用 BigInt 现算，断言直接比对精确结果，不用模糊的关键字匹配。
+      const _x=987654321987654321n,_y=123456789123456789n,_exp=(_x*_y).toString();
+      return{input:'请用代码精确计算 987654321987654321 * 123456789123456789，只回答这个整数，不要加千分位分隔符',
+        asserts:[{t:'tool',v:'code_interpreter',label:'调用了 code_interpreter'},
+          {t:'contains',v:_exp,label:'算出了精确值 '+_exp.slice(0,9)+'…'+_exp.slice(-6)}],
+        why:'18 位整数相乘，模型没有代码执行没法给出精确值；期望值是浏览器用 BigInt 现算的，B 侧几乎必然算错'};}
+    case'browser':return{input:'打开 https://aws.amazon.com/bedrock/ 并告诉我页面标题',
+      asserts:[{t:'tool',v:'browser',label:'调用了 browser'}],
+      why:'没有 Browser 就无法访问外部网页'};
+    case'kb':return{input:'查一下内部知识库里关于「'+(nm||'内部资料')+'」的说明，只依据知识库回答',
+      asserts:[{t:'tool',v:_pyId(nm),label:'调用了知识库工具 '+_pyId(nm)}],
+      why:'私有资料只能从知识库检索，模型训练数据里没有'};
+    case'mcp':{
+      if(['web_search','mcpServer','openApiSchema','smithyModel'].indexOf(n.cfg.type)>=0)
+        return{input:'请用 '+nm+' 完成一次查询',
+          asserts:[{t:'tool',v:_pyId(nm),label:'调用了 '+_pyId(nm)}],
+          why:'⚠ '+n.cfg.type+' 类 target 不进 entry 的 tools 列表，只有云端注入 GATEWAY_URL 后才经 MCP 客户端动态挂载 —— 本地不可验证，只能看产物差异或切云端来源'};
+      const pk=(nm==='order_lookup')?'订单 A1001':'一条需要用到该工具的请求';
+      return{input:'请用 '+nm+' 工具处理：'+pk,
+        asserts:[{t:'tool',v:_pyId(nm),label:'调用了 '+_pyId(nm)}],why:'该能力只存在于这个工具里'};}
+    case'skill':return{input:'用 '+nm+' 处理这组数据：3,7,11,19,23',
+      asserts:[{t:'tool',v:_pyId(nm),label:'调用了技能 '+_pyId(nm)}],why:'技能是打包进产物的专用能力'};
+    case'gateway':{
+      // Gateway 消融会连带去掉挂在它下面的组件；探针要盯住其中"本地真能调用"的那个工具
+      const g=ablGroup(n),lost=localToolSet(nodes).filter(t=>localToolSet(nodes.filter(x=>g.indexOf(x)<0)).indexOf(t)<0);
+      if(lost.length)return{input:'请用 '+lost[0]+' 工具完成一次查询',
+        asserts:[{t:'tool',v:lost[0],label:'调用了 '+lost[0]}],
+        why:'去掉 Gateway 会连带去掉挂在它下面的 '+(g.length-1)+' 个组件，本地可调用工具会少掉：'+lost.join('、')};
+      return{input:'请用你手上的工具查一条内部数据',
+        asserts:[{t:'anytool',v:'',label:'至少调用了一个工具'}],
+        why:'⚠ 这个 Gateway 下面挂的是 web_search / mcpServer / openApiSchema / smithyModel 类 target，它们不进 entry 的 tools 列表——只有云端注入 GATEWAY_URL 后才动态挂载。所以本地去不去掉 Gateway，可调用工具都一样，只能看产物差异。'};}
+    case'memory':return{input:'我叫张三，请记住。然后告诉我我叫什么',
+      asserts:[{t:'contains',v:'张三',label:'回答里带出了记住的信息'}],
+      why:'⚠ Memory 不进 entry 代码（genEntry 不接收 memory），本地消融只会看到 deploy.sh 的资源差异；且单轮对话本身不需要记忆。要验证 Memory 必须切云端做跨轮对话。'};
+    case'policy':return{input:'请用你手上的工具做一次查询',
+      asserts:[{t:'anytool',v:'',label:'工具调用没有被策略拦截'}],
+      why:'Policy 作用在 Gateway 调用上，ENFORCE 且无 permit 会全部拦截'};
+    default:return{input:'请完成一个需要用到「'+nodeLabel(n)+'」的任务',
+      asserts:[{t:'anytool',v:'',label:'至少调用了一个工具'}],why:''}}}
+function evalAsserts(R,asserts){
+  const calls=(((R&&R.trace&&R.trace.tool_calls)||[]).map(c=>(c&&c.name)||''));
+  const txt=''+((R&&R.result)||'');
+  return (asserts||[]).map(a=>{
+    let ok=false;
+    if(a.t==='tool')ok=calls.indexOf(a.v)>=0;
+    else if(a.t==='anytool')ok=calls.length>0;
+    else if(a.t==='contains')ok=txt.indexOf(a.v)>=0;
+    else if(a.t==='nottool')ok=calls.indexOf(a.v)<0;
+    return{label:a.label||(a.t+' '+a.v),ok:ok}})}
+function onAblTargetChange(){const el=document.getElementById('ablTarget');
+  const n=nodes.find(x=>String(x.id)===String(el&&el.value));
+  const box=document.getElementById('ablProbe');if(!box)return;
+  const p=ablProbeFor(n);
+  if(!p){box.innerHTML='';return}
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // 提前告知这个组件在本地能不能验出行为差异，别等跑完 13 秒才知道
+  let verdict='';
+  if(n){const g=ablGroup(n);
+    const tA=localToolSet(nodes).join(','),tB=localToolSet(nodes.filter(x=>g.indexOf(x)<0)).join(',');
+    verdict=(tA!==tB)
+      ? '<div class="ap-ok">✅ '+tr('本地可验证：去掉它会让可调用工具从')+' ['+E(tA||'空')+'] '+tr('变成')+' ['+E(tB||'空')+']</div>'
+      : '<div class="ap-na">☁️ '+tr('本地不可验证：本地可调用工具集不变（')+E(tA||tr('本地无可调用工具'))+'）—— '+tr('会直接给产物差异，不浪费时间跑模型')+'</div>'}
+  box.innerHTML='<div class="ap-in">▶ '+E(p.input)+'</div>'
+    +'<div class="ap-as">'+p.asserts.map(a=>'<span class="dt-chip">✓ '+E(a.label)+'</span>').join('')+'</div>'
+    +verdict
+    +(p.why?'<div class="ap-why">'+E(p.why)+'</div>':'')}
+function runAblProbe(){const el=document.getElementById('ablTarget');
+  const n=nodes.find(x=>String(x.id)===String(el&&el.value));
+  if(!n){toast('请先选择要关闭的组件');return}
+  // 不预先 autoPublish：本地不可判定的组件会在前置检查处短路，一次云端探测都不用做
+  sendAbl(ablProbeFor(n).input,ablProbeFor(n).asserts)}
+function fillAblTargets(){const el=document.getElementById('ablTarget');if(!el)return;
+  const list=ablatable(),cur=el.value;el.innerHTML='';
+  if(!list.length){const o=document.createElement('option');o.value='';o.textContent='（画布上没有可关闭的组件）';el.appendChild(o);return}
+  const base=localToolSet(nodes).join(',');
+  list.forEach(n=>{const o=document.createElement('option');o.value=String(n.id);
+    const g=ablGroup(n);
+    const local=localToolSet(nodes.filter(x=>g.indexOf(x)<0)).join(',')!==base;
+    o.textContent=(local?'✅ ':'☁️ ')+nodeLabel(n)+(g.length>1?('（+'+(g.length-1)+'）'):'');
+    el.appendChild(o)});
+  if(cur&&list.some(n=>String(n.id)===cur))el.value=cur;
+  onAblTargetChange()}
+function newAblProgress(lbl){const m=document.getElementById('msgs');
+  const steps=[['pub_a','⚙️',tr('发布基线')],['run_a','▶',tr('调用 A')],['pub_b','🔬',tr('发布消融变体')],['run_b','▶',tr('调用 B')],['restore','↩',tr('还原画布')]];
+  const d=document.createElement('div');d.className='msg sys deploytrace';
+  d.innerHTML='<div class="dt-hd">🔬 '+tr('消融对比')+' · '+lbl+'</div><div class="dt-row">'+steps.map((s,i)=>
+    '<div class="dt-stage pending" data-k="'+s[0]+'"><span class="dt-ic">'+s[1]+'</span><span class="dt-lb">'+s[2]+'</span><span class="dt-ck">✓</span></div>'+
+    (i<steps.length-1?'<span class="dt-conn"></span>':'')).join('')+'</div>';
+  m.appendChild(d);m.scrollTop=m.scrollHeight;
+  return {mark:function(k,st){const e=d.querySelector('.dt-stage[data-k="'+k+'"]');if(e)e.className='dt-stage '+st;
+    m.scrollTop=m.scrollHeight}}}
+// 消融要连带它的依赖组件一起去掉：Gateway 是 MCP / Skill / KB / Policy 的挂载点，
+// 但 gen() 采集工具时并不看 Gateway 是否存在 —— 只删 Gateway 节点，产物里的工具还在，
+// 于是两侧行为完全一样。级联删除才是"去掉这个组件"的真实含义。
+// 本地真正可调用的工具集（镜像 genEntry 的 toolList 逻辑）。
+// web_search / mcpServer / openApiSchema / smithyModel 这些 Gateway target 不在 toolList 里：
+// 它们只在云端注入 GATEWAY_URL 后才经 MCP 客户端动态挂载，本地一律不可调用。
+function localToolSet(arr){arr=arr||nodes;
+  const ok=n=>n&&!isIncomplete(n);
+  const out=[];
+  arr.filter(n=>n.type==='mcp'&&ok(n)).forEach(n=>{
+    if(n.cfg.type==='lambda'&&/^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:function:/.test(n.cfg.endpoint||''))out.push(_pyId(n.cfg.name));
+    else if(n.cfg.type==='rest'&&n.cfg.connector)out.push(_pyId(n.cfg.name))});
+  arr.filter(n=>n.type==='skill'&&ok(n)).forEach(n=>out.push(_pyId(n.cfg.name)));
+  arr.filter(n=>n.type==='kb'&&ok(n)).forEach(n=>out.push(_pyId(n.cfg.name)));
+  if(arr.find(n=>n.type==='codeinterp'&&ok(n)))out.push('code_interpreter');
+  if(arr.find(n=>n.type==='browser'&&ok(n)))out.push('browser');
+  const rt=arr.find(n=>n.type==='runtime')||arr.find(n=>n.type==='harness');
+  ((rt&&rt.cfg.workers)||[]).forEach(w=>{if(w&&w.arn&&w.name)out.push(_pyId(w.name))});
+  return out.sort()}
+function cloudOnlyToolSet(arr){arr=arr||nodes;
+  const ok=n=>n&&!isIncomplete(n);
+  return arr.filter(n=>n.type==='mcp'&&ok(n)&&['web_search','mcpServer','openApiSchema','smithyModel'].indexOf(n.cfg.type)>=0)
+    .map(n=>n.cfg.name+'（'+n.cfg.type+'）')}
+function ablGroup(n){const out=[n];
+  nodes.forEach(x=>{if(x===n)return;const c=COMPONENTS[x.type]||{};
+    const ps=c.parents||(c.parent?[c.parent]:[]);
+    if(ps.indexOf(n.type)>=0&&out.indexOf(x)<0)out.push(x)});
+  return out}
+async function sendAbl(txt,asserts){
+  if(pgSrc==='cloud'){toast('消融对比仅支持「本地」来源（需要重新发布变体产物）');return}
+  const el=document.getElementById('ablTarget'),id=el?el.value:'';
+  if(!id){toast('请先选择要关闭的组件');return}
+  const node=nodes.find(n=>String(n.id)===String(id));
+  if(!node){toast('该组件已不在画布上');fillAblTargets();return}
+  const rt=centerNode();
+  if(!rt){toast('请先添加 Runtime 或 Harness');return}
+  const group=ablGroup(node),extra=group.slice(1);
+  const lbl=nodeLabel(node)+(extra.length?('（连带 '+extra.length+' 个挂在它下面的组件）'):'');
+  addMsg('u',txt);
+  if(extra.length)addMsg('sys','🔗 '+nodeLabel(node)+' 是这些组件的挂载点，一起去掉：'+extra.map(nodeLabel).join('、'));
+  const P=newAblProgress(lbl);
+  const _ART=['agentcore_entry.py','deploy.sh','iam-policy.json','registry.json','requirements.txt'];
+  const pub=async()=>{try{const r=await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign(payload(),{probe:true}))});return r.ok}catch(e){return false}};
+  const call=async()=>{try{const r=await fetch('/api/invoke',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:agentName(),prompt:txt,region:rt.cfg.region,system_prompt:rt.cfg.system_prompt,history:[],session:pgSession})});
+    return await r.json()}catch(e){return{result:'调用失败（后端未启动）',mode:'error'}}};
+  // 先算产物差异，再决定要不要花时间跑模型
+  const saved=nodes.slice(),filesA=payload().files||{};
+  nodes=nodes.filter(x=>group.indexOf(x)<0);
+  const filesB=payload().files||{};
+  nodes=saved;
+  const art=[];
+  _ART.forEach(fn=>{const a=(filesA[fn]||'').split('\n'),b=(filesB[fn]||'').split('\n');
+    const sb=new Set(b);const gone=a.filter(l=>l.trim()&&!sb.has(l)).length;
+    if(gone||a.length!==b.length)art.push({file:fn,a:a.length,b:b.length,gone:gone})});
+  const entryChanged=(filesA['agentcore_entry.py']||'')!==(filesB['agentcore_entry.py']||'');
+  const tA=localToolSet(saved),tB=localToolSet(saved.filter(x=>group.indexOf(x)<0));
+  const toolsSame=tA.join(',')===tB.join(',');
+  const cloudOnly=cloudOnlyToolSet(saved);
+  if(!entryChanged||toolsSame){
+    // 两种本地不可判定：① 组件不进 entry 代码；② entry 变了但本地可调用的工具集没变
+    ['pub_a','run_a','pub_b','run_b','restore'].forEach(k=>P.mark(k,'skip'));
+    const reason=!entryChanged
+      ? {kind:'noentry'}
+      : {kind:'sametools',tools:tA,cloudOnly:cloudOnly};
+    renderAbl(lbl,null,null,art,null,null,null,{localNA:true,target:nodeLabel(node),reason:reason});
+    evPush('ablation',txt,[],{ablated:lbl,artifact:art,localNA:reason.kind});
+    return}
+  P.mark('pub_a','active');
+  if(!await pub()){P.mark('pub_a','skip');addMsg('sys','⚠ 基线变体发布失败（后端可能未启动），消融对比中止');return}
+  P.mark('pub_a','done');
+  P.mark('run_a','active');const A=await call();P.mark('run_a','done');
+  nodes=nodes.filter(x=>group.indexOf(x)<0);
+  let B;
+  try{P.mark('pub_b','active');const okB=await pub();P.mark('pub_b',okB?'done':'skip');
+    if(okB){P.mark('run_b','active');B=await call();P.mark('run_b','done')}
+    else{P.mark('run_b','skip');B={result:'消融变体发布失败',mode:'error'}}}
+  finally{P.mark('restore','active');nodes=saved;await pub();render();P.mark('restore','done')}
+  published=true;
+  const asA=evalAsserts(A,asserts),asB=evalAsserts(B,asserts);
+  renderAbl(lbl,A,B,art,asA,asB,asserts,null);
+  evPush('ablation',txt,[{label:'A · 含 '+lbl,mode:A&&A.mode,result:A&&A.result,trace:A&&A.trace},
+    {label:'B · 去掉 '+lbl,mode:B&&B.mode,result:B&&B.result,trace:B&&B.trace}],
+    {ablated:lbl,artifact:art,asserts:(asserts||[]).map((a,i)=>({label:asA[i]?asA[i].label:'',A:asA[i]?asA[i].ok:null,B:asB[i]?asB[i].ok:null}))})}
+function renderAbl(lbl,A,B,art,asA,asB,asserts,na){const m=document.getElementById('msgs');
+  const E=s=>(''+s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const mkChip=(box,txt,cls)=>{const s=document.createElement('span');s.className='dt-chip'+(cls?' '+cls:'');s.textContent=txt;box.appendChild(s)};
+  if(na&&na.localNA){
+    // 本地不可判定：不跑模型，只给能证明的部分 + 讲清为什么
+    const rs=na.reason||{kind:'noentry'};
+    const card=document.createElement('div');card.className='msg abl-card';
+    const vd=document.createElement('div');vd.className='abl-vd';
+    const bg=document.createElement('span');bg.className='abl-badge warn';bg.textContent=tr('本地不可判定');
+    const vt=document.createElement('span');vt.className='vt';
+    vt.textContent=rs.kind==='noentry'
+      ? tr('去掉它以后 agentcore_entry.py 逐字节相同 —— 这个组件不进 Agent 代码，只影响云端资源与部署步骤。本地跑两次模型不可能有行为差异，所以直接跳过调用（跑了只会得到一个误导性的「没区别」）。')
+      : tr('产物变了，但本地可调用的工具集两侧完全一样 —— 所以本地跑两次模型也不会有行为差异，已跳过调用。');
+    vd.appendChild(bg);vd.appendChild(vt);card.appendChild(vd);
+    if(rs.kind==='sametools'){
+      const s0=document.createElement('div');s0.className='abl-sec';s0.textContent=tr('本地可调用的工具（两侧相同）');card.appendChild(s0);
+      const c0=document.createElement('div');c0.className='abl-chips';card.appendChild(c0);
+      if(rs.tools&&rs.tools.length)rs.tools.forEach(t=>mkChip(c0,t,'hit'));
+      else mkChip(c0,tr('本地一个可调用工具都没有'),'fail');
+      if(rs.cloudOnly&&rs.cloudOnly.length){
+        const s1=document.createElement('div');s1.className='abl-sec';s1.textContent=tr('只有云端才可调用的 Gateway target');card.appendChild(s1);
+        const c1=document.createElement('div');c1.className='abl-chips';card.appendChild(c1);
+        rs.cloudOnly.forEach(t=>mkChip(c1,t,'miss'));
+        const w=document.createElement('div');w.className='abl-note';
+        w.textContent=tr('这些 target 不进 entry 的 tools 列表：只有云端部署 Gateway 后注入 GATEWAY_URL，Agent 才会经 MCP 客户端动态挂载它们。本地 GATEWAY_URL 为空，所以有没有 Gateway，本地可用工具都一样。');
+        card.appendChild(w)}}
+    const s2=document.createElement('div');s2.className='abl-sec';s2.textContent=tr('产物差异（这才是本地能证明的部分）');card.appendChild(s2);
+    const c2=document.createElement('div');c2.className='abl-chips';card.appendChild(c2);
+    if(art&&art.length)art.forEach(x=>mkChip(c2,x.file+'  '+x.a+'→'+x.b+' '+tr('行')+' (-'+x.gone+')','hit'));
+    else mkChip(c2,tr('连产物都没有差异 —— 该组件在当前配置下不产生任何输出'),'fail');
+    const s3=document.createElement('div');s3.className='abl-sec';s3.textContent=tr('要在本地看到行为差异，改用这些组件');card.appendChild(s3);
+    const note=document.createElement('div');note.className='abl-note';
+    note.textContent=rs.kind==='sametools'
+      ? tr('本地可消融的是进 tools 列表的组件：Code Interpreter、Browser、Skill、Knowledge Base、lambda 型 MCP 工具、REST 连接器、子 Agent。web_search / mcpServer / openApiSchema / smithyModel 必须切「AWS 云端」来源，对已部署的 Agent 做对照。')
+      : tr('切到「AWS 云端」来源，对已部署的 Agent 做对照：Memory 要跨多轮对话验证（不是单轮）；Policy 要看越权请求是否被拦；Identity 要看出站凭证是否注入。这些都发生在云端资源上，本地 entry 代码里没有对应接线。');
+    card.appendChild(note);
+    m.appendChild(card);m.scrollTop=m.scrollHeight;return}
+  const wrap=document.createElement('div');wrap.className='msg abtest';
+  [['A','含 '+lbl,A,''],['B','去掉 '+lbl,B,'b']].forEach(function(t){
+    const k=t[0],sub=t[1],R=t[2],cls=t[3];
+    const col=document.createElement('div');col.className='ab-col '+cls;
+    const h=document.createElement('div');h.className='ab-h';h.textContent=k+' · '+sub;col.appendChild(h);
+    const body=document.createElement('div');body.className='ab-body';
+    body.textContent=(''+((R&&R.result)==null?'（无输出）':R.result)).replace(/\\r\\n/g,'\n').replace(/\\n/g,'\n');col.appendChild(body);
+    const te=buildTraceEl(R&&R.trace);if(te){te.style.marginTop='8px';col.appendChild(te)}
+    wrap.appendChild(col)});
+  m.appendChild(wrap);
+  const a=''+((A&&A.result)||''),b=''+((B&&B.result)||'');
+  const tl=R=>(((R&&R.trace&&R.trace.tool_calls)||[]).map(c=>c.name));
+  const ta=tl(A),tb=tl(B);
+  // 判定优先级：断言 > 工具调用差异 > 产物差异 > 仅文本差异
+  const toolDiff=ta.join(',')!==tb.join(',');
+  const artDiff=!!(art&&art.length);
+  const hasAs=!!(asserts&&asserts.length);
+  const aPass=hasAs&&asA.every(x=>x.ok),bPass=hasAs&&asB.every(x=>x.ok);
+  let badge,vtxt;
+  if(hasAs&&aPass&&!bPass){badge=['ok',tr('断言证明')];vtxt=tr('含该组件时断言全部通过，去掉后断言失败 — 这个任务离开该组件做不到，这是最强的证据')}
+  else if(hasAs&&aPass&&bPass){badge=['warn',tr('并非必需')];vtxt=tr('两侧断言都通过 — 这个任务不需要该组件，或模型换了别的路径完成；换一个只有它能做的任务再试')}
+  else if(hasAs&&!aPass){badge=['warn',tr('探针未命中')];vtxt=tr('含该组件的一侧断言就没通过 — 模型没按预期用它（提示词不够强制，或模型链路不通），先修探针再下结论')}
+  else if(toolDiff){badge=['ok',tr('行为差异')];vtxt=tr('工具调用不同 — 关闭该组件后 Agent 的实际行为改变了，这是最硬的证据')}
+  else if(artDiff){badge=['ok',tr('产物差异')];vtxt=tr('工具调用相同，但生成的产物不同 — 该组件影响部署产物；行为差异需要一句真正用到它的输入，或切到 AWS 云端验证')}
+  else if(a!==b){badge=['warn',tr('仅文本差异')];vtxt=tr('产物与工具调用都没变，只有输出文本不同 — 这很可能只是模型采样随机性，不能当作组件效果')}
+  else{badge=['warn',tr('无差异')];vtxt=tr('两侧完全相同 — 这一句没有触发到该组件，不能当作「组件无用」的证据，换一句必须用到它的输入再试')}
+  const card=document.createElement('div');card.className='msg abl-card';
+  const vd=document.createElement('div');vd.className='abl-vd';
+  const bg=document.createElement('span');bg.className='abl-badge '+badge[0];bg.textContent=badge[1];
+  const vt=document.createElement('span');vt.className='vt';vt.textContent=vtxt;
+  vd.appendChild(bg);vd.appendChild(vt);card.appendChild(vd);
+  const sec=t=>{const s=document.createElement('div');s.className='abl-sec';s.textContent=t;card.appendChild(s)};
+  const chips=()=>{const c=document.createElement('div');c.className='abl-chips';card.appendChild(c);return c};
+  const chip=(box,txt,cls)=>{const s=document.createElement('span');s.className='dt-chip'+(cls?' '+cls:'');s.textContent=txt;box.appendChild(s)};
+  if(hasAs){sec(tr('断言'));
+    asserts.forEach((_,i)=>{const c=chips();
+      chip(c,(asA[i].ok?'✓':'✗')+' A '+asA[i].label,asA[i].ok?'hit':'fail');
+      chip(c,(asB[i].ok?'✓':'✗')+' B '+asB[i].label,asB[i].ok?'hit':'fail')})}
+  sec(tr('工具调用'));
+  const c1=chips();
+  chip(c1,'A '+(ta.length?ta.join(' · '):tr('无')),ta.length?'hit':'miss');
+  chip(c1,'B '+(tb.length?tb.join(' · '):tr('无')),tb.length?'hit':'miss');
+  sec(tr('产物差异'));
+  const c2=chips();
+  if(artDiff)art.forEach(x=>chip(c2,x.file+'  '+x.a+'→'+x.b+' '+tr('行')+' (-'+x.gone+')','hit'));
+  else chip(c2,tr('无差异（该组件只影响云端资源，不影响本地产物）'),'miss');
+  const note=document.createElement('div');note.className='abl-note';
+  note.textContent=tr('两侧都是真实重新发布的产物各调用一次，均为独立单轮（不带客户端历史）。Memory / Policy / Knowledge Base 等云端资源型组件在本地通常只体现产物差异。');
+  card.appendChild(note);
+  m.appendChild(card);m.scrollTop=m.scrollHeight}
+
 let curDeployLog=null;
 let curDeployHd=null,deployTimer=null,deployStart=0;
 function newDeployLog(){const m=document.getElementById('msgs');const d=document.createElement('div');d.className='msg sys deploylog';
@@ -1789,7 +2650,10 @@ function buildDeployPlan(){
   const has=t=>nodes.find(n=>n.type===t&&ok(n));
   const p=[{id:'runtime',label:'Runtime',icon:'⚙️'}];
   if(has('memory'))p.push({id:'memory',label:'Memory',icon:'🧠'});
-  const obn=has('observability');if(obn&&obn.cfg.enabled!=='false')p.push({id:'observability',label:'Observability',icon:'📊'});
+  const obn=has('observability');if(obn&&obn.cfg.enabled!=='false'){p.push({id:'observability',label:'Observability',icon:'📊'});
+    if(obn.cfg.dashboard!=='false')p.push({id:'dashboard',label:'Dashboard',icon:'📈'});}
+  const evn=has('evaluation');if(evn&&evn.cfg.enabled!=='false')p.push({id:'evaluations',label:'Evaluations',icon:'🧪'});
+  const opn=has('optimisation');if(opn&&opn.cfg.enabled!=='false'&&opn.cfg.config_bundles!=='false')p.push({id:'optimization',label:'Config Bundle',icon:'🎯'});
   const idn=has('identity');if(idn&&(idn.cfg.inbound_auth==='JWT'||idn.cfg.outbound_auth!=='none'))p.push({id:'identity',label:'Identity',icon:'🔐'});
   if(has('gateway')){p.push({id:'gateway',label:'Gateway',icon:'🔌'});
     nodes.filter(n=>n.type==='mcp'&&ok(n)).forEach(n=>p.push({id:'tool:'+n.cfg.name,label:'MCP '+n.cfg.name,icon:'🧰'}));
@@ -1869,7 +2733,7 @@ async function deployCloud(){const rt=centerNode();if(!rt){toast('请先添加 R
       if(s.done){gotDone=true;ok=s.ok;finalLog=s.log||'';break}
     }
     if(!gotDone)throw new Error('部署任务异常结束');
-    if(ok){stopDeployHeartbeat('✅ 云端部署完成');completeTrace();deployed=true;setSrc('cloud');addMsg('sys','🎉 全部发布完成！已切换「AWS 云端」，发消息即可验证云端 runtime');
+    if(ok){stopDeployHeartbeat('✅ 云端部署完成');completeTrace();deployed=true;saveFpBase();setSrc('cloud');addMsg('sys','🎉 全部发布完成！已切换「AWS 云端」，发消息即可验证云端 runtime');
       if(delOld){try{const dr=await fetch('/api/delete-runtime',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:delOld,region:rt.cfg.region})});const dj=await dr.json();addMsg('sys',dj.ok?('🗑 已删除旧 Runtime「'+delOld+'」（其 Memory 仍保留）'):('⚠ 删除旧 Runtime「'+delOld+'」失败：'+(dj.error||'')))}catch(e){addMsg('sys','⚠ 删除旧 Runtime 请求失败：'+e.message)}}
       lastCloudName=curNm}
     else{stopDeployHeartbeat('⚠ 部署未完全成功');const tail=(finalLog||'').split('\n').slice(-12).join('\n');addMsg('sys','⚠ 部署未完全成功，日志末尾：\n'+tail)}}catch(e){stopDeployHeartbeat('⚠ 部署中断');
@@ -1884,11 +2748,15 @@ function dl(name,text){const b=new Blob([text],{type:'text/plain'}),a=document.c
 function downloadCurrent(){const f=curFile();dl(f.name,f.text);toast('已下载 '+f.name)}
 function copyCurrent(){navigator.clipboard.writeText(curFile().text);toast('已复制')}
 function clearCanvas(){if(confirm('清空画布?')){nodes=[];sel=null;published=false;lastCloudName=null;render();renderProps()}}
+const OKF_LOADER_CODE="# ABOUTME: OKF (Open Knowledge Format) lookup skill — reads a real markdown concept\n# directory (skills/okf_bundle/), parses YAML frontmatter, follows cross-links.\n# Zero third-party deps (stdlib only). NOT a RAG/vector store: the agent reads\n# curated, interlinked markdown concepts directly.\nimport os as _os\nimport re as _re\n\n_BASE = _os.path.join(_os.path.dirname(__file__), \"okf_bundle\")\n\n\ndef _parse_frontmatter(text):\n    \"\"\"Manual YAML-frontmatter parse (no PyYAML). Returns (meta:dict, body:str).\"\"\"\n    meta, body = {}, text\n    if text.startswith(\"---\"):\n        parts = text.split(\"---\", 2)\n        if len(parts) == 3:\n            fm, body = parts[1], parts[2]\n            for line in fm.splitlines():\n                line = line.strip()\n                if not line or line.startswith(\"#\") or \":\" not in line:\n                    continue\n                k, v = line.split(\":\", 1)\n                k, v = k.strip(), v.strip()\n                if v.startswith(\"[\") and v.endswith(\"]\"):\n                    v = [x.strip() for x in v[1:-1].split(\",\") if x.strip()]\n                meta[k] = v\n    return meta, body.strip()\n\n\ndef _load_bundle():\n    \"\"\"Load every *.md concept under okf_bundle/ into a graph.\n    Returns {relpath: {meta, body, links:[relpath]}}.\"\"\"\n    concepts = {}\n    if not _os.path.isdir(_BASE):\n        return concepts\n    for root, _dirs, files in _os.walk(_BASE):\n        for fn in files:\n            if not fn.endswith(\".md\"):\n                continue\n            fp = _os.path.join(root, fn)\n            rel = _os.path.relpath(fp, _BASE).replace(_os.sep, \"/\")\n            try:\n                meta, body = _parse_frontmatter(open(fp, encoding=\"utf-8\").read())\n            except Exception:\n                continue\n            # cross-links: markdown links to .md files, absolute (/x.md) or relative (x.md)\n            links = []\n            for tgt in _re.findall(r\"\\]\\(([^)]+\\.md)\\)\", body):\n                t = tgt.lstrip(\"/\").replace(_os.sep, \"/\")\n                links.append(t)\n            concepts[rel] = {\"meta\": meta, \"body\": body, \"links\": links}\n    return concepts\n\n\ndef _resolve(target, all_keys):\n    \"\"\"Best-effort resolve a link target to an actual concept key.\"\"\"\n    t = target.lstrip(\"/\")\n    if t in all_keys:\n        return t\n    base = t.split(\"/\")[-1]\n    for k in all_keys:\n        if k == t or k.endswith(\"/\" + t) or k.split(\"/\")[-1] == base:\n            return k\n    return None\n\n\ndef _score(query, rel, c):\n    q = query.lower().strip()\n    if not q:\n        return 0\n    terms = [w for w in _re.split(r\"[\\s,，、]+\", q) if w]\n    meta = c[\"meta\"]\n    hay_strong = \" \".join([\n        str(meta.get(\"title\", \"\")), str(meta.get(\"type\", \"\")),\n        \" \".join(meta.get(\"tags\", []) if isinstance(meta.get(\"tags\"), list) else [str(meta.get(\"tags\", \"\"))]),\n        rel, rel.split(\"/\")[-1].replace(\".md\", \"\"),\n    ]).lower()\n    hay_body = (str(meta.get(\"description\", \"\")) + \" \" + c[\"body\"]).lower()\n    s = 0\n    for term in terms:\n        if term in hay_strong:\n            s += 5\n        if term in hay_body:\n            s += 1\n    return s\n\n\ndef run(query):\n    \"\"\"Query the OKF knowledge bundle. Matches a curated concept (table / dataset /\n    metric / runbook) and returns it PLUS the concepts it cross-links to, so the\n    agent can follow the knowledge graph. Pass a natural-language query string.\"\"\"\n    query = str(query or \"\").strip()\n    concepts = _load_bundle()\n    if not concepts:\n        return \"OKF bundle not found (skills/okf_bundle/ missing or empty).\"\n\n    # No query -> overview from index.md (or list all concepts)\n    if not query:\n        idx = concepts.get(\"index.md\")\n        listing = \"\\n\".join(\n            f\"- {c['meta'].get('title', k)} [{c['meta'].get('type', '?')}] ({k})\"\n            for k, c in sorted(concepts.items())\n        )\n        head = (idx[\"body\"] + \"\\n\\n\") if idx else \"\"\n        return f\"{head}OKF concepts ({len(concepts)}):\\n{listing}\"\n\n    ranked = sorted(concepts.items(), key=lambda kv: _score(query, kv[0], kv[1]), reverse=True)\n    best_key, best = ranked[0]\n    if _score(query, best_key, best) == 0:\n        listing = \"\\n\".join(\n            f\"- {c['meta'].get('title', k)} [{c['meta'].get('type', '?')}] ({k})\"\n            for k, c in sorted(concepts.items())\n        )\n        return f\"No concept matched '{query}'. Available OKF concepts:\\n{listing}\"\n\n    m = best[\"meta\"]\n    out = [f\"# {m.get('title', best_key)}  [{m.get('type', 'Concept')}]  ({best_key})\"]\n    if m.get(\"description\"):\n        out.append(m[\"description\"])\n    if m.get(\"resource\"):\n        out.append(f\"resource: {m['resource']}\")\n    out.append(\"\\n\" + best[\"body\"])\n\n    # Follow cross-links (the OKF differentiator vs RAG chunks)\n    linked = []\n    for tgt in best[\"links\"]:\n        rk = _resolve(tgt, concepts.keys())\n        if rk and rk != best_key:\n            lm = concepts[rk][\"meta\"]\n            linked.append(f\"- {lm.get('title', rk)} [{lm.get('type', '?')}] ({rk}): {lm.get('description', '')}\")\n    if linked:\n        out.append(\"\\n## Linked concepts (follow the knowledge graph)\")\n        out.extend(linked)\n    return \"\\n\".join(out)\n\n\nif __name__ == \"__main__\":\n    import sys\n    print(run(sys.argv[1] if len(sys.argv) > 1 else \"\"))\n";
+const OKF_BUNDLE={"datasets/orders_db.md": "---\ntype: BigQuery Dataset\ntitle: Orders DB\ndescription: Sales dataset holding order and customer tables.\ntags: [sales, dataset]\ntimestamp: 2026-05-28T14:30:00Z\n---\n\n# Contents\n\n- [orders](/tables/orders.md)\n- [customers](/tables/customers.md)\n", "index.md": "---\ntype: Bundle Index\ntitle: Sales Knowledge Bundle\ndescription: Curated knowledge for the sales domain — datasets, tables and metrics.\ntags: [sales, index]\ntimestamp: 2026-05-28T14:30:00Z\n---\n\n# Sales Knowledge Bundle\n\nThis OKF bundle documents the sales domain. Start here, then follow links.\n\n- Dataset: [orders_db](/datasets/orders_db.md)\n- Tables: [orders](/tables/orders.md), [customers](/tables/customers.md)\n- Metrics: [weekly_active_users](/metrics/weekly_active_users.md)\n", "metrics/weekly_active_users.md": "---\ntype: Metric\ntitle: Weekly Active Users\ndescription: Distinct customers who completed at least one order in a 7-day window.\ntags: [sales, metric, wau]\ntimestamp: 2026-05-28T14:30:00Z\n---\n\n# Definition\n\nCount distinct `customer_id` from [orders](/tables/orders.md) where\n`created_at` is within the trailing 7 days.\n\n```sql\nSELECT COUNT(DISTINCT customer_id) AS wau\nFROM sales.orders\nWHERE created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY);\n```\n", "tables/customers.md": "---\ntype: BigQuery Table\ntitle: Customers\ndescription: One row per customer account.\nresource: https://console.cloud.google.com/bigquery?p=acme&d=sales&t=customers\ntags: [sales, customers]\ntimestamp: 2026-05-28T14:30:00Z\n---\n\n# Schema\n\n| Column        | Type   | Description                          |\n|---------------|--------|--------------------------------------|\n| `customer_id` | STRING | Globally unique customer identifier. |\n| `email`       | STRING | Contact email.                       |\n| `signup_at`   | TIMESTAMP | Account creation time.            |\n\nReferenced by [orders](/tables/orders.md).\n", "tables/orders.md": "---\ntype: BigQuery Table\ntitle: Orders\ndescription: One row per completed customer order.\nresource: https://console.cloud.google.com/bigquery?p=acme&d=sales&t=orders\ntags: [sales, revenue, orders]\ntimestamp: 2026-05-28T14:30:00Z\n---\n\n# Schema\n\n| Column        | Type   | Description                              |\n|---------------|--------|------------------------------------------|\n| `order_id`    | STRING | Globally unique order identifier.        |\n| `customer_id` | STRING | FK to [customers](/tables/customers.md). |\n| `amount`      | FLOAT  | Order total in USD.                      |\n| `created_at`  | TIMESTAMP | When the order was completed.         |\n\nPart of the [orders_db](/datasets/orders_db.md) dataset.\n"};
 const SCENARIOS={
-  minimal:{label:'极简对话 Agent',desc:'Runtime + Memory + Browser + Gateway(Web Search)，可对话+联网搜索+网页访问',nodes:[['runtime',40,250,{name:'chat_agent',region:'us-east-1',system_prompt:'你是一个友好的对话助手。需要最新或实时信息时调用 web_search 工具联网搜索；需要打开某个具体网页时调用 browser 工具。'}],['memory',300,60],['browser',300,210,{network:'SANDBOX'}],['gateway',300,360,{gw_name:'chat_gw'}],['mcp',560,480,{name:'web_search',type:'web_search',description:'AgentCore 托管联网搜索，返回正文摘要与来源链接'}]]},
-  support:{label:'客服 Agent（带工具）',desc:'Runtime + Memory + Identity + Gateway + 真实工具 order_lookup',nodes:[['runtime',40,250,{name:'support_agent',region:'us-east-1',system_prompt:'你是一个专业的客服助手。当用户询问订单时，调用 order_lookup 工具（参数 order_id）查询，并用简洁中文汇报订单状态、物流与预计送达时间。'}],['memory',320,40],['identity',320,150],['gateway',320,320,{gw_name:'support_gw'}],['mcp',610,300,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-east-1:527165314912:function:order_lookup',description:'按订单号查询订单状态/物流/金额'}]]},
+  minimal:{label:'极简对话 Agent',desc:'Runtime + Memory + Browser + Gateway(Web Search)，可对话+联网搜索+网页访问',nodes:[['runtime',40,250,{name:'chat_agent',region:'us-east-1',system_prompt:'你是一个友好的对话助手。需要打开某个具体网页时调用 browser 工具（本地即可用）。web_search 属于 Gateway 托管 connector，只有部署到云端后才可调用；本地对话时如果需要联网搜索，请直接说明该能力需切换到「AWS 云端」来源。'}],['memory',300,60],['browser',300,210,{network:'VPC'}],['gateway',300,360,{gw_name:'chat_gw'}],['mcp',560,480,{name:'web_search',type:'web_search',description:'AgentCore 托管联网搜索，返回正文摘要与来源链接'}]]},
+  support:{label:'客服 Agent（带工具）',desc:'Runtime + Memory + Identity + Gateway + 真实工具 order_lookup',nodes:[['runtime',40,250,{name:'support_agent',region:'us-east-1',system_prompt:'你是一个专业的客服助手。当用户询问订单时，调用 order_lookup 工具（参数 order_id）查询，并用简洁中文汇报订单状态、物流与预计送达时间。'}],['memory',320,40],['identity',320,150],['gateway',320,320,{gw_name:'support_gw'}],['mcp',610,300,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-east-1:123456789012:function:order_lookup',description:'按订单号查询订单状态/物流/金额（示例 ARN，账号 123456789012 为占位，换成你的函数）'}]]},
   analyst:{label:'数据分析 Agent',desc:'Runtime + Code Interpreter + Memory + Observability + Gateway + Skill',nodes:[['runtime',40,210,{name:'analyst_agent',system_prompt:'你是一个数据分析助手，可运行 Python 代码处理数据，并可调用 descriptive_stats 技能做描述性统计。'}],['memory',340,110],['codeinterp',340,250,{network:'SANDBOX'}],['observability',340,390],['gateway',620,110,{gw_name:'analyst_gw'}],['skill',620,270,{name:'descriptive_stats',desc:'计算一组数值的均值/中位数/标准差/最值',category:'analysis',source_type:'inline',code:'import statistics as _st\n\ndef run(numbers):\n    """对一组数值计算描述性统计。numbers 可为列表或逗号分隔字符串。返回 count/mean/median/min/max/stdev/variance。"""\n    if isinstance(numbers, str):\n        numbers = [float(x) for x in numbers.replace("，", ",").split(",") if x.strip()]\n    nums = [float(x) for x in numbers]\n    if not nums:\n        return {"error": "未提供有效数值"}\n    out = {"count": len(nums), "mean": round(_st.mean(nums), 4), "median": round(_st.median(nums), 4), "min": min(nums), "max": max(nums)}\n    if len(nums) > 1:\n        out["stdev"] = round(_st.stdev(nums), 4)\n        out["variance"] = round(_st.variance(nums), 4)\n    return out\n'}]]},
-  full:{label:'全家桶（全部组件）',desc:'13 个组件全部展示',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480],['skill',640,600],['kb',640,720],['optimisation',940,200]]}
+  full:{label:'全家桶（全部组件）',desc:'13 个组件全部展示',nodes:[['runtime',60,380],['memory',340,20],['observability',340,160],['identity',340,300],['gateway',340,440],['codeinterp',340,600],['browser',340,740],['evaluation',640,120],['policy',640,360],['mcp',640,480,{name:'order_lookup',type:'lambda',endpoint:'arn:aws:lambda:us-west-2:123456789012:function:order_lookup',description:'示例 Lambda 工具（替换为你的函数 ARN）'}],['skill',640,600],['kb',640,720,{name:'internal_kb',kb_id:'<KB_ID>',region:'us-west-2',description:'示例知识库（替换为你的 KB ID）'}],['optimisation',940,200]]},
+  pitfall:{label:'⚠ 典型踩坑（pre-flight 演示）',desc:'四个「能部署但会出错」的配置：web_search 跨区、知识库跨区、Policy ENFORCE 无 permit、Code Interpreter 出公网',nodes:[['runtime',60,300,{name:'pitfall_agent',region:'us-west-2',system_prompt:'你是一个演示 Agent。需要联网时用 web_search，查内部资料用知识库工具，算数用 code_interpreter。'}],['gateway',360,300,{}],['mcp',660,180,{name:'web_search',type:'web_search',description:'联网搜索（AgentCore 托管 connector）'}],['kb',660,400,{name:'internal_faq',kb_id:'KB0000DEMO',region:'us-east-1',description:'内部 FAQ 知识库'}],['policy',360,540,{engine:'demo_engine',pname:'deny_all_demo',mode:'ENFORCE',authoring:'cedar',cedar:'// 只写了 forbid，没有任何 permit\nforbid(\n  principal,\n  action,\n  resource\n);'}],['codeinterp',60,560,{network:'PUBLIC'}]]},
+  okf:{label:'📚 OKF 知识包 Agent',desc:'Runtime + Memory + Gateway + Skill(okf_lookup 读真实 markdown 概念目录) + KB(RAG 对照)。OKF=已整理、带交叉链接的 markdown 概念包，agent 直接读并跟随链接；与向量 RAG 并排对比',nodes:[['runtime',40,240,{name:'okf_agent',region:'us-west-2',system_prompt:'你是一个内部知识助手，有两种知识来源，请按用途区分：\n1) okf_lookup —— 查询「已整理、带交叉链接的 markdown 概念包（OKF）」。当用户问表结构、字段含义、指标口径、数据集、runbook 等有明确「概念」的问题时优先用它。它会返回命中的概念，并列出该概念交叉链接到的相关概念（linked），请顺着 linked 补全上下文（例如查某指标会带出它依赖的表）。\n2) vector_kb —— 向量 RAG 检索。仅当需要在大段非结构化长文档里做模糊语义搜索、OKF 里没有对应概念时才用。\n先判断问题属于哪类，再选工具。回答用简洁中文，并注明信息来自哪个概念文件。'}],['memory',320,60],['gateway',320,300,{gw_name:'okf_gw'}],['skill',620,160,{name:'okf_lookup',desc:'查询 OKF 知识包：按概念检索并跟随交叉链接返回相关表/指标/数据集定义（传入自然语言查询）',category:'retrieval',source_type:'inline',code:OKF_LOADER_CODE}],['kb',620,420,{name:'vector_kb',kb_id:'<KB_ID>',region:'us-west-2',description:'向量 RAG 检索（与 OKF 对照，需替换为真实 Bedrock KB ID）'}]]},
 };
 // 每个场景/agent 独立 session：保存/恢复 published/deployed/源模式/对话历史
 function persistSessions(){  // B4：把 sessions 落地 localStorage，刷新不丢
@@ -1915,7 +2783,7 @@ function applySession(name,label){
     pgHist=st.hist?st.hist.slice():[];pgSession=st.session||(name+'-'+Date.now().toString(36));
     document.getElementById('srcCloud').classList.toggle('avail',!!st.cloudAvail)}
   else{published=false;deployed=false;pgSrc='local';lastCloudName=null;m.innerHTML='';
-    pgHist=[];pgSession=name+'-'+Date.now().toString(36);pgStats={turns:0,tokens:{in:0,out:0},tools:{},latency:[]};renderPgStats();
+    pgHist=[];pgSession=name+'-'+Date.now().toString(36);pgStats={turns:0,tokens:{in:0,out:0},tools:{},latency:[]};evLog=[];renderPgStats();
     document.getElementById('srcCloud').classList.remove('avail');
     addMsg('sys',tr('🆕 场景「')+tr(label||name)+tr('」：先在「本地」对话测试，OK 后再「发布到云端」。每个场景需各自发布；云端对话用的是该场景自己部署的 Agent。'))}
   syncSrcPills()}
