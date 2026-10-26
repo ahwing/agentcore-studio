@@ -50,7 +50,7 @@
 - **多 Agent 编排**：从云端拉取已发布 agent，一键生成编排器 Agent —— Supervisor（主控把子 Agent 包成工具按需调用）或 A2A（经 `InvokeAgentRuntime` 透传 JSON-RPC `message/send` 与对等 Agent 协作，A2A 模式只列以 `--protocol A2A` 部署的 agent）；画布自动画出主↔子 Agent 关系
 - **导入已有 Agent 继续编辑**：发布时把整张画布配置存档到 S3 state 桶（`specs/<name>.json`）；导入时拉取云端 agent 列表并交叉标注「可导入」，点一下读回配置**重建可编辑画布**、改完重新发布。仅对 Studio 发布过的 agent 有效
 
-> 细节：模型 ID 按区域自动加跨区域推理配置前缀（`us.`/`eu.`/`apac.`）；默认区域 `us-west-2`、默认模型 Claude Sonnet 4.5；切换部署区域时自动清理跨区残留的 toolkit 本地状态。
+> 细节：模型 ID 按区域自动加跨区域推理配置前缀（`us.`/`eu.`/`apac.`）；默认区域 `us-west-2`、默认模型 Claude Sonnet 5.5（另有 Opus 5.5、Haiku 5.5、GPT 6.1 / 6；新一代模型不传 temperature）；切换部署区域时自动清理跨区残留的 toolkit 本地状态。
 >
 > Memory 长期记忆策略支持 `SEMANTIC / SUMMARY / USER_PREFERENCE / EPISODIC / CUSTOM`（对应 API 的 `*MemoryStrategy`）；`STM` 模式只保留事件流不建策略，含 `LTM` 时经 `update-memory --memory-strategies` 原地追加。Policy 的 enforcement mode（`LOG_ONLY` / `ENFORCE`）通过 Gateway 的 `policyEngineConfiguration` 生效，不是策略引擎自身的参数。
 >

@@ -167,7 +167,7 @@ COMPONENT_SCHEMAS = {
         "desc": "Harness 声明式 Agent",
         "schema": """{
   "name": "agent 名称（字母数字，<=23 字符）",
-  "model_id": "Bedrock 模型 ID，如 anthropic.claude-sonnet-4-6",
+  "model_id": "Bedrock 模型 ID，如 anthropic.claude-sonnet-5-5",
   "region": "部署区域",
   "system_prompt": "（由后续步骤单独生成，此处留空字符串）",
   "tools": ["内置工具列表: browser / code_interpreter / web_search"],
@@ -353,7 +353,7 @@ def deep_generate(nl_prompt, llm_fn, region="us-west-2", on_progress=None):
         futures["main"] = pool.submit(
             _gen_component, deploy_mode, spec.get("summary", ""),
             deploy_mode if deploy_mode in COMPONENT_SCHEMAS else "harness",
-            {"name": "agent", "model_id": "anthropic.claude-sonnet-4-6", "region": region})
+            {"name": "agent", "model_id": "anthropic.claude-sonnet-5-5", "region": region})
         # Memory
         if spec.get("memory"):
             mem_type = f"memory_{spec['memory'].get('strategy', 'episodic')}"
@@ -547,7 +547,7 @@ def _build_canvas_nodes(spec, components, region):
     # 主节点
     main_node_cfg = {
         "name": _sanitize_name(main_cfg.get("name", "agent")),
-        "model_id": main_cfg.get("model_id", "anthropic.claude-sonnet-4-6"),
+        "model_id": main_cfg.get("model_id", "anthropic.claude-sonnet-5-5"),
         "region": region,
         "system_prompt": main_cfg.get("system_prompt", ""),
         "deploy_mode": deploy_mode,

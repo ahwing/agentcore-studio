@@ -245,7 +245,7 @@ def cloud_status(d, region, name=None):
 def bedrock_reply(prompt, cfg, history=None):
     """直接调用 Bedrock converse 返回真实模型回复。无 boto3/凭证/模型权限则抛异常。"""
     import boto3
-    model = cfg.get("model") or "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    model = cfg.get("model") or "anthropic.claude-sonnet-5-5"
     region = cfg.get("region") or "us-west-2"
     # 跨区域推理配置：新模型按需调用需带地域前缀
     import re as _re
@@ -264,7 +264,10 @@ def bedrock_reply(prompt, cfg, history=None):
             msgs.append({"role": role, "content": [{"text": str(txt)}]})
     msgs.append({"role": "user", "content": [{"text": prompt}]})
     kw = {"modelId": model, "messages": msgs,
-          "inferenceConfig": {"maxTokens": cfg.get("max_tokens") or 1024, "temperature": 0.7}}
+          "inferenceConfig": {"maxTokens": cfg.get("max_tokens") or 1024}}
+    # newer Claude (Opus 4.7+/5.x) and GPT (5.x/6.x) reject temperature
+    if not _re.search(r"claude-(opus-4-[7-9]|(opus|sonnet|haiku|fable)-[5-9])|openai\.gpt-([5-9]|\d\d)", model):
+        kw["inferenceConfig"]["temperature"] = 0.7
     if sp.strip(): kw["system"] = [{"text": sp.strip()}, {"cachePoint": {"type": "default"}}]
     r = br.converse(**kw)
     text = r["output"]["message"]["content"][0]["text"]
