@@ -660,6 +660,7 @@ const EN={
   '启用优化':'Enable optimization','目标评估器':'Target evaluator','AI 推荐 (系统提示/工具描述)':'AI recommendations (system prompt / tool descriptions)','配置包 (版本化快照)':'Config bundle (versioned snapshot)',
   '策略引擎名称':'Policy engine name','关联 Gateway':'Attach Gateway','执行模式':'Enforcement mode','策略名称':'Policy name','策略编写方式':'Authoring mode','Cedar 策略定义':'Cedar policy definition','自然语言描述':'Natural-language description','校验模式':'Validation mode','治理策略':'Governance policy',
   'Agent 名称':'Agent name','Agent 框架':'Agent framework','模型 ID':'Model ID','模型提供方':'Model provider','系统提示 (System Prompt)':'System prompt','温度':'Temperature','最大输出 Token':'Max output tokens',
+  '推理力度 (reasoning effort)':'Reasoning effort','仅新一代 Claude（thinking adaptive + effort）/ GPT（reasoning.effort）；default=用模型默认推理档位（不传 effort）':'Only newer Claude (thinking adaptive + effort) / GPT (reasoning.effort); default = model default reasoning tier (effort omitted)',
   '部署方式':'Deploy type','ECR 镜像 URI':'ECR image URI','代码包 S3 桶':'Code package S3 bucket','运行时':'Runtime','AWS 区域':'AWS region','实例最大存活(秒)':'Max instance lifetime (s)','环境变量':'Environment variables',
   '指令 (Instructions)':'Instructions','Agent 循环上限':'Agent loop limit','最大迭代轮数':'Max iterations','每轮最大 Token':'Max tokens per turn','上下文截断策略':'Context truncation','单次超时(秒)':'Per-call timeout (s)','会话存储挂载路径':'Session storage mount path','自带容器 (URI/Dockerfile)':'Bring-your-own container (URI/Dockerfile)',
   '工具网关':'Tool gateway',
@@ -720,14 +721,52 @@ const MODEL_OPTS=['anthropic.claude-sonnet-5-5','anthropic.claude-opus-5-5','ant
 // 不接受 temperature 的模型
 function noTemp(m){return /claude-(opus-4-[7-9]|(opus|sonnet|haiku|fable)-[5-9])|openai\.gpt-([5-9]|\d\d)/.test(m||'')}
 function tempArg(c,pre,suf){return noTemp(c.model_id)?'':pre+c.temperature+suf}
+// 推理力度：家族判定 + 生成代码片段
+// Claude(Opus4.6+/5.x): additionalModelRequestFields={"thinking":{"type":"adaptive"}[,"output_config":{"effort":E}]}
+// GPT(5.x/6.x):          additionalModelRequestFields={"reasoning":{"effort":E}}（E 省略即模型默认）
+// 实测确认（Converse，2026-10）：effort 取值 low/medium/high/xhigh/max；default 表示不传 effort。
+function reasoningFamily(m){if(/claude-(opus-4-[6-9]|(opus|sonnet|haiku|fable)-[5-9])/.test(m||''))return 'claude';if(/openai\.gpt-([5-9]|\d\d)/.test(m||''))return 'gpt';return ''}
+const _EFFORTS=['low','medium','high','xhigh','max'];
+// 返回 additionalModelRequestFields 的 JS 对象（无则 null）
+function reasoningFields(c){const fam=reasoningFamily(c&&c.model_id);if(!fam)return null;
+  const e=(c.reasoning_effort||'default');const eff=_EFFORTS.includes(e)?e:null;
+  if(fam==='claude'){const o={thinking:{type:'adaptive'}};if(eff)o.output_config={effort:eff};return o}
+  return eff?{reasoning:{effort:eff}}:null}  // gpt：无 effort 则不传 additionalModelRequestFields
+// 生成 Python kwarg 片段，如 `additionalModelRequestFields={...}, `（供 BedrockModel / converse 调用）
+function reasoningKw(c,pre,suf){const rf=reasoningFields(c);return rf?pre+JSON.stringify(rf)+suf:''}
 // AgentCore Runtime 可用区域；V2 平台版本只在其中 5 个区域
-const RT_REGIONS=['us-west-2','us-east-1','us-east-2','eu-west-1','eu-central-1','ap-northeast-1','ap-northeast-2','ap-southeast-1','ap-southeast-2','ap-south-1'];
-// web_search 托管 connector 支持的区域
-const WS_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1','ap-southeast-2','us-gov-west-1'];
+// 区域可用性：单一事实来源（AgentCore endpoints & quotas + 各功能文档，2026-10 核对）
+// AgentCore 核心（control/data plane）9 个 GA 区域——Runtime/Harness/Memory/Gateway/Identity/Policy/Code Interpreter/Browser 均经此
+const AC_CORE=['us-west-2','us-east-1','us-east-2','eu-west-1','eu-central-1','ap-northeast-1','ap-southeast-1','ap-southeast-2','ap-south-1'];
+// Runtime V2 平台版本（快照启动）仅 5 个区域
 const V2_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1'];
 // AgentCore CLI v1 (GA), pinned to an exact version. Runtime & Harness modes share one invocation (npx, no bare `agentcore` binary).
 const AC_CLI_VERSION='1.0.0';
 const AC_CLI='npx -y @aws/agentcore@'+AC_CLI_VERSION;
+// web_search 托管 connector 支持的区域（Web Search Tool 文档 Availability 一节）
+const WS_REGIONS=['us-east-1','us-east-2','us-west-2','eu-west-1','ap-northeast-1','ap-southeast-2','us-gov-west-1'];
+// AgentCore Evaluations（跨区推理，核心区域内可用集）
+const EVAL_REGIONS=['us-east-1','us-east-2','us-west-2','eu-central-1','eu-west-1','ap-northeast-1','ap-south-1','ap-southeast-1','ap-southeast-2'];
+// 每个画布功能支持的区域（key=功能 id）。Runtime 各计算/平台组合另由 rtRuntimeRegions() 细分
+const FEATURE_REGIONS={
+  runtime:AC_CORE, runtime_v2:V2_REGIONS, runtime_instances:AC_CORE, harness:AC_CORE,
+  memory:AC_CORE, gateway:AC_CORE, identity:AC_CORE, policy:AC_CORE, evaluation:EVAL_REGIONS,
+  codeinterp:AC_CORE, browser:AC_CORE, web_search:WS_REGIONS, kb:AC_CORE };
+const FEATURE_LABELS={runtime:'Runtime',runtime_v2:'Runtime V2',runtime_instances:'Runtime instances',harness:'Harness',memory:'Memory',gateway:'Gateway',identity:'Identity',policy:'Policy',evaluation:'Evaluations',codeinterp:'Code Interpreter',browser:'Browser',web_search:'web_search connector',kb:'Knowledge Base'};
+// 运行时选区列表：V2(非 instances) 收窄到 V2_REGIONS，否则核心 9 区
+function rtRuntimeRegions(c){return (c&&c.compute_type!=='instances'&&c.platform_version==='V2')?V2_REGIONS:AC_CORE}
+// 某区域是否支持某功能
+function regionSupports(region,feat){const L=FEATURE_REGIONS[feat];return !L||!region||L.includes(region)}
+// 画布上某节点实际占用的功能 id（随配置而变，如 V2 / instances / web_search 子类型）
+function nodeFeature(n){
+  if(!n)return null;
+  if(n.type==='runtime'){const c=n.cfg;if(c.compute_type==='instances')return 'runtime_instances';if(c.platform_version==='V2')return 'runtime_v2';return 'runtime'}
+  if(n.type==='mcp')return n.cfg.type==='web_search'?'web_search':null;  // 其他 MCP target 无区域限制
+  return FEATURE_REGIONS[n.type]?n.type:null}
+// 画布上全部功能（去重），用于求「同时支持所有功能」的交集区域
+function canvasFeatures(){const s=new Set();nodes.forEach(n=>{const f=nodeFeature(n);if(f)s.add(f)});return [...s]}
+// 同时支持给定功能集的区域（交集）；传空集则返回核心区
+function regionsSupportingAll(feats){let out=AC_CORE.slice();(feats||[]).forEach(f=>{const L=FEATURE_REGIONS[f];if(L)out=out.filter(r=>L.includes(r))});return out}
 // 生命周期上限：microVM 8 小时，instances 14 天
 function rtMaxLife(c){return c&&c.compute_type==='instances'?1209600:28800}
 // 环境变量总大小上限（字节）：V1 4KB；V2 代码包 1.5KB / 容器 2.5KB
@@ -740,6 +779,7 @@ const COMPONENTS={
     {k:'model_id',l:'模型 ID',t:'select',o:MODEL_OPTS,d:'anthropic.claude-sonnet-5-5'},
     {k:'system_prompt',l:'系统提示 (System Prompt)',t:'textarea',d:'你是一个乐于助人的 AWS 助手。'},
     {k:'temperature',l:'温度',t:'select',o:['0','0.3','0.7','1.0'],d:'0.7',hint:'新一代 Claude / GPT 不支持，选了这些模型时自动不传'},
+    {k:'reasoning_effort',l:'推理力度 (reasoning effort)',t:'select',o:['default','low','medium','high','xhigh','max'],d:'default',hint:'仅新一代 Claude（thinking adaptive + effort）/ GPT（reasoning.effort）；default=用模型默认推理档位（不传 effort）'},
     {k:'max_tokens',l:'最大输出 Token',t:'text',d:'1024'},
     {k:'deploy_type',l:'部署方式',t:'select',o:['direct_code_deploy','container'],d:'direct_code_deploy',hint:'direct_code_deploy: 代码包(S3); container: 容器镜像(ECR)'},
     {k:'container_uri',l:'ECR 镜像 URI',t:'text',d:'',hint:'container 模式：自带镜像，留空则工具链自动构建并推送 ECR'},
@@ -749,7 +789,7 @@ const COMPONENTS={
     {k:'capacity_provider_arn',l:'容量提供方 ARN',t:'text',d:'',hint:'instances 必填，形如 arn:aws:bedrock-agentcore:<region>:<acct>:capacity-provider/<name>-<id>'},
     {k:'session_storage',l:'会话存储挂载路径',t:'text',d:'',hint:'可选，跨调用持久化文件，须为 /mnt/<一级目录>，如 /mnt/data'},
     {k:'runtime',l:'运行时',t:'select',o:['PYTHON_3_10','PYTHON_3_11','PYTHON_3_12','PYTHON_3_13','PYTHON_3_14','NODE_22'],d:'PYTHON_3_11'},
-    {k:'region',l:'AWS 区域',t:'select',o:RT_REGIONS,d:'us-west-2',hint:'V2 仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1'},
+    {k:'region',l:'AWS 区域',t:'select',o:AC_CORE,d:'us-west-2',hint:'V2 仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1'},
     {k:'protocol',l:'协议',t:'select',o:['HTTP','MCP','A2A'],d:'HTTP'},
     {k:'inbound_auth',l:'入站认证',t:'select',o:['IAM','JWT'],d:'IAM',hint:'谁能调用此 Agent：IAM(SigV4，默认) 或 JWT(OAuth/OIDC)；JWT 经 add runtime --authorizer-configuration 声明'},
     {k:'in_discovery_url',l:'OIDC Discovery URL',t:'text',d:'',hint:'JWT 入站，形如 https://.../.well-known/openid-configuration'},
@@ -770,7 +810,7 @@ const COMPONENTS={
     {k:'timeout',l:'单次超时(秒)',t:'text',d:'300'},
     {k:'truncation',l:'上下文截断策略',t:'select',o:['sliding_window','summarization'],d:'sliding_window'},
     {k:'memory',l:'记忆',t:'select',o:['auto','none'],d:'auto',hint:'auto: 自动建 STM+LTM; none: 不建'},
-    {k:'region',l:'AWS 区域',t:'select',o:RT_REGIONS,d:'us-east-1'},
+    {k:'region',l:'AWS 区域',t:'select',o:AC_CORE,d:'us-east-1'},
     {k:'network_mode',l:'网络模式',t:'select',o:['PUBLIC','VPC'],d:'PUBLIC'},
     {k:'session_storage',l:'会话存储挂载路径',t:'text',d:'',hint:'如 /mnt/data/（持久化跨会话文件，可选）'},
     {k:'container',l:'自带容器 (URI/Dockerfile)',t:'text',d:'',hint:'留空用默认环境'},
@@ -826,7 +866,7 @@ const COMPONENTS={
   kb:{label:'Knowledge Base',ic:'📚',ac:'var(--kb)',multi:true,parent:'gateway',fields:[
     {k:'name',l:'工具名称',t:'text',d:'knowledge_base',hint:'作为 Agent 可调用工具的函数名'},
     {k:'kb_id',l:'Bedrock 知识库 ID',t:'text',d:'',hint:'Bedrock Knowledge Base ID，如 ABCDEFGHIJ'},
-    {k:'region',l:'KB 区域',t:'select',o:RT_REGIONS,d:'us-east-1'},
+    {k:'region',l:'KB 区域',t:'select',o:AC_CORE,d:'us-east-1'},
     {k:'top_k',l:'检索条数 (top-k)',t:'text',d:'5'},
     {k:'description',l:'描述',t:'text',d:'从知识库检索相关内容'}]},
   codeinterp:{label:'Code Interpreter',ic:'💻',ac:'var(--ci)',fields:[
@@ -1149,6 +1189,10 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
     if(n.type==='runtime'){
       if(f.k==='container_uri'&&n.cfg.deploy_type!=='container')return '';
       if(f.k==='code_s3'&&n.cfg.deploy_type!=='direct_code_deploy')return '';
+      // 新一代 Claude/GPT 不收 temperature：隐藏温度、改显推理力度；其余模型反之
+      const _nt=noTemp(n.cfg.model_id);
+      if(f.k==='temperature'&&_nt)return '';
+      if(f.k==='reasoning_effort'&&(!_nt||!reasoningFamily(n.cfg.model_id)))return '';
       const _inst=n.cfg.compute_type==='instances';
       if(f.k==='platform_version'&&_inst)return '';          // 平台版本只用于 microVM
       if(f.k==='capacity_provider_arn'&&!_inst)return '';     // 容量提供方只用于 instances
@@ -1217,8 +1261,20 @@ function renderProps(){const pop=document.getElementById('pop'),n=nodes.find(x=>
     let fo=f.o;
     if(n.type==='runtime'){
       const _v2=n.cfg.compute_type!=='instances'&&n.cfg.platform_version==='V2';
-      if(f.k==='region'&&_v2)fo=V2_REGIONS;                 // V2 只列支持的区域
       const _en=LANG==='en',_lim=rtEnvLimit(n.cfg),_used=rtEnvBytes(n.cfg);
+      if(f.k==='region'){
+        // 区域下拉收窄到「同时支持画布上所有功能」的交集；若无交集则退回运行时自身可用区（避免空列表）
+        const _feats=canvasFeatures(),_inter=regionsSupportingAll(_feats),_self=rtRuntimeRegions(n.cfg);
+        fo=_inter.length?_inter.filter(r=>_self.includes(r)):_self;
+        if(!fo.length)fo=_self;
+        // 列出因功能被排除的区域及其限制功能，解释为何列表变短
+        const _excl=_self.filter(r=>!fo.includes(r));
+        const _why=_feats.filter(ff=>FEATURE_REGIONS[ff]&&_self.some(r=>!FEATURE_REGIONS[ff].includes(r))).map(ff=>FEATURE_LABELS[ff]);
+        if(_excl.length)fhint=(_en?'Narrowed to regions supporting every feature on the canvas':'已收窄到同时支持画布上所有功能的区域')
+          +(_why.length?(_en?' (limited by: ':'（受限于：')+_why.join('/')+'）':'')
+          +(_en?'. Excluded: ':'；已排除：')+_excl.join('/');
+        else fhint=_v2?(_en?'V2 regions: '+V2_REGIONS.join('/'):'V2 区域：'+V2_REGIONS.join('/')):(_en?'AgentCore core regions':'AgentCore 核心区域');
+      }
       if(f.k==='platform_version')fhint=n.cfg.platform_version==='V2'
         ?(_en?'V2: snapshot start, consistent cold starts, pay for active usage ⚠ create/update takes minutes to reach READY; container must pass /ping within 120s; env-var limit '+_lim+'B (now '+_used+'B)'
              :'V2: 快照启动，冷启动稳定、按实际用量计费 ⚠ 创建/更新需几分钟才 READY；容器须在 120 秒内 /ping 健康；环境变量上限 '+_lim+'B（当前 '+_used+'B）')
@@ -2240,11 +2296,11 @@ function genEntry(c,skills,mcps,ci,br,kbs){
   const strandsProc=hasWS?`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    if _GW_MCP is not None:\n        try:\n            with _GW_MCP:\n                _gwt = _GW_MCP.list_tools_sync()\n                agent = Agent(model=model, system_prompt=sp, tools=_TOOLS + _gwt, messages=_hist_msgs(history))\n                _r = agent(prompt)\n                return str(_r), _trace_from(_r, agent)\n        except Exception:\n            pass\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    _r = agent(prompt)\n    return str(_r), _trace_from(_r, agent)\n`:`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, tools=_TOOLS, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   let logic;
   if(c.framework==='strands'){
-    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length||connTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", ${tempArg(c,'temperature=',', ')}max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n${connSetup}_TOOLS = [${toolList}${connTools.length?((toolList?', ':'')+'*_CONN_TOOLS'):''}]\n\n${wsSetup}${strandsProc}`;
-    else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", ${tempArg(c,'temperature=',', ')}max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
+    if(lamTools.length||skTools.length||ci||br||hasWS||kbTools.length||wkTools.length||connTools.length)logic=`from strands import Agent, tool\nfrom strands.models.bedrock import BedrockModel\nimport boto3 as _b3, json as _j3\n\nmodel = BedrockModel(model_id="${mid}", ${tempArg(c,'temperature=',', ')}${reasoningKw(c,'additional_request_fields=',', ')}max_tokens=${c.max_tokens}, cache_tools="default")\n_lambda_client = _b3.client("lambda", region_name="${lamRegion}")\n\ndef _invoke_lambda(arn, payload):\n    try:\n        r = _lambda_client.invoke(FunctionName=arn, Payload=_j3.dumps(payload).encode("utf-8"))\n        return r["Payload"].read().decode("utf-8")\n    except Exception as e:\n        return f"工具调用失败: {e}"\n\ndef _kb_retrieve(kb_id, region, query, top_k=5):\n    try:\n        _kc = _b3.client("bedrock-agent-runtime", region_name=region)\n        _r = _kc.retrieve(knowledgeBaseId=kb_id, retrievalQuery={"text": query}, retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": int(top_k)}})\n        _rs = _r.get("retrievalResults", [])\n        return " || ".join((x.get("content") or {}).get("text", "") for x in _rs) or "（无检索结果）"\n    except Exception as e:\n        return f"知识库检索失败: {e}"\n\ndef _invoke_agent(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps({"prompt": query}).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw)\n            return _d.get("result") or _d.get("output") or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"子 Agent 调用失败: {e}"\n\ndef _invoke_a2a(arn, region, query):\n    try:\n        import uuid as _uuid\n        _ac = _b3.client("bedrock-agentcore", region_name=region)\n        _sid = ("sess-" + _uuid.uuid4().hex + _uuid.uuid4().hex)[:40]\n        _rpc = {"jsonrpc": "2.0", "id": _uuid.uuid4().hex, "method": "message/send", "params": {"message": {"role": "user", "parts": [{"kind": "text", "text": query}], "messageId": _uuid.uuid4().hex}}}\n        _r = _ac.invoke_agent_runtime(agentRuntimeArn=arn, runtimeSessionId=_sid, payload=_j3.dumps(_rpc).encode("utf-8"))\n        _body = _r.get("response")\n        _raw = _body.read() if hasattr(_body, "read") else _body\n        if isinstance(_raw, (bytes, bytearray)):\n            _raw = _raw.decode("utf-8", "ignore")\n        try:\n            _d = _j3.loads(_raw); _res = _d.get("result") or _d\n            _parts = (((_res or {}).get("message") or {}).get("parts")) or (_res or {}).get("parts") or []\n            _txt = " ".join(p.get("text", "") for p in _parts if isinstance(p, dict))\n            return _txt or _raw\n        except Exception:\n            return _raw\n    except Exception as e:\n        return f"A2A 调用失败: {e}"\n\n${toolDefs}${skDefs}${ciDefs}${brDefs}${kbDefs}${wkDefs}\n${connSetup}_TOOLS = [${toolList}${connTools.length?((toolList?', ':'')+'*_CONN_TOOLS'):''}]\n\n${wsSetup}${strandsProc}`;
+    else logic=`from strands import Agent\nfrom strands.models.bedrock import BedrockModel\n\nmodel = BedrockModel(model_id="${mid}", ${tempArg(c,'temperature=',', ')}${reasoningKw(c,'additional_request_fields=',', ')}max_tokens=${c.max_tokens})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None):\n    agent = Agent(model=model, system_prompt=sp, messages=_hist_msgs(history))\n    result = agent(prompt)\n    return str(result), _trace_from(result, agent)\n`;
   }
-  else if(c.framework==='claude_sdk')logic=`import anthropic\n_c = anthropic.Anthropic()\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    _msgs = [{"role": h["role"], "content": h["content"]} for h in (history or []) if h.get("role") in ("user", "assistant") and h.get("content")]\n    _msgs.append({"role": "user", "content": prompt})\n    msg = _c.messages.create(model="${mid}", max_tokens=${c.max_tokens}, temperature=${c.temperature},\n        system=sp, messages=_msgs)\n    return msg.content[0].text\n`;
-  else if(c.framework==='langchain')logic=`from langchain_aws import ChatBedrock\n_llm = ChatBedrock(model_id="${mid}", model_kwargs={${tempArg(c,'"temperature": ',', ')}"max_tokens": ${c.max_tokens}})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    return _llm.invoke(sp + "\\n\\n" + prompt).content\n`;
+  else if(c.framework==='claude_sdk')logic=`import anthropic\n_c = anthropic.Anthropic()\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    _msgs = [{"role": h["role"], "content": h["content"]} for h in (history or []) if h.get("role") in ("user", "assistant") and h.get("content")]\n    _msgs.append({"role": "user", "content": prompt})\n    msg = _c.messages.create(model="${mid}", max_tokens=${c.max_tokens}, ${tempArg(c,'temperature=',', ')}\n        system=sp, messages=_msgs)\n    return msg.content[0].text\n`;
+  else if(c.framework==='langchain')logic=`from langchain_aws import ChatBedrock\n_llm = ChatBedrock(model_id="${mid}", ${reasoningKw(c,'additional_model_request_fields=',', ')}model_kwargs={${tempArg(c,'"temperature": ',', ')}"max_tokens": ${c.max_tokens}})\n\ndef process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    return _llm.invoke(sp + "\\n\\n" + prompt).content\n`;
   else logic=`def process_request(prompt: str, sp: str = SYSTEM_PROMPT, history=None) -> str:\n    # === 在此实现你的 agent 逻辑 ===\n    note = f" (已注册技能: {SKILLS}, 工具: {TOOLS})" if SKILLS or TOOLS else ""\n    return f"[{sp[:20]}] 收到: {prompt}{note}"\n`;
   return head+tools+`\napp = BedrockAgentCoreApp()\n\n${logic}\n@app.entrypoint\ndef invoke(payload: Dict[str, Any]) -> Dict[str, Any]:\n    import time as _t\n    prompt = payload.get("prompt", "")\n    sp = payload.get("system_prompt") or SYSTEM_PROMPT  # 每次请求可覆盖系统提示（改 prompt 即时生效，无需重新部署）\n    history = payload.get("history") or []  # 会话内多轮记忆\n    if not prompt:\n        return {"error": "No prompt provided", "result": ""}\n    _t0 = _t.time()\n    try:\n        _out = process_request(prompt, sp, history)\n    except Exception as e:\n        return {"error": str(e), "result": ""}\n    if isinstance(_out, tuple):\n        _text, _trace = _out[0], dict(_out[1] or {})\n    else:\n        _text, _trace = _out, {}\n    _trace.setdefault("latency_ms", int((_t.time() - _t0) * 1000))\n    _trace.setdefault("model", MODEL_ID)\n    return {"result": _text, "trace": _trace}\n\n\nif __name__ == "__main__":\n    app.run()\n`}
 function renderPreview(){[...tabsEl.children].forEach(b=>b.classList.toggle('on',b.dataset.k===tab));
@@ -2319,7 +2375,7 @@ function payload(){const rt=centerNode();const o=gen();
   const spec=JSON.stringify({v:1,name:rt.cfg.name,ts:Date.now(),nodes},null,2);
   return{name:rt.cfg.name,files:{'agentcore_entry.py':o.entry,'deploy.sh':o.deploy,'registry.json':o.registry,'iam-policy.json':o.policy,'requirements.txt':o.req,'.studio_spec.json':spec,...(o.skillFiles||{})},
     zips:o.skillZips||{},
-    cfg:{entry:'agentcore_entry.py',deploy_mode:rt.type==='harness'?'harness':(rt.cfg.deploy_mode||'runtime'),harness_name:(rt.cfg.name||'').replace(/[^a-zA-Z0-9]/g,'')||'agent',region:rt.cfg.region,framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,
+    cfg:{entry:'agentcore_entry.py',deploy_mode:rt.type==='harness'?'harness':(rt.cfg.deploy_mode||'runtime'),harness_name:(rt.cfg.name||'').replace(/[^a-zA-Z0-9]/g,'')||'agent',region:rt.cfg.region,framework:rt.cfg.framework,system_prompt:rt.cfg.system_prompt,model:rt.cfg.model_id,reasoning_effort:rt.cfg.reasoning_effort||'default',temperature:rt.cfg.temperature,
       tools:nodes.filter(n=>n.type==='mcp').map(n=>n.cfg.name),skills:nodes.filter(n=>n.type==='skill').map(n=>n.cfg.name)}}}
 function collectWarnings(){
   const w=[];
@@ -2340,16 +2396,19 @@ function graphWarnings(){return graphRisks().map(r=>r.msg)}
 // 结构化 pre-flight 风险：每条带命中节点 id 与一键修复
 function graphRisks(){
   const R=[];const _rt=centerNode();const _region=_rt?(_rt.cfg.region||''):'';
+  // 画布整体「同时支持所有功能」的首选区域（用于一键修复的目标；无交集则 null）
+  const _allRegs=regionsSupportingAll(canvasFeatures());
+  const _pref=_allRegs.includes('us-west-2')?'us-west-2':(_allRegs[0]||null);
   // web_search 托管 connector 只在部分区域可用
   nodes.filter(n=>n.type==='mcp'&&n.cfg.type==='web_search').forEach(n=>{
     if(_region&&!WS_REGIONS.includes(_region))R.push({id:'ws:'+n.id,node:_rt?_rt.id:null,sev:'high',
       msg:'🧰 web_search 托管 connector 不支持区域 '+_region+'（仅 '+WS_REGIONS.join('/')+'），将无法使用（改区域或换工具）',
-      fixLabel:'把 Agent 区域改为 us-west-2',fix:()=>{_rt.cfg.region='us-west-2'}})});
+      ...(_pref&&_rt?{fixLabel:'把 Agent 区域改为 '+_pref,fix:()=>{_rt.cfg.region=_pref}}:{})})});
   // Runtime 平台版本 / 计算类型
   if(_rt&&_rt.type==='runtime'){const c=_rt.cfg;const inst=c.compute_type==='instances';
     if(!inst&&c.platform_version==='V2'&&!V2_REGIONS.includes(c.region))R.push({id:'v2reg',node:_rt.id,sev:'high',
       msg:'⚙️ Runtime V2 不支持区域 '+c.region+'（仅 '+V2_REGIONS.join('/')+'）',
-      fixLabel:'把区域改为 us-west-2',fix:()=>{c.region='us-west-2'}});
+      fixLabel:'把区域改为 '+(_pref||'us-west-2'),fix:()=>{c.region=(_pref||'us-west-2')}});
     if(rtEnvBytes(c)>rtEnvLimit(c))R.push({id:'envsz',node:_rt.id,sev:'high',
       msg:'⚙️ 环境变量(含 SYSTEM_PROMPT)共 '+rtEnvBytes(c)+'B，超过 '+(!inst&&c.platform_version==='V2'?'V2':'V1')+' 上限 '+rtEnvLimit(c)+'B，部署会报 ValidationException',
       fixLabel:'切回 V1（上限 4KB）',fix:()=>{c.platform_version='V1'}});
@@ -2408,6 +2467,21 @@ function graphRisks(){
       msg:'💳 Payment「'+(n.cfg.pm_name||'payment')+'」选了 Stripe(Privy) 但凭证方式不是 MANUAL（Stripe 不支持 Quick create）',
       fixLabel:'改为 MANUAL',fix:()=>{n.cfg.provision_mode='MANUAL'}});
   });
+  // 每功能区域支持：逐一点名画布上「功能在 Runtime 区域不受支持」的节点（web_search/V2 已由 ws:/v2reg 单独处理，此处跳过避免重复）
+  if(_region){
+    const _done=new Set(['web_search','runtime_v2']);
+    nodes.forEach(n=>{const feat=nodeFeature(n);
+      if(!feat||_done.has(feat)||regionSupports(_region,feat))return;
+      const c=COMPONENTS[n.type]||{};const L=FEATURE_REGIONS[feat]||[];
+      const nm=n.cfg.name||n.cfg.gw_name||n.cfg.engine||n.cfg.pname||n.cfg.mem_name||c.label||feat;
+      R.push({id:'featreg:'+n.id,node:n.id,sev:'high',
+        msg:(c.ic||'⚠️')+' '+FEATURE_LABELS[feat]+'「'+nm+'」在区域 '+_region+' 不受支持（仅 '+L.join('/')+'）',
+        ...(_pref?{fixLabel:'把 Agent 区域改为 '+_pref+'（支持画布全部功能）',fix:()=>{if(_rt)_rt.cfg.region=_pref}}:{fixLabel:'无同时支持全部功能的区域，请移除冲突节点'})});
+    });
+    // 画布功能之间没有公共区域 → 无法一键修复，提示拆分
+    if(!_allRegs.length&&canvasFeatures().length>1)R.push({id:'noregion',node:_rt?_rt.id:null,sev:'mid',
+      msg:'🗺️ 画布上的功能没有任何一个区域能同时支持（如 Runtime V2 + 某仅限其他区域的功能），需拆分到不同 Agent 或移除冲突功能'});
+  }
   return R}
 function publish(){const rt=centerNode();if(!rt){toast('请先添加 Runtime 或 Harness');return}
   if(/[^a-z0-9_]/i.test(rt.cfg.name)){toast('Agent 名称仅允许字母/数字/下划线');return}
