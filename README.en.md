@@ -12,7 +12,7 @@
 
 ![AgentCore Studio architecture](architecture.png)
 
-> Developers orchestrate by dragging in Studio (deployable on App Runner / EC2 / ECS / EKS / locally) → the generated artifacts are deployed via CI/CD (CodeBuild → S3 → ECR) → the Agent Runtime in Amazon Bedrock AgentCore drives Memory, Identity, Policy, Observability, the Gateway tool layer, and the built-in sandbox tools. The editable source is in [`architecture.drawio`](architecture.drawio).
+> Developers orchestrate by dragging in Studio (deployable on App Runner / EC2 / ECS / EKS / locally) → the generated artifacts are deployed via CI/CD (CodeBuild → S3 → ECR) → the Agent Runtime in Amazon Bedrock AgentCore (platform V1 / V2, microVM / instances) drives Memory (incl. self-managed strategy), Identity, Payments (preview), Policy, Observability / Evaluations (incl. custom evaluators), the Gateway tool layer (incl. interceptors), and the built-in sandbox tools; deploys go through AgentCore CLI v1. The editable source is in [`architecture.drawio`](architecture.drawio).
 
 ## Features
 

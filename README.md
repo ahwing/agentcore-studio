@@ -12,7 +12,7 @@
 
 ![AgentCore Studio 架构图](architecture.png)
 
-> 开发者通过 Studio（可部署在 App Runner / EC2 / ECS / EKS / 本地）拖拽编排 → 生成产物经 CI/CD（CodeBuild → S3 → ECR）部署 → Amazon Bedrock AgentCore 中的 Agent Runtime 调度 Memory、Identity、Policy、Observability、Gateway 工具层与内置沙箱工具。可编辑源文件见 [`architecture.drawio`](architecture.drawio)。
+> 开发者通过 Studio（可部署在 App Runner / EC2 / ECS / EKS / 本地）拖拽编排 → 生成产物经 CI/CD（CodeBuild → S3 → ECR）部署 → Amazon Bedrock AgentCore 中的 Agent Runtime（平台 V1 / V2，microVM / instances）调度 Memory（含自管理策略）、Identity、Payments（预览）、Policy、Observability / Evaluations（含自建评估器）、Gateway 工具层（含拦截器）与内置沙箱工具；部署走 AgentCore CLI v1。可编辑源文件见 [`architecture.drawio`](architecture.drawio)。
 
 ## 功能
 
