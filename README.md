@@ -39,7 +39,7 @@
 ### 📄 实时产物 & 发布
 - 实时生成 `agentcore_entry.py` / `deploy.sh` / `iam-policy.json` / `requirements.txt` / `registry.json`；Registry 实时登记所有组件、内置工具、MCP/Skill
 - ⚡ **产物 diff 直播**：改一个配置，产物面板立刻列出**同时变化的所有文件**与语义摘要（新增工具函数 / IAM 语句与权限 / 角色内联策略 / 部署步骤 / 依赖），当前文件内新增行绿色高亮。一个功能节点 = 工具代码 + 对应最小 IAM 权限 + 部署步骤 + 注册记录，四处一起长出来（例：开一个 Observability → `deploy.sh` +1 步骤、`iam-policy.json` +5 行含 `logs:*`/`xray:*`、`registry.json` +2、`requirements.txt` +1）
-- ✅ **Pre-flight 校验**：除完整性检查外，做**跨节点语义/区域/安全**校验（web_search 仅 us-east-1、知识库跨区、Policy ENFORCE 无 permit 会全锁、出公网风险等），设计期状态条实时显示「风险」并在部署前拦截提示
+- ✅ **Pre-flight 校验**：除完整性检查外，做**跨节点语义/区域/安全**校验（Runtime V2 选了不支持的区、web_search 不支持的区、知识库跨区、Policy ENFORCE 无 permit 会全锁、出公网风险等），设计期状态条实时显示「风险」并在部署前拦截提示
 - 🛡️ **风险面板 + 一键修复**：点状态条展开每条风险，支持「🎯 定位节点」跳到出问题的组件，以及针对性修复（改区域 / 对齐知识库区域 / 插入 permit 语句 / 网络改回 SANDBOX）；「全部修复」按迭代收敛（修一条→重算，因为一条修复会改变其他条的判定）。配合 ⚠ 典型踩坑场景，一次触发四类风险
 - 🚀 **发布管线 trace**：发布时展示组件发布路径，逐个点亮（pending→进行中→✓）；后台任务 + 轮询进度（不受流式超时影响），实时日志 + 部署计时心跳
 - ⚡ **增量发布（三态）**：按指纹判定——制品/代码变更→全量重建；仅控制面配置变更（协议/超时/环境变量/描述等）→ `update-agent-runtime` 秒级更新（复用制品、保留 ARN）；未变化→跳过。Identity / MCP Target / Policy / Memory / Gateway 均支持原地快速更新

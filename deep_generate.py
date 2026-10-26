@@ -21,7 +21,7 @@ CAPABILITY_MAP = """
 ### 内置工具（零额外成本，随 Runtime/Harness 提供）
 - **browser**: 无头浏览器，能打开网页、提取内容、截图、填表单、点击。适用于：抓取网页、监控页面变化、自动化表单操作。
 - **code_interpreter**: Python 沙箱，能 pip install、有网络访问、能执行 boto3。适用于：数据计算、发邮件(boto3+SES)、调 API(requests)、画图、文件处理。
-- **web_search**: 搜索互联网返回摘要。适用于：搜索新闻、查信息、竞品监控。限制：仅 us-east-1。
+- **web_search**: 搜索互联网返回摘要。适用于：搜索新闻、查信息、竞品监控。限制：仅 us-east-1/us-east-2/us-west-2/eu-west-1/ap-northeast-1/ap-southeast-2。
 
 ### 组件
 - **runtime**: 容器化 Agent，自定义编排代码（strands-agents），支持复杂工具循环。适合需要自定义代码逻辑的场景。
