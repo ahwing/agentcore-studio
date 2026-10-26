@@ -265,14 +265,33 @@ def bedrock_reply(prompt, cfg, history=None):
     msgs.append({"role": "user", "content": [{"text": prompt}]})
     kw = {"modelId": model, "messages": msgs,
           "inferenceConfig": {"maxTokens": cfg.get("max_tokens") or 1024}}
+    # Reasoning effort (verified via Converse 2026-10):
+    #   Claude Opus 4.6+/5.x: additionalModelRequestFields={"thinking":{"type":"adaptive"}[,"output_config":{"effort":E}]}
+    #   GPT 5.x/6.x:          additionalModelRequestFields={"reasoning":{"effort":E}}  (E one of low/medium/high/xhigh/max)
+    # These families reject `temperature`, so reasoning and temperature are mutually exclusive.
+    effort = (cfg.get("reasoning_effort") or "default")
+    is_claude_reasoning = bool(_re.search(r"claude-(opus-4-[6-9]|(opus|sonnet|haiku|fable)-[5-9])", model))
+    is_gpt_reasoning = bool(_re.search(r"openai\.gpt-([5-9]|\d\d)", model))
+    amrf = {}
+    if is_claude_reasoning:
+        amrf["thinking"] = {"type": "adaptive"}
+        if effort in ("low", "medium", "high", "xhigh", "max"):
+            amrf["output_config"] = {"effort": effort}
+    elif is_gpt_reasoning and effort in ("low", "medium", "high", "xhigh", "max"):
+        amrf["reasoning"] = {"effort": effort}
+    if amrf:
+        kw["additionalModelRequestFields"] = amrf
     # newer Claude (Opus 4.7+/5.x) and GPT (5.x/6.x) reject temperature
-    if not _re.search(r"claude-(opus-4-[7-9]|(opus|sonnet|haiku|fable)-[5-9])|openai\.gpt-([5-9]|\d\d)", model):
-        kw["inferenceConfig"]["temperature"] = 0.7
+    elif not _re.search(r"claude-(opus-4-[7-9]|(opus|sonnet|haiku|fable)-[5-9])|openai\.gpt-([5-9]|\d\d)", model):
+        kw["inferenceConfig"]["temperature"] = float(cfg.get("temperature") or 0.7)
     if sp.strip(): kw["system"] = [{"text": sp.strip()}, {"cachePoint": {"type": "default"}}]
     r = br.converse(**kw)
-    text = r["output"]["message"]["content"][0]["text"]
+    # Reasoning models emit a reasoningContent block before the text block, so scan for text rather than taking content[0].
+    _content = r["output"]["message"].get("content") or []
+    text = "".join(b["text"] for b in _content if isinstance(b, dict) and "text" in b) or "（空响应）"
     u = r.get("usage") or {}
     trace = {"model": model,
+             "reasoning_effort": (effort if amrf else None),
              "usage": {"input_tokens": u.get("inputTokens"), "output_tokens": u.get("outputTokens"), "total_tokens": u.get("totalTokens")},
              "latency_ms": (r.get("metrics") or {}).get("latencyMs")}
     return text, trace
